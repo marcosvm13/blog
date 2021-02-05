@@ -5,9 +5,22 @@ layout: default
 <div class="content">
     {{ content }}
 </div>
-
+<div class="content">
+    Habla computing team
+</div>
 <div class="columns is-multiline">
-    {% assign sortedautors = site.authors | sort: "start_date" %}
+    {% assign sortedautors = site.authors | where "active", true | sort: "start_date" %}
+    {% for author in sortedautors %}
+        <div class="column is-12">
+            {% include author-media.html %}
+        </div>
+    {% endfor %}
+</div>
+<div class="content">
+    Other authors of the blog
+</div>
+<div class="columns is-multiline">
+    {% assign sortedautors = site.authors | where "active", false | sort: "start_date" %}
     {% for author in sortedautors %}
         <div class="column is-12">
             {% include author-media.html %}

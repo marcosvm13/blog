@@ -8,6 +8,7 @@
   linkedin: https://es.linkedin.com/in/jserranohidalgo
   github: https://github.com/jserranohidalgo
   start_date: 2013-01-01
+  active: true
 ---
 
 Juan Manuel is the CEO of habla computing and a teacher.

@@ -7,4 +7,5 @@
   linkedin: https://www.linkedin.com/in/carlos-vidal-a1389041/
   github: https://github.com/carlosvidalvaro
   start_date: 2019-01-01
+  active: true
 ---
