@@ -20,7 +20,7 @@ layout: default
     Guest writers in the blog
 </div>
 <div class="columns is-multiline">
-    {% assign guests = site.authors | where_exp:"auth", "auth.active == false" | sort: "start_date" %}
+    {% assign guests = site.authors | where_exp:"auth", "auth.active == nil" | sort: "start_date" %}
     {% for author in guests %}
         <div class="column is-12">
             {% include author-media.html %}
