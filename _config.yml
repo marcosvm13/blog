@@ -26,7 +26,7 @@ defaults:
     values:
       author: "Juan Manuel Serrano"
       layout: post
-      image: /img/amanecer.jpg
+      image: /img/logo-habla.png
       show_sidebar: true
   -
     scope:
