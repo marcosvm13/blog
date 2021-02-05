@@ -1,0 +1,619 @@
+---
+layout: post
+title: Todo lo que quieres saber y nunca te atreviste a preguntar sobre el pattern
+  matching.
+date:
+type: post
+parent_id: '0'
+published: false
+password: ''
+status: draft
+categories: []
+tags: []
+meta:
+  _wpcom_is_markdown: '1'
+  _last_editor_used_jetpack: block-editor
+  _coblocks_attr: ''
+  _coblocks_dimensions: ''
+  _coblocks_responsive_height: ''
+  _coblocks_accordion_ie_support: ''
+  amp_status: enabled
+  spay_email: ''
+  _wpas_is_tweetstorm: ''
+author:
+  login: alfilercioroa
+  email: roaredalfonso@gmail.com
+  display_name: Alfonso Roa
+  first_name: Alfonso
+  last_name: Roa
+permalink: "/"
+---
+<p><!-- wp:jetpack/markdown {"source":"\n## \u00bfQue es el pattern matching?\n\nUna estructura de control, pensada para comprobar si un elemento cumple ciertas condiciones. Si no la conoc\u00edas antes es similar en sintaxis a un `switch`, pero nos permite mayor precisi\u00f3n.\nPara usarlo solo necesitamos poner a continuaci\u00f3n del elemento sobre el que queremos aplicarlo la palabra reservada `match` e indicar cada uno de los casos que nos interesan.\n\nComencemos con un ejemplo sencillo:\n\n\n```scala\nval stringExample = \u0022hola\u0022\nstringExample match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case _ =\u0026gt; \u0022???\u0022\n}\n```\n\n"} --></p>
+<div class="wp-block-jetpack-markdown">
+<h2>¿Que es el pattern matching?</h2>
+<p>Una estructura de control, pensada para comprobar si un elemento cumple ciertas condiciones. Si no la conocías antes es similar en sintaxis a un <code>switch</code>, pero nos permite mayor precisión.<br />
+Para usarlo solo necesitamos poner a continuación del elemento sobre el que queremos aplicarlo la palabra reservada <code>match</code> e indicar cada uno de los casos que nos interesan.</p>
+<p>Comencemos con un ejemplo sencillo:</p>
+<pre><code class="language-scala">val stringExample = &quot;hola&quot;
+stringExample match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case _ =&amp;gt; &quot;???&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola"</span><br />
+<br /><span style="color:cyan;">res3_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"saludos"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Vamos a describir que est\u00e1 ocurriendo aqu\u00ed: tenemos nuestro valor asignado y empezamos el matcheado. En este caso, queremos comprobar si el valor a procesar es igual al string \u0022hola\u0022. En caso de ser correcto, se ejecutar\u00e1 el codigo de su parte derecha, si no, pasar\u00e1 al siguiente caso y repetir\u00e1 lo misma comprobaci\u00f3n hasta que uno coincida. Pod\u00e9is ver que el \u00faltimo caso, se representa solo con `_`, esta es la forma en scala de indicar \u0022cualquier otro caso\u0022. De esta forma, si ninguno de los anteriores ha sido satisfactorio, sabemos que siempre ejecutar\u00e1 la parte derecha de este c\u00f3digo.\n\nEsta es la principal diferencia respecto a `switch`. El patter matching \u00fanicamente ejecutar\u00e1 el primer trozo de c\u00f3digo que satisfaga la condici\u00f3n, por lo que el orden que indiquemos importa.\n\n\n```scala\nval stringExample = \u0022hola\u0022\nstringExample match {\n    case _ =\u0026gt; \u0022???\u0022\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Vamos a describir que está ocurriendo aquí: tenemos nuestro valor asignado y empezamos el matcheado. En este caso, queremos comprobar si el valor a procesar es igual al string &quot;hola&quot;. En caso de ser correcto, se ejecutará el codigo de su parte derecha, si no, pasará al siguiente caso y repetirá lo misma comprobación hasta que uno coincida. Podéis ver que el último caso, se representa solo con <code>_</code>, esta es la forma en scala de indicar &quot;cualquier otro caso&quot;. De esta forma, si ninguno de los anteriores ha sido satisfactorio, sabemos que siempre ejecutará la parte derecha de este código.</p>
+<p>Esta es la principal diferencia respecto a <code>switch</code>. El patter matching únicamente ejecutará el primer trozo de código que satisfaga la condición, por lo que el orden que indiquemos importa.</p>
+<pre><code class="language-scala">val stringExample = &quot;hola&quot;
+stringExample match {
+    case _ =&amp;gt; &quot;???&quot;
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:red;">Compilador</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```\ncmd4.sc:3: patterns after a variable pattern cannot match (SLS 8.1.1)  \n    case _ =\u0026gt; \u0022???\u0022  \n            ^cmd4.sc:4: unreachable code due to variable pattern on line 3  \n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022  \n                    ^cmd4.sc:5: unreachable code due to variable pattern on line 3  \n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022  \n                    ^cmd4.sc:4: unreachable code  \n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022  \n                    ^\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code>cmd4.sc:3: patterns after a variable pattern cannot match (SLS 8.1.1)  
+    case _ =&amp;gt; &quot;???&quot;  
+            ^cmd4.sc:4: unreachable code due to variable pattern on line 3  
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;  
+                    ^cmd4.sc:5: unreachable code due to variable pattern on line 3  
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;  
+                    ^cmd4.sc:4: unreachable code  
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;  
+                    ^
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola"</span><br />
+<span style="color:cyan;">res4_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"???"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"En este ejemplo pusimos en primer caso el comod\u00edn `_`, por lo que cualquier valor al ser comparado ejecutar\u00e1 el c\u00f3digo de la derecha. El resto de casos son inaccesibles, lo que har\u00e1 que nos muestre un error de compilaci\u00f3n `patterns after a variable pattern cannot match` que nos indica que tenemos c\u00f3digo inalcanzable. Todos los casos que hay tras el `case _` se podr\u00edan borrar. Esto nos da una pista de que nuestro pattern matching podr\u00eda estar mal o que podemos prescindir de casos inalcanzables.\n\n## Pero esto es solo la punta del iceberg.\n\nComo hemos visto, pattern matching no solo podemos hacer condiciones de igualdad, si no que podemos hacer una variada cantidad de acciones.\n### Comparar con m\u00faltiples casos.\n\nEn caso de tener m\u00faltiples valores que pueden satisfacer un mismo caso, podemos representarlo separandolos con `|`.\n\n\n```scala\nval stringExample1 = \u0022hola\u0022\nstringExample1 match {\n    case \u0022hola\u0022 | \u0022holi\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case _ =\u0026gt; \u0022???\u0022\n}\n\nval stringExample2 = \u0022holi\u0022\nstringExample2 match {\n    case \u0022hola\u0022 | \u0022holi\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case _ =\u0026gt; \u0022???\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>En este ejemplo pusimos en primer caso el comodín <code>_</code>, por lo que cualquier valor al ser comparado ejecutará el código de la derecha. El resto de casos son inaccesibles, lo que hará que nos muestre un error de compilación <code>patterns after a variable pattern cannot match</code> que nos indica que tenemos código inalcanzable. Todos los casos que hay tras el <code>case _</code> se podrían borrar. Esto nos da una pista de que nuestro pattern matching podría estar mal o que podemos prescindir de casos inalcanzables.</p>
+<h2>Pero esto es solo la punta del iceberg.</h2>
+<p>Como hemos visto, pattern matching no solo podemos hacer condiciones de igualdad, si no que podemos hacer una variada cantidad de acciones.</p>
+<h3>Comparar con múltiples casos.</h3>
+<p>En caso de tener múltiples valores que pueden satisfacer un mismo caso, podemos representarlo separandolos con <code>|</code>.</p>
+<pre><code class="language-scala">val stringExample1 = &quot;hola&quot;
+stringExample1 match {
+    case &quot;hola&quot; | &quot;holi&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case _ =&amp;gt; &quot;???&quot;
+}
+
+val stringExample2 = &quot;holi&quot;
+stringExample2 match {
+    case &quot;hola&quot; | &quot;holi&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case _ =&amp;gt; &quot;???&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample1</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola"</span><br />
+<br /><span style="color:cyan;">res5_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"saludos"</span><br />
+<br /><span style="color:cyan;">stringExample2</span>: <span style="color:green;">String</span> = <span style="color:green;">"holi"</span><br />
+<br /><span style="color:cyan;">res5_3</span>: <span style="color:green;">String</span> = <span style="color:green;">"saludos"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"## Asignaci\u00f3n a un valor\n\nEn caso de cumplir la condici\u00f3n, muchas veces necesitamos recoger el valor extra\u00eddo para poder procesarlo.\n\n\n```scala\nval stringExample = \u0022ya estoy\u0022\nstringExample match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case x =\u0026gt; s\u0022el valor $x no est\u00e1 contemplado\u0022\n}\n``` "} --></p>
+<div class="wp-block-jetpack-markdown">
+<h2>Asignación a un valor</h2>
+<p>En caso de cumplir la condición, muchas veces necesitamos recoger el valor extraído para poder procesarlo.</p>
+<pre><code class="language-scala">val stringExample = &quot;ya estoy&quot;
+stringExample match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case x =&amp;gt; s&quot;el valor $x no está contemplado&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"ya estoy"</span><br />
+<br /><span style="color:cyan;">res6_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"el valor ya estoy no est\u00e1 contemplado"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Podemos ver, que hemos cambiado nuestro comod\u00edn `_` por `x`, lo que permite que se pueda usar en la parte derecha y podemos garantizar que si llegamos a este caso nuestro valor nunca contendr\u00e1 los valores `\u0022hola\u0022` y `\u0022adios`\u0022. Realmente el comod\u00edn no indica \u0022en cualquier otro caso\u0022, es una asignaci\u00f3n igual que con `x`. La diferencia es que `_` no puede ser llamada desde la parte derecha.\n\nAqu\u00ed quiero hacer otro inciso, y es la forma en la que puedes nombrar al valor donde vamos a asignar el elemento sobre el que hacemos el matching, ya que scala tiene unas reglas.\n\nPongamos el siguiente ejemplo, en el que asignamos el valor a un nombre ya existente.\n\n\n```scala\nval x = \u0022soy x\u0022\n\nval stringExample = \u0022ya estoy\u0022\nstringExample match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case x =\u0026gt; s\u0022el valor $x no est\u00e1 contemplado\u0022\n}\n```  "} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Podemos ver, que hemos cambiado nuestro comodín <code>_</code> por <code>x</code>, lo que permite que se pueda usar en la parte derecha y podemos garantizar que si llegamos a este caso nuestro valor nunca contendrá los valores <code>&quot;hola&quot;</code> y <code>&quot;adios</code>&quot;. Realmente el comodín no indica &quot;en cualquier otro caso&quot;, es una asignación igual que con <code>x</code>. La diferencia es que <code>_</code> no puede ser llamada desde la parte derecha.</p>
+<p>Aquí quiero hacer otro inciso, y es la forma en la que puedes nombrar al valor donde vamos a asignar el elemento sobre el que hacemos el matching, ya que scala tiene unas reglas.</p>
+<p>Pongamos el siguiente ejemplo, en el que asignamos el valor a un nombre ya existente.</p>
+<pre><code class="language-scala">val x = &quot;soy x&quot;
+
+val stringExample = &quot;ya estoy&quot;
+stringExample match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case x =&amp;gt; s&quot;el valor $x no está contemplado&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">x</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"ya estoy"</span><br />
+<br /><span style="color:cyan;">res7_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"el valor ya estoy no est\u00e1 contemplado"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"En este caso, el valor `x` de dentro del `match` impedir\u00e1 en el contexto de la derecha que se pueda acceder al valor `x` externo. Esto se llama ocultamiento de valor o \u0022variable shadowing\u0022, y puede llevar a confusi\u00f3n en algunos casos. Desgraciadamente, el compilador de scala, NO nos dar\u00e1 una advertencia en caso de que ocurra esto.\n\n\u00bfY si yo quisiera comparar un caso con el contenido de un valor que tengo definido fuera del `match`? En el pattern matching se puede, pero siguiendo unas reglas, ya que, como hemos visto, un valor con el que nos gustar\u00eda comparar puede convertirse en una nueva asignaci\u00f3n. Entonces \u00bfc\u00f3mo podr\u00eda crear un caso si es igual a mi valor externo `x`? Indicando que este nombre de valor no es para asignarlo, si no compararlo, rodeando el valor con comillas `` `x` ``:\n\n\n```scala\nval x = \u0022soy x\u0022\n\nval stringExample = \u0022soy x\u0022\nstringExample match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case `x` =\u0026gt; s\u0022es el valor que ten\u00eda en x\u0022\n    case _ =\u0026gt; \u0022ninguno de los anteriores\u0022\n}\n``` "} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>En este caso, el valor <code>x</code> de dentro del <code>match</code> impedirá en el contexto de la derecha que se pueda acceder al valor <code>x</code> externo. Esto se llama ocultamiento de valor o &quot;variable shadowing&quot;, y puede llevar a confusión en algunos casos. Desgraciadamente, el compilador de scala, NO nos dará una advertencia en caso de que ocurra esto.</p>
+<p>¿Y si yo quisiera comparar un caso con el contenido de un valor que tengo definido fuera del <code>match</code>? En el pattern matching se puede, pero siguiendo unas reglas, ya que, como hemos visto, un valor con el que nos gustaría comparar puede convertirse en una nueva asignación. Entonces ¿cómo podría crear un caso si es igual a mi valor externo <code>x</code>? Indicando que este nombre de valor no es para asignarlo, si no compararlo, rodeando el valor con comillas <code>`x`</code>:</p>
+<pre><code class="language-scala">val x = &quot;soy x&quot;
+
+val stringExample = &quot;soy x&quot;
+stringExample match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case `x` =&amp;gt; s&quot;es el valor que tenía en x&quot;
+    case _ =&amp;gt; &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">x</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">res8_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"es el valor que ten\u00eda en x"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Y si no te f\u00edas de que esto sea as\u00ed, pongamos un ejemplo que no coincida.\n\n\n```scala\nval x = \u0022soy x\u0022\n\nval stringExample2 = \u0022no soy x\u0022\nstringExample2 match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case `x` =\u0026gt; s\u0022es el valor que ten\u00eda en x\u0022\n    case _ =\u0026gt; \u0022ninguno de los anteriores\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Y si no te fías de que esto sea así, pongamos un ejemplo que no coincida.</p>
+<pre><code class="language-scala">val x = &quot;soy x&quot;
+
+val stringExample2 = &quot;no soy x&quot;
+stringExample2 match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case `x` =&amp;gt; s&quot;es el valor que tenía en x&quot;
+    case _ =&amp;gt; &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<br /><span style="color:cyan;">x</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">stringExample2</span>: <span style="color:green;">String</span> = <span style="color:green;">"no soy x"</span><br />
+<br /><span style="color:cyan;">res9_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"ninguno de los anteriores"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Otra forma m\u00e1s sencilla es seguir [la guia de estilo de scala](https:\/\/docs.scala-lang.org\/style\/naming-conventions.html#constants-values-variable-and-methods). En ella se indica que los valores constantes definidos a nivel de clase han de empezar con may\u00fascula, lo que reconoce que no es un valor a asignar.\n\n```scala\nval X = \u0022soy x\u0022\n\nval stringExample = \u0022soy x\u0022\nstringExample match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case X =\u0026gt; s\u0022es el valor que ten\u00eda en x\u0022\n    case _ =\u0026gt; \u0022ninguno de los anteriores\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Otra forma más sencilla es seguir <a href="https://docs.scala-lang.org/style/naming-conventions.html#constants-values-variable-and-methods">la guia de estilo de scala</a>. En ella se indica que los valores constantes definidos a nivel de clase han de empezar con mayúscula, lo que reconoce que no es un valor a asignar.</p>
+<pre><code class="language-scala">val X = &quot;soy x&quot;
+
+val stringExample = &quot;soy x&quot;
+stringExample match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case X =&amp;gt; s&quot;es el valor que tenía en x&quot;
+    case _ =&amp;gt; &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">X</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">stringExample</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">res10_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"es el valor que ten\u00eda en x"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\nval X = \u0022soy x\u0022\n\nval stringExample2 = \u0022no soy x\u0022\nstringExample2 match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case X =\u0026gt; s\u0022es el valor que ten\u00eda en x\u0022\n    case _ =\u0026gt; \u0022ninguno de los anteriores\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">val X = &quot;soy x&quot;
+
+val stringExample2 = &quot;no soy x&quot;
+stringExample2 match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case X =&amp;gt; s&quot;es el valor que tenía en x&quot;
+    case _ =&amp;gt; &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<br /><span style="color:cyan;">X</span>: <span style="color:green;">String</span> = <span style="color:green;">"soy x"</span><br />
+<br /><span style="color:cyan;">stringExample2</span>: <span style="color:green;">String</span> = <span style="color:green;">"no soy x"</span><br />
+<br /><span style="color:cyan;">res11_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"ninguno de los anteriores"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"### Refinar la condici\u00f3n.\n\nAhora que sabemos asignar el valor dentro de un caso podemos llegar a otra de las ventajas del pattern matching como es el poder refinar la condici\u00f3n sin tener que ser siempre por igualdad, como hemos hecho hasta el momento. Pongamos el ejemplo donde quisieramos tratar los strings que comiencen por `h` de manera distinta, excepto el caso que tenemos ya, comparando con la palabra `\u0022hola\u0022`. Con los conocimientos que tenemos actualmente, nuestro c\u00f3digo quedar\u00eda algo tal que as\u00ed:\n\n\n```scala\nval stringExample2 = \u0022habana\u0022\nstringExample2 match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case x =\u0026gt;\n     if (x.head == 'h') \u0022comienza por h\u0022 else \u0022ninguno de los anteriores\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<h3>Refinar la condición.</h3>
+<p>Ahora que sabemos asignar el valor dentro de un caso podemos llegar a otra de las ventajas del pattern matching como es el poder refinar la condición sin tener que ser siempre por igualdad, como hemos hecho hasta el momento. Pongamos el ejemplo donde quisieramos tratar los strings que comiencen por <code>h</code> de manera distinta, excepto el caso que tenemos ya, comparando con la palabra <code>&quot;hola&quot;</code>. Con los conocimientos que tenemos actualmente, nuestro código quedaría algo tal que así:</p>
+<pre><code class="language-scala">val stringExample2 = &quot;habana&quot;
+stringExample2 match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case x =&amp;gt;
+     if (x.head == 'h') &quot;comienza por h&quot; else &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample2</span>: <span style="color:green;">String</span> = <span style="color:green;">"habana"</span><br />
+<br /><span style="color:cyan;">res12_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"comienza por h"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Pero la utilidad del pattern matching es la de aplanar todos los posibles casos y no empezar a anidar casos m\u00e1s complejos, por lo que podemos hacer uso de la asignaci\u00f3n del valor y hacer filtrado de casos de la siguiente manera:\n\n\n```scala\nval stringExample2 = \u0022habana\u0022\nstringExample2 match {\n    case \u0022hola\u0022 =\u0026gt; \u0022saludos\u0022\n    case \u0022adios\u0022 =\u0026gt; \u0022hasta pronto\u0022\n    case x if x.head == 'h' =\u0026gt; \u0022comienza por h\u0022\n    case _ =\u0026gt; \u0022ninguno de los anteriores\u0022\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Pero la utilidad del pattern matching es la de aplanar todos los posibles casos y no empezar a anidar casos más complejos, por lo que podemos hacer uso de la asignación del valor y hacer filtrado de casos de la siguiente manera:</p>
+<pre><code class="language-scala">val stringExample2 = &quot;habana&quot;
+stringExample2 match {
+    case &quot;hola&quot; =&amp;gt; &quot;saludos&quot;
+    case &quot;adios&quot; =&amp;gt; &quot;hasta pronto&quot;
+    case x if x.head == 'h' =&amp;gt; &quot;comienza por h&quot;
+    case _ =&amp;gt; &quot;ninguno de los anteriores&quot;
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">stringExample2</span>: <span style="color:green;">String</span> = <span style="color:green;">"habana"</span><br />
+<br /><span style="color:cyan;">res13_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"comienza por h"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"De esta manera, vemos claramente los 4 posibles casos estructurados con su condici\u00f3n primero, y no tenemos que rebuscar l\u00f3gica escondida a lo largo de todo el c\u00f3digo. Lo \u00fanico a tener en cuenta es que este `if` no necesita par\u00e9ntesis en la condici\u00f3n, a diferencia de la estructura de control en scala.\n\n### Comprobaci\u00f3n del tipo del elemento matcheado.\n\nHasta ahora, \u00bftodo bien? Comencemos a trabajar con m\u00e1s tipos, adem\u00e1s de nuestro querido `String`. \u00bfC\u00f3mo podr\u00edamos sacar casos distintos si es string, si es Integer, y un \u00faltimo para el resto? En principio ser\u00eda algo tal que as\u00ed:\n\n\n\n```scala\ndef matchfun(x: Any): String =\n x match {\n     case x if x.isInstanceOf[String] =\u0026gt;\n       val xString = x.asInstanceOf[String]\n       s\u0022tengo el string $xString\u0022\n     case x if x.isInstanceOf[Int] =\u0026gt;\n       val xInt = x.asInstanceOf[Int]\n       s\u0022tengo el integer $xInt\u0022\n     case _ =\u0026gt; \u0022es otro tipo\u0022\n }\n```\n\n\n\n\ndefined \u003cspan style=\u0022color:green;\u0022\u003efunction\u003c\/span\u003e \u003cspan style=\u0022color:cyan;\u0022\u003ematchfun\u003c\/span\u003e  \n\n\n\n\n```scala\nmatchfun(\u0022hola\u0022)\nmatchfun(42)\nmatchfun(12.4)\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>De esta manera, vemos claramente los 4 posibles casos estructurados con su condición primero, y no tenemos que rebuscar lógica escondida a lo largo de todo el código. Lo único a tener en cuenta es que este <code>if</code> no necesita paréntesis en la condición, a diferencia de la estructura de control en scala.</p>
+<h3>Comprobación del tipo del elemento matcheado.</h3>
+<p>Hasta ahora, ¿todo bien? Comencemos a trabajar con más tipos, además de nuestro querido <code>String</code>. ¿Cómo podríamos sacar casos distintos si es string, si es Integer, y un último para el resto? En principio sería algo tal que así:</p>
+<pre><code class="language-scala">def matchfun(x: Any): String =
+ x match {
+     case x if x.isInstanceOf[String] =&amp;gt;
+       val xString = x.asInstanceOf[String]
+       s&quot;tengo el string $xString&quot;
+     case x if x.isInstanceOf[Int] =&amp;gt;
+       val xInt = x.asInstanceOf[Int]
+       s&quot;tengo el integer $xInt&quot;
+     case _ =&amp;gt; &quot;es otro tipo&quot;
+ }
+</code></pre>
+<p>defined &lt;span style=&quot;color:green;&quot;&gt;function&lt;/span&gt; &lt;span style=&quot;color:cyan;&quot;&gt;matchfun&lt;/span&gt;</p>
+<pre><code class="language-scala">matchfun(&quot;hola&quot;)
+matchfun(42)
+matchfun(12.4)
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res15_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo el string hola"</span><br />
+<br /><span style="color:cyan;">res15_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo el integer 42"</span><br />
+<br /><span style="color:cyan;">res15_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"es otro tipo"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Esta forma genera mucho c\u00f3digo repetitivo, por lo que la sintaxis del pattern matching nos da una forma m\u00e1s concisa de describirlo. Esta nos sirve no solo para saber si es de un tipo, tambi\u00e9n har\u00e1 autom\u00e1ticamente el cambio de tipo para que trabajemos en nuestro contexto de la derecha.\n\n\n```scala\ndef matchfun2(x: Any): String =\n x match {\n     case x: String =\u0026gt; s\u0022tengo el string $x\u0022\n     case x: Int =\u0026gt; s\u0022tengo el integer $x\u0022\n     case _ =\u0026gt; \u0022es otro tipo\u0022\n }\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Esta forma genera mucho código repetitivo, por lo que la sintaxis del pattern matching nos da una forma más concisa de describirlo. Esta nos sirve no solo para saber si es de un tipo, también hará automáticamente el cambio de tipo para que trabajemos en nuestro contexto de la derecha.</p>
+<pre><code class="language-scala">def matchfun2(x: Any): String =
+ x match {
+     case x: String =&amp;gt; s&quot;tengo el string $x&quot;
+     case x: Int =&amp;gt; s&quot;tengo el integer $x&quot;
+     case _ =&amp;gt; &quot;es otro tipo&quot;
+ }
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">matchfun2</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\nmatchfun2(\u0022hola\u0022)\nmatchfun2(42)\nmatchfun2(12.4)\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">matchfun2(&quot;hola&quot;)
+matchfun2(42)
+matchfun2(12.4)
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res17_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo el string hola"</span><br />
+<br /><span style="color:cyan;">res17_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo el integer 42"</span><br />
+<br /><span style="color:cyan;">res17_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"es otro tipo"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Esta forma es mucho m\u00e1s concisa y nos evita mancharnos las manos con funciones como `asInstanceOf`.\n\n#### Cuidado con las comprobaciones de algunas clases\n\nUna cosa que tenemos que tener en cuenta es que estas comprobaciones se hacen en tiempo de ejecuci\u00f3n. La JVM tiene una limitaci\u00f3n y es los tipos param\u00e9tricos no existen durante la ejecuci\u00f3n. En otras palabras, que si quisieramos comparar y saber si es de tipo `List[String]` o `List[Int]` no podr\u00edamos f\u00e1cilmente, ya que la informaci\u00f3n sobre qu\u00e9 tipo de elemento contiene se pierde durante la ejecuci\u00f3n:\n\n\n```scala\ndef matchfun2(x: List[Any]): String =\n x match {\n     case x: List[String] =\u0026gt;\n       s\u0022tengo una lista de string de longitud ${x.size}\u0022\n     case x: List[Int] =\u0026gt;\n       s\u0022tengo una lista de integer de longitud ${x.size}\u0022\n     case _ =\u0026gt; \u0022es otro tipo de lista\u0022\n }\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Esta forma es mucho más concisa y nos evita mancharnos las manos con funciones como <code>asInstanceOf</code>.</p>
+<h4>Cuidado con las comprobaciones de algunas clases</h4>
+<p>Una cosa que tenemos que tener en cuenta es que estas comprobaciones se hacen en tiempo de ejecución. La JVM tiene una limitación y es los tipos paramétricos no existen durante la ejecución. En otras palabras, que si quisieramos comparar y saber si es de tipo <code>List[String]</code> o <code>List[Int]</code> no podríamos fácilmente, ya que la información sobre qué tipo de elemento contiene se pierde durante la ejecución:</p>
+<pre><code class="language-scala">def matchfun2(x: List[Any]): String =
+ x match {
+     case x: List[String] =&amp;gt;
+       s&quot;tengo una lista de string de longitud ${x.size}&quot;
+     case x: List[Int] =&amp;gt;
+       s&quot;tengo una lista de integer de longitud ${x.size}&quot;
+     case _ =&amp;gt; &quot;es otro tipo de lista&quot;
+ }
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:red;">Compilador</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```\ncmd18.sc:3: non-variable type argument String in type pattern List[String] (the underlying of List[String]) is unchecked since it is eliminated by erasure  \n   case x: List[String] =\u0026gt; s\u0022tengo una lista de string de longitud ${x.size}\u0022  \n           ^cmd18.sc:4: non-variable type argument Int in type pattern List[Int] (the underlying of List[Int]) is unchecked since it is eliminated by erasure  \n   case x: List[Int] =\u0026gt; s\u0022tengo una lista de integer de longitud ${x.size}\u0022  \n           ^cmd18.sc:4: unreachable code  \n   case x: List[Int] =\u0026gt; s\u0022tengo una lista de integer de longitud ${x.size}\u0022  \n                              ^\n```  "} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code>cmd18.sc:3: non-variable type argument String in type pattern List[String] (the underlying of List[String]) is unchecked since it is eliminated by erasure  
+   case x: List[String] =&amp;gt; s&quot;tengo una lista de string de longitud ${x.size}&quot;  
+           ^cmd18.sc:4: non-variable type argument Int in type pattern List[Int] (the underlying of List[Int]) is unchecked since it is eliminated by erasure  
+   case x: List[Int] =&amp;gt; s&quot;tengo una lista de integer de longitud ${x.size}&quot;  
+           ^cmd18.sc:4: unreachable code  
+   case x: List[Int] =&amp;gt; s&quot;tengo una lista de integer de longitud ${x.size}&quot;  
+                              ^
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">matchfun2</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\nmatchfun2(List(\u0022hola\u0022, \u0022adios\u0022))\nmatchfun2(List(42))\nmatchfun2(List(4.2f))\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">matchfun2(List(&quot;hola&quot;, &quot;adios&quot;))
+matchfun2(List(42))
+matchfun2(List(4.2f))
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res19_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo una lista de string de longitud 2"</span><br />
+<br /><span style="color:cyan;">res19_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo una lista de string de longitud 1"</span><br />
+<br /><span style="color:cyan;">res19_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"tengo una lista de string de longitud 1"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Como puedes comprobar, el pattern matching no puede ver m\u00e1s all\u00e1 de que se trata de una lista y el tipo contenido nunca lo tiene en cuenta, por lo que siempre entrar\u00e1 en el primer caso. Se podr\u00eda comprobar qu\u00e9 tipo de elemento contiene en el primer elemento, pero siempre tendremos el problema en listas vac\u00edas, ya que nos resultar\u00e1 imposible poder comprobarlo. Eso si, como todo posible punto de error, el compilador nos informar\u00e1 para que lo tengamos en cuenta con el siguiente warning `List[String] is unchecked since it is eliminated by erasure`, o traducido, \u0022List[String] no est\u00e1 chequeado porque ha sido borrado\u0022. Esto ocurre porque el compilador lo traducir\u00e1 a `case x: List =\u0026gt; ...` borrando el tipo de la lista. Como os podr\u00e9is imaginar esto no ocurre solo con listas, si no con todos los tipos param\u00e9tricos."} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Como puedes comprobar, el pattern matching no puede ver más allá de que se trata de una lista y el tipo contenido nunca lo tiene en cuenta, por lo que siempre entrará en el primer caso. Se podría comprobar qué tipo de elemento contiene en el primer elemento, pero siempre tendremos el problema en listas vacías, ya que nos resultará imposible poder comprobarlo. Eso si, como todo posible punto de error, el compilador nos informará para que lo tengamos en cuenta con el siguiente warning <code>List[String] is unchecked since it is eliminated by erasure</code>, o traducido, &quot;List[String] no está chequeado porque ha sido borrado&quot;. Esto ocurre porque el compilador lo traducirá a <code>case x: List =&amp;gt; ...</code> borrando el tipo de la lista. Como os podréis imaginar esto no ocurre solo con listas, si no con todos los tipos paramétricos.</p>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:jetpack/markdown {"source":"### ADT's en pattern matching\n\nYa hemos visto que scala permite comprobar el tipo del elemento para poder realizar una acci\u00f3n para cada tipo. Es por esto que quiero pararme a comentar una particularidad de la programaci\u00f3n funcional, que por supuesto se aplica en scala, y es el uso de los Tipos Algebr\u00e1icos de Datos, Algebraic Data Types en ingl\u00e9s o ADT para que sea m\u00e1s corto. Esto es una representaci\u00f3n de los datos que se basa en el producto y suma de tipos, por ejemplo un producto de String e integer ser\u00eda la siguiente `case class`\n\n\n```scala\ncase class Usuario(nombre: String, edad: Int)\n``` "} --></p>
+<div class="wp-block-jetpack-markdown">
+<h3>ADT's en pattern matching</h3>
+<p>Ya hemos visto que scala permite comprobar el tipo del elemento para poder realizar una acción para cada tipo. Es por esto que quiero pararme a comentar una particularidad de la programación funcional, que por supuesto se aplica en scala, y es el uso de los Tipos Algebráicos de Datos, Algebraic Data Types en inglés o ADT para que sea más corto. Esto es una representación de los datos que se basa en el producto y suma de tipos, por ejemplo un producto de String e integer sería la siguiente <code>case class</code></p>
+<pre><code class="language-scala">case class Usuario(nombre: String, edad: Int)
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">class</span> <span style="color:cyan;">Usuario</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Y una  suma de tipos se puede representar de m\u00faltiples maneras, pero la m\u00e1s com\u00fan es el uso de `sealed trait` por ejemplo.\n\n\n```scala\nsealed trait Trabajador\ncase class Currito(nombre: String) extends Trabajador\ncase class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajador\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Y una  suma de tipos se puede representar de múltiples maneras, pero la más común es el uso de <code>sealed trait</code> por ejemplo.</p>
+<pre><code class="language-scala">sealed trait Trabajador
+case class Currito(nombre: String) extends Trabajador
+case class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajador
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">trait</span> <span style="color:cyan;">Trabajador</span><br />
+<br />defined <span style="color:green;">class</span> <span style="color:cyan;">Currito</span><br />
+<br />defined <span style="color:green;">class</span> <span style="color:cyan;">Jefe</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"En este vemos una representaci\u00f3n de lo que ser\u00eda un trabajador: o es alguien con subordinados a su cargo, o es un currante sin nadie a su cargo. Al ser un `sealed trait` solo permite estas dos posibilidiades de tipo de trabajador y no se puede extender en ning\u00fan otro lado. Esta forma de representaci\u00f3n de datos es muy usada en scala, incluso en elementos que nos da el lenguaje, como ser\u00eda Option, que tiene dos posibles elementos: Some, que indica que contiene un elemento, o None, que no contiene ninguno.\n\nDada la particularidad de esta suma de tipos, el pattern matching suele ser una herramienta muy com\u00fan y \u00fatil para poder actuar seg\u00fan el tipo de dato que podamos encontrarnos.\n\n\n```scala\ndef quienEs(t: Trabajador): String =\nt match {\n    case j: Jefe =\u0026gt;\n      s\u0022${j.nombre} es jefe de ${j.subordinados.size} empleados\u0022\n    case c: Currito =\u0026gt; s\u0022${c.nombre} es un gran trabajador\u0022\n}\n\ndef tengoDato(o: Option[Int]): String =\no match {\n    case s: Some[Int] =\u0026gt; s\u0022tenemos el valor ${s.get}\u0022\n    case None =\u0026gt; \u0022no tenemos valor\u0022 \n\/\/ en este caso, no comparamos por tipo, \n\/\/ si no contra el objeto \u00fanico que representa un Option vac\u00edo\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>En este vemos una representación de lo que sería un trabajador: o es alguien con subordinados a su cargo, o es un currante sin nadie a su cargo. Al ser un <code>sealed trait</code> solo permite estas dos posibilidiades de tipo de trabajador y no se puede extender en ningún otro lado. Esta forma de representación de datos es muy usada en scala, incluso en elementos que nos da el lenguaje, como sería Option, que tiene dos posibles elementos: Some, que indica que contiene un elemento, o None, que no contiene ninguno.</p>
+<p>Dada la particularidad de esta suma de tipos, el pattern matching suele ser una herramienta muy común y útil para poder actuar según el tipo de dato que podamos encontrarnos.</p>
+<pre><code class="language-scala">def quienEs(t: Trabajador): String =
+t match {
+    case j: Jefe =&amp;gt;
+      s&quot;${j.nombre} es jefe de ${j.subordinados.size} empleados&quot;
+    case c: Currito =&amp;gt; s&quot;${c.nombre} es un gran trabajador&quot;
+}
+
+def tengoDato(o: Option[Int]): String =
+o match {
+    case s: Some[Int] =&amp;gt; s&quot;tenemos el valor ${s.get}&quot;
+    case None =&amp;gt; &quot;no tenemos valor&quot; 
+// en este caso, no comparamos por tipo, 
+// si no contra el objeto único que representa un Option vacío
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">quienEs</span><br />
+<br />defined <span style="color:green;">function</span> <span style="color:cyan;">tengoDato</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\nquienEs(Jefe(\u0022JM\u0022, List(Currito(\u0022Ar\u0022), Currito(\u0022J\u0022))))\nquienEs(Currito(\u0022Ar\u0022))\n\ntengoDato(Some(23))\ntengoDato(None)\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">quienEs(Jefe(&quot;JM&quot;, List(Currito(&quot;Ar&quot;), Currito(&quot;J&quot;))))
+quienEs(Currito(&quot;Ar&quot;))
+
+tengoDato(Some(23))
+tengoDato(None)
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res23_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"JM es jefe de 2 empleados"</span><br />
+<br /> <span style="color:cyan;">res23_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"Ar es un gran trabajador"</span><br />
+<br /> <span style="color:cyan;">res23_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"tenemos el valor 23"</span><br />
+<br /><span style="color:cyan;">res23_3</span>: <span style="color:green;">String</span> = <span style="color:green;">"no tenemos valor"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"### Extractores\n\nPero no nos quedemos solo con las limitaciones, porque al fin llega uno de los elementos m\u00e1s potentes del pattern matching (y mi favorito), los extractores. Pongamos que ya somos mayorcitos y no trabajamos solo con tipos simples como String, Int, etc, si no que ya tenemos estructuras m\u00e1s complejas, por ejemplo una tupla. En esta tupla nos gustar\u00eda hacer varios casos, segun el contenido de esta. Con nuestro conocimiento actual, podr\u00edamos hacer algo tal que as\u00ed:\n\n\n```scala\ndef tuplaMatch(x: (String, Int)): String =\n x match {\n     case x if x._1 == \u0022hola\u0022 \u0026amp; x._2  == 10 =\u0026gt; \u0022hola con valor igual que 10\u0022\n     case x if x._1 == \u0022hola\u0022 \u0026amp; x._2 \u0026gt; 10 =\u0026gt; \u0022hola con valor mayor que 10\u0022\n     case x if x._1 == \u0022hola\u0022 =\u0026gt; \u0022hola con valor menor a 10\u0022\n     case x =\u0026gt; s\u0022la palabra es ${x._1} con valor ${x._2}\u0022\n }\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<h3>Extractores</h3>
+<p>Pero no nos quedemos solo con las limitaciones, porque al fin llega uno de los elementos más potentes del pattern matching (y mi favorito), los extractores. Pongamos que ya somos mayorcitos y no trabajamos solo con tipos simples como String, Int, etc, si no que ya tenemos estructuras más complejas, por ejemplo una tupla. En esta tupla nos gustaría hacer varios casos, segun el contenido de esta. Con nuestro conocimiento actual, podríamos hacer algo tal que así:</p>
+<pre><code class="language-scala">def tuplaMatch(x: (String, Int)): String =
+ x match {
+     case x if x._1 == &quot;hola&quot; &amp;amp; x._2  == 10 =&amp;gt; &quot;hola con valor igual que 10&quot;
+     case x if x._1 == &quot;hola&quot; &amp;amp; x._2 &amp;gt; 10 =&amp;gt; &quot;hola con valor mayor que 10&quot;
+     case x if x._1 == &quot;hola&quot; =&amp;gt; &quot;hola con valor menor a 10&quot;
+     case x =&amp;gt; s&quot;la palabra es ${x._1} con valor ${x._2}&quot;
+ }
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">tuplaMatch</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\ntuplaMatch((\u0022hola\u0022, 10))\ntuplaMatch((\u0022hola\u0022, 42))\ntuplaMatch((\u0022hola\u0022, 2))\ntuplaMatch((\u0022adios\u0022, 42))\n```  "} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">tuplaMatch((&quot;hola&quot;, 10))
+tuplaMatch((&quot;hola&quot;, 42))
+tuplaMatch((&quot;hola&quot;, 2))
+tuplaMatch((&quot;adios&quot;, 42))
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res25_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor igual que 10"</span>  <br />
+<span style="color:cyan;">res25_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor mayor que 10"</span>  <br />
+<span style="color:cyan;">res25_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor menor a 10"</span>  <br />
+<span style="color:cyan;">res25_3</span>: <span style="color:green;">String</span> = <span style="color:green;">"la palabra es adios con valor 42"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"El c\u00f3digo es correcto, pero hasta el momento la principal ventaja del pattern matching es una descripci\u00f3n muy gr\u00e1fica de la l\u00f3gica en la comprobaci\u00f3n. Aqu\u00ed es donde entra el uso de los extractores, con los que podemos comprobar o asignar los elementos internos de una manera mucho m\u00e1s parecida a la representaci\u00f3n de la construcci\u00f3n de la clase.\n\nPor ejemplo, para crear una tupla la forma en la que lo hacemos es poniendo los elementos necesarios entre par\u00e9ntesis y separados por una coma. En este caso a ser una tupla de dos elementos que se podr\u00eda representar tal que as\u00ed:\n\n\n```scala\nval tupla: (String, Int) = (\u0022texto\u0022, 1)\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>El código es correcto, pero hasta el momento la principal ventaja del pattern matching es una descripción muy gráfica de la lógica en la comprobación. Aquí es donde entra el uso de los extractores, con los que podemos comprobar o asignar los elementos internos de una manera mucho más parecida a la representación de la construcción de la clase.</p>
+<p>Por ejemplo, para crear una tupla la forma en la que lo hacemos es poniendo los elementos necesarios entre paréntesis y separados por una coma. En este caso a ser una tupla de dos elementos que se podría representar tal que así:</p>
+<pre><code class="language-scala">val tupla: (String, Int) = (&quot;texto&quot;, 1)
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">tupla</span>: (<span style="color:green;">String</span>, <span style="color:green;">Int</span>) = (<span style="color:green;">"texto"</span>, <span style="color:green;">1</span>)<br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\ndef tuplaMatch2(x: (String, Int)): String =\n x match {\n     case (\u0022hola\u0022, 10) =\u0026gt; \u0022hola con valor igual que 10\u0022\n\/\/ hacemos uso de comparaci\u00f3n\n     case (\u0022hola\u0022, x2) if x2 \u0026gt; 10 =\u0026gt; \u0022hola con valor mayor que 10\u0022\n\/\/ hacemos uso de comparaci\u00f3n y de asignaci\u00f3n de un elemento interno\n     case (\u0022hola\u0022, _) =\u0026gt; \u0022hola con valor menor a 10\u0022\n     case (x1, x2) =\u0026gt; s\u0022la palabra es ${x1} con valor ${x2}\u0022\n\/\/ asignamos ambos elementos de la tupla\n }\n``` "} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">def tuplaMatch2(x: (String, Int)): String =
+ x match {
+     case (&quot;hola&quot;, 10) =&amp;gt; &quot;hola con valor igual que 10&quot;
+// hacemos uso de comparación
+     case (&quot;hola&quot;, x2) if x2 &amp;gt; 10 =&amp;gt; &quot;hola con valor mayor que 10&quot;
+// hacemos uso de comparación y de asignación de un elemento interno
+     case (&quot;hola&quot;, _) =&amp;gt; &quot;hola con valor menor a 10&quot;
+     case (x1, x2) =&amp;gt; s&quot;la palabra es ${x1} con valor ${x2}&quot;
+// asignamos ambos elementos de la tupla
+ }
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">tuplaMatch2</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\ntuplaMatch((\u0022hola\u0022, 10))\ntuplaMatch((\u0022hola\u0022, 42))\ntuplaMatch((\u0022hola\u0022, 2))\ntuplaMatch((\u0022adios\u0022, 42))\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">tuplaMatch((&quot;hola&quot;, 10))
+tuplaMatch((&quot;hola&quot;, 42))
+tuplaMatch((&quot;hola&quot;, 2))
+tuplaMatch((&quot;adios&quot;, 42))
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res28_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor igual que 10"</span>  <br />
+<span style="color:cyan;">res28_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor mayor que 10"</span>  <br />
+<span style="color:cyan;">res28_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"hola con valor menor a 10"</span>  <br />
+<span style="color:cyan;">res28_3</span>: <span style="color:green;">String</span> = <span style="color:green;">"la palabra es adios con valor 42"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Hay que tener en cuenta que el uso de extractores no es solo para pattern matching, tambi\u00e9n se pueden  usar en las asignaciones\n\n\n```scala\nval tupla: (String, Int) = (\u0022texto\u0022, 1)\nval (primero, segundo) = tupla\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Hay que tener en cuenta que el uso de extractores no es solo para pattern matching, también se pueden  usar en las asignaciones</p>
+<pre><code class="language-scala">val tupla: (String, Int) = (&quot;texto&quot;, 1)
+val (primero, segundo) = tupla
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">tupla</span>: (<span style="color:green;">String</span>, <span style="color:green;">Int</span>) = (<span style="color:green;">"texto"</span>, <span style="color:green;">1</span>)<br />
+<span style="color:cyan;">primero</span>: <span style="color:green;">String</span> = <span style="color:green;">"texto"</span>  <br />
+<span style="color:cyan;">segundo</span>: <span style="color:green;">Int</span> = <span style="color:green;">1</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Los extractores no solo permiten comparar por igualdad, o asignar los elementos internos, tambi\u00e9n permiten comprobar el tipo de los elementos internos.\n\n\n```scala\ndef tuplaAnyMatch(x: (Any, Any)): String =\n  x match {\n      case (x: String, y: String) =\u0026gt; s\u0022dos strings primero: $x segundo: $y\u0022\n      case (x: String, _) =\u0026gt; s\u0022solo el primero es string: $x\u0022\n      case (_, x: String) =\u0026gt; s\u0022solo el segundo es string: $x\u0022\n      case _ =\u0026gt; \u0022ninguno es string\u0022\n  }\n```  "} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Los extractores no solo permiten comparar por igualdad, o asignar los elementos internos, también permiten comprobar el tipo de los elementos internos.</p>
+<pre><code class="language-scala">def tuplaAnyMatch(x: (Any, Any)): String =
+  x match {
+      case (x: String, y: String) =&amp;gt; s&quot;dos strings primero: $x segundo: $y&quot;
+      case (x: String, _) =&amp;gt; s&quot;solo el primero es string: $x&quot;
+      case (_, x: String) =&amp;gt; s&quot;solo el segundo es string: $x&quot;
+      case _ =&amp;gt; &quot;ninguno es string&quot;
+  }
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">tuplaAnyMatch</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\ntuplaAnyMatch((\u0022hola\u0022, \u0022adios\u0022))\ntuplaAnyMatch((\u0022hola\u0022, 42))\ntuplaAnyMatch((1, \u0022adios\u0022))\ntuplaAnyMatch((1, 42))\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">tuplaAnyMatch((&quot;hola&quot;, &quot;adios&quot;))
+tuplaAnyMatch((&quot;hola&quot;, 42))
+tuplaAnyMatch((1, &quot;adios&quot;))
+tuplaAnyMatch((1, 42))
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+<span style="color:cyan;">res31_0</span>: <span style="color:green;">String</span> = <span style="color:green;">"dos strings primero: hola segundo: adios"</span>  <br />
+<span style="color:cyan;">res31_1</span>: <span style="color:green;">String</span> = <span style="color:green;">"solo el primero es string: hola"</span>  <br />
+<span style="color:cyan;">res31_2</span>: <span style="color:green;">String</span> = <span style="color:green;">"solo el segundo es string: adios"</span>  <br />
+<span style="color:cyan;">res31_3</span>: <span style="color:green;">String</span> = <span style="color:green;">"ninguno es string"</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"Como habr\u00e1s visto, los extractores son una herramienta muy potente que permite simplificar nuestro c\u00f3digo. Esto es tan com\u00fan, que cuando trabajamos con `case classes` (elemento fundamental para crear ADT's) scala nos crea extractores que siguen la misma estructura de los constructores.\n\n\n```scala\nsealed trait Trabajador\ncase class Currito(nombre: String) extends Trabajador\ncase class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajador\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<p>Como habrás visto, los extractores son una herramienta muy potente que permite simplificar nuestro código. Esto es tan común, que cuando trabajamos con <code>case classes</code> (elemento fundamental para crear ADT's) scala nos crea extractores que siguen la misma estructura de los constructores.</p>
+<pre><code class="language-scala">sealed trait Trabajador
+case class Currito(nombre: String) extends Trabajador
+case class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajador
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">trait</span> <span style="color:cyan;">Trabajador</span>  <br />
+defined <span style="color:green;">class</span> <span style="color:cyan;">Currito</span>  <br />
+defined <span style="color:green;">class</span> <span style="color:cyan;">Jefe</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"```scala\ndef dibujaJerarquia(t:Trabajador, nivel: Int = 0):Unit = {\n    val blancos = \u0022  \u0022 * nivel\n    t match{\n        case Currito(n) =\u0026gt; println(s\u0022${blancos}- $n \ud83e\uddd1\u200d\ud83c\udfed\u0022)\n        case Jefe(n, l) =\u0026gt;\n          println(s\u0022${blancos}- $n \ud83d\ude0e\u0022)\n          l.foreach(dibujaJerarquia(_, nivel + 1))\n    }\n}\n```"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">def dibujaJerarquia(t:Trabajador, nivel: Int = 0):Unit = {
+    val blancos = &quot;  &quot; * nivel
+    t match{
+        case Currito(n) =&amp;gt; println(s&quot;${blancos}- $n 🧑‍🏭&quot;)
+        case Jefe(n, l) =&amp;gt;
+          println(s&quot;${blancos}- $n 😎&quot;)
+          l.foreach(dibujaJerarquia(_, nivel + 1))
+    }
+}
+</code></pre>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:html --><br />
+defined <span style="color:green;">function</span> <span style="color:cyan;">dibujaJerarquia</span><br />
+<!-- /wp:html --></p>
+<p><!-- wp:jetpack/markdown {"source":"\n\n```scala\nval empresa = Jefe(\u0022A\u0022, List(\n         Jefe(\u0022B\u0022, List(Currito(\u0022C\u0022), Currito(\u0022D\u0022))),\n         Jefe(\u0022E\u0022, List(Currito(\u0022F\u0022), Currito(\u0022G\u0022))),\n         Currito(\u0022H\u0022)\n      )\n    )\n\ndibujaJerarquia(empresa)\n```\n\n```\n    - A \ud83d\ude0e\n      - B \ud83d\ude0e\n        - C \ud83e\uddd1\u200d\ud83c\udfed\n        - D \ud83e\uddd1\u200d\ud83c\udfed\n      - E \ud83d\ude0e\n        - F \ud83e\uddd1\u200d\ud83c\udfed\n        - G \ud83e\uddd1\u200d\ud83c\udfed\n      - H \ud83e\uddd1\u200d\ud83c\udfed\n```\n\n\n\n## Resumen final\nComo habr\u00e1s visto, el pattern matching es una herramienta que permite simplificar c\u00f3digos muy complejos de una manera estructurada. No es algo que sea exclusivo de scala, ni siquiera es el primero en tenerlo (otros lenguajes ya han introducido herramientas similares) pero podr\u00e1s ver que siempre va de la mano con el paradigma funcional. Una tendencia que cada vez vemos en m\u00e1s lenguajes.\nEn el siguiente post, podr\u00e1s ver elementos avanzados para poder crear tus propios extractores,  como mejorar los posibles errores que puedan surgirte y m\u00e1s.\n\n## Repositorio\nSi prefieres leer este post en formato notebook, lo tienes en [github](https:\/\/github.com\/alfonsorr\/pattern-matching-post)\n"} --></p>
+<div class="wp-block-jetpack-markdown">
+<pre><code class="language-scala">val empresa = Jefe(&quot;A&quot;, List(
+         Jefe(&quot;B&quot;, List(Currito(&quot;C&quot;), Currito(&quot;D&quot;))),
+         Jefe(&quot;E&quot;, List(Currito(&quot;F&quot;), Currito(&quot;G&quot;))),
+         Currito(&quot;H&quot;)
+      )
+    )
+
+dibujaJerarquia(empresa)
+</code></pre>
+<pre><code>    - A 😎
+      - B 😎
+        - C 🧑‍🏭
+        - D 🧑‍🏭
+      - E 😎
+        - F 🧑‍🏭
+        - G 🧑‍🏭
+      - H 🧑‍🏭
+</code></pre>
+<h2>Resumen final</h2>
+<p>Como habrás visto, el pattern matching es una herramienta que permite simplificar códigos muy complejos de una manera estructurada. No es algo que sea exclusivo de scala, ni siquiera es el primero en tenerlo (otros lenguajes ya han introducido herramientas similares) pero podrás ver que siempre va de la mano con el paradigma funcional. Una tendencia que cada vez vemos en más lenguajes.<br />
+En el siguiente post, podrás ver elementos avanzados para poder crear tus propios extractores,  como mejorar los posibles errores que puedan surgirte y más.</p>
+<h2>Repositorio</h2>
+<p>Si prefieres leer este post en formato notebook, lo tienes en <a href="https://github.com/alfonsorr/pattern-matching-post">github</a></p>
+</div>
+<p><!-- /wp:jetpack/markdown --></p>
+<p><!-- wp:paragraph --></p>
+<p><!-- /wp:paragraph --></p>
