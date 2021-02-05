@@ -1,1 +1,20 @@
-theme: jekyll-theme-minimal
+remote_theme: chrisrhymes/mere-blog-theme
+title: Habla computing Blog
+tagline: Habla computing Blog
+url: "https://www.hablapps.com/blog"
+
+plugins:
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-feed
+  - jekyll-seo-tag
+  - kramdown
+  - rouge
+  - jekyll-toc
+
+
+livereload: true
+
+collections:
+  authors:
+    output: true
