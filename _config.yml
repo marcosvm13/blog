@@ -18,6 +18,23 @@ plugins:
 
 livereload: true
 
+defaults:
+  -
+    scope:
+      path: ""
+      type: "posts"
+    values:
+      author: "Juan Manuel Serrano"
+      layout: post
+      #image: /img/home.jpg
+      show_sidebar: true
+  -
+    scope:
+      path: ""
+      type: "authors"
+    values:
+      layout: "author"
+
 collections:
   authors:
     output: true
