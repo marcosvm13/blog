@@ -3,6 +3,9 @@ title: Habla computing Blog
 tagline: Habla computing Blog
 url: "https://www.hablapps.com/blog"
 
+paginate: 6
+paginate_path: "/page:num"
+
 plugins:
   - jekyll-sitemap
   - jekyll-paginate
