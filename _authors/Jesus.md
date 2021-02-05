@@ -7,5 +7,7 @@
   twitter: https://twitter.com/juanshac
   linkedin: https://es.linkedin.com/in/jserranohidalgo
   github: https://github.com/jserranohidalgo
+
+  start_date: 2014-01-01
 ---
 Jesus is a functional developer
