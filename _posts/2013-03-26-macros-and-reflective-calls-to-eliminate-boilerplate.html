@@ -48,12 +48,7 @@ meta:
     me ha encantado lo de \"In order to avoid lots of dangerous copy-paste actions\".
     Que recuerdos de la antigua arquitectura...xD\";}}}"
   _publicize_pending: '1'
-author:
-  login: jesuslg
-  email: jesus@kathars.es
-  display_name: Jesus Lopez-Gonzalez
-  first_name: Jesús
-  last_name: López González
+author: Jesus Lopez-Gonzalez
 permalink: "/2013/03/26/macros-and-reflective-calls-to-eliminate-boilerplate/"
 ---
 <p>In our previous <a href="http://blog.hablapps.com/2013/03/07/updating-immutable-objects-in-generic-contexts/">post</a>, we told you about <a title="updatable" href="http://github.com/hablapps/updatable">updatable</a>, a library that empowers programmers to build and update immutable objects in generic contexts. We saw the <em>builder</em> macro as a main element in the library, but we did not explain in detail how it was implemented. We think it uses an interesting pattern to eliminate boilerplate, so we want to share it with you. Instead of showing the original updatable builder, we are going to use a reduced version, in order to keep the example small. We call it <a href="https://gist.github.com/jesuslopez-gonzalez/5244174#file-factory-scala">factory</a>, because its unique aim is to instantiate traits. Now let's get to work!</p>

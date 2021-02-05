@@ -19,12 +19,7 @@ meta:
   _publicize_done_16092269: '1'
   _wpas_done_15919025: '1'
   publicize_twitter_user: jeslg
-author:
-  login: jesuslg
-  email: jesus@kathars.es
-  display_name: Jesus Lopez-Gonzalez
-  first_name: Jesús
-  last_name: López González
+author: Jesus Lopez-Gonzalez
 permalink: "/2017/02/20/algebras-for-the-masses/"
 ---
 <p>According to Wikipedia, <em>"an <a href="https://en.wikipedia.org/wiki/Algebraic_structure">Algebraic Structure</a> is a set with one or more finitary operations defined on it that satisfies a list of axioms"</em>. From a programming perspective, that sounds like a bunch of methods defined on a type. In fact, we can find many of those algebras represented as <em>type classes</em> in libraries such as <em>scalaz</em> or <em>cats</em>. This way of representing algebras is pretty related to <a href="https://www.cs.utexas.edu/~wcook/Drafts/2012/ecoop2012.pdf"><em>object algebras</em></a>. However, it's quite common to hear about <a href="https://www.schoolofhaskell.com/user/bartosz/understanding-algebras"><em>F-algebras</em></a> as well, an abstraction that arises from the field of <em>Category Theory</em>. Today, we'll see not only that both representations are isomorphic, but also how to systematically generate conversions between them. To validate those transformations, we'll scratch the surface of <a href="https://github.com/slamdata/matryoshka">Matryoshka</a> to fold several expressions with the aforementioned algebra representations. So here we go!</p>

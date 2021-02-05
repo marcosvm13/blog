@@ -56,12 +56,7 @@ meta:
     me parece que está muy bien escrito.\";}i:5;a:2:{s:4:\"time\";s:10:\"1362496075\";s:7:\"content\";s:20:\"
     No entiendo nada!!!\";}}}"
   _publicize_pending: '1'
-author:
-  login: juanmanuelserranohidalgo
-  email: juanmanuel.serrano.hidalgo@gmail.com
-  display_name: Juan
-  first_name: Juan Manuel
-  last_name: Serrano
+author: Juan Manuel Serrano
 permalink: "/2013/03/07/updating-immutable-objects-in-generic-contexts/"
 ---
 <p>Immutability is one of the hallmarks of functional design, and writing idiomatic programs in Scala highly relies on manipulating immutable objects. Now, if we don't have mutable fields (aka <em>vars</em>) ... how can we update objects in a convenient way? Scala provides so-called <em>case classes</em> which have a <em>copy</em> method with the required functionality. And we can also use <em>lenses</em>, a higher-level abstraction that you can find in popular Scala libraries such as <a href="https://github.com/scalaz/scalaz">scalaz</a> and <a href="https://github.com/milessabin/shapeless">shapeless</a> (you can find a macro-based implementation in the <a href="https://github.com/retronym/macrocosm">macrocosm</a> project as well). Nevertheless, all these implementations build some way or another upon case classes as the basic updating mechanism.</p>
