@@ -1,6 +1,6 @@
 remote_theme: chrisrhymes/mere-blog-theme
 title: Habla computing Blog
-tagline: Habla computing Blog
+tagline: Purely Functional
 url: "https://www.hablapps.com/blog"
 
 paginate: 6
@@ -26,7 +26,7 @@ defaults:
     values:
       author: "Juan Manuel Serrano"
       layout: post
-      image: /img/logo-habla.png
+      image: /img/default-post.png
       show_sidebar: true
   -
     scope:
