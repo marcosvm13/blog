@@ -26,7 +26,7 @@ defaults:
     values:
       author: "Juan Manuel Serrano"
       layout: post
-      image: /img/default-post.png
+      image: /img/default-post.svg
       show_sidebar: true
   -
     scope:
