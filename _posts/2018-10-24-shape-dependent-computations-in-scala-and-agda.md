@@ -99,10 +99,10 @@ update(Node(Leaf(1), 2, Leaf(3)))(Vec(3))
 ... wouldn’t this be beautiful?
 
 
-Alas, the above signature is not legal Scala 2.12. The problem is in the `Vec[? , ? : Nat]` type constructor. As we said, it holds two parameters. There is no problem with the first one: type constructors in Scala do indeed receive types as arguments. Another way of saying this is that types in Scala can be parameterised with respect to types. And yet another way is saying that types in Scala can be made <em>dependent</em> on types. But the second parameter of the `Vec` constructor is not a type, it’s a <em>value</em>! And we can’t parameterise types in Scala with respect to values, only to types.
+Alas, the above signature is not legal Scala 2.12. The problem is in the `Vec[? , ? : Nat]` type constructor. As we said, it holds two parameters. There is no problem with the first one: type constructors in Scala do indeed receive types as arguments. Another way of saying this is that types in Scala can be parameterised with respect to types. And yet another way is saying that types in Scala can be made *dependent* on types. But the second parameter of the `Vec` constructor is not a type, it’s a *value*! And we can’t parameterise types in Scala with respect to values, only to types.
 
 
-A type whose definition refers to values is called a <em>dependent type</em>. Indeed, the type `List[A]` in Scala also <em>depends</em> on something, to wit the type `A`. So, in a sense, we may rightfully call it a dependent type as well. However, the “dependent” qualifier is conventionally reserved for types that are parameterised with respect to values.
+A type whose definition refers to values is called a *dependent type*. Indeed, the type `List[A]` in Scala also *depends* on something, to wit the type `A`. So, in a sense, we may rightfully call it a dependent type as well. However, the “dependent” qualifier is conventionally reserved for types that are parameterised with respect to values.
 
 
 Can’t we solve our problem in Scala, then? Yes, we will see that we can indeed solve this problem in Scala, albeit in a different way. But before delving into the Scala solution, let’s see how we can solve this problem in a language with full-fledged dependent types, in line with the solution sketched at the beginning of this section.
@@ -251,7 +251,7 @@ t3 = Leaves.update t1 (5 ∷ [])
 The `l1` variable represents the leaves of the sample tree `t1`, namely values 1, 3 and 5. Accordingly, the type of the variable is `Vec ℕ 3`. The variable `t2` is the result of updating the tree with a new collection of leaves. In both cases, we make reference to the functions `get` and `update` declared in the module `Leaves`.
 
 
-The next lines <em>prove</em> that the values of these variables are the expected ones, making use of the equality type constructor `_≡_` and its `refl` constructor (note that `_≡_` is parameterised with respect two values, so it's a dependent type). The proof is plain `refl`exivity, i.e. `x ≡ x`, since `l1` and `t2` actually evaluate to the same values.
+The next lines *prove* that the values of these variables are the expected ones, making use of the equality type constructor `_≡_` and its `refl` constructor (note that `_≡_` is parameterised with respect two values, so it's a dependent type). The proof is plain `refl`exivity, i.e. `x ≡ x`, since `l1` and `t2` actually evaluate to the same values.
 
 
 Note that the fact that this code compiles is enough to show that the tests pass. We don’t need to run anything! On the other hand, Agda allows us to test that our functions work as expected by implementing much more complex proofs for more expressive properties. We will leave that for another post.
@@ -266,7 +266,7 @@ Let’s come back to Scala.
 We can’t make computations on values in Scala at compile time, but we can do it on types! And this suffices to solve our problem, albeit in a different form to Agda. We will reconcile both approaches in the next section.
 
 
-Type-level computation in Scala proceeds through the implicits mechanism. But before we can exploit implicits, we first need to re-implement our `Tree` data type so that we don’t loose the <em>shapes</em> of trees:
+Type-level computation in Scala proceeds through the implicits mechanism. But before we can exploit implicits, we first need to re-implement our `Tree` data type so that we don’t loose the *shapes* of trees:
 
 
 ```scala
@@ -293,10 +293,10 @@ case class Cons[A, T &lt;: List[A]](head: A, tail: T) extends List[A] ``` Let&#0
 }
 ```
 
-Now we can explain their limitations in a more precise way. For instance, let’s consider the resulting function of `update`. The input of this function is declared to be any `List[A]`, not lists of a particular <em>shape</em>. That’s relevant to our problem because we want the compiler to be able to block invocations for trees of an undesired shape, i.e. length. But how can we represent the shape of an algebraic data type in the Scala type system? The answer is <em>subtyping</em>, i.e. we can declare the result of that function to be some `L &lt;: List[A]`, instead of a plain `List[A]`. There is a one-to-one correspondence between the subtypes of the algebraic data type `List[A]` and its possible shapes.
+Now we can explain their limitations in a more precise way. For instance, let’s consider the resulting function of `update`. The input of this function is declared to be any `List[A]`, not lists of a particular *shape*. That’s relevant to our problem because we want the compiler to be able to block invocations for trees of an undesired shape, i.e. length. But how can we represent the shape of an algebraic data type in the Scala type system? The answer is *subtyping*, i.e. we can declare the result of that function to be some `L &lt;: List[A]`, instead of a plain `List[A]`. There is a one-to-one correspondence between the subtypes of the algebraic data type `List[A]` and its possible shapes.
 
 
-Similarly, the input trees of `get` and `update` are declared to be any `Tree[A]`, instead of trees of a particular shape `T &lt;: Tree[A]`. This is bad, because in that way we won’t be able to determine which is the exact list shape that must be returned for a given tree. Ok, but how can we determine the shape of list corresponding to a given shape of tree? The answer is using <em>type-level functions</em> which operates on input/output types that represent shapes.
+Similarly, the input trees of `get` and `update` are declared to be any `Tree[A]`, instead of trees of a particular shape `T &lt;: Tree[A]`. This is bad, because in that way we won’t be able to determine which is the exact list shape that must be returned for a given tree. Ok, but how can we determine the shape of list corresponding to a given shape of tree? The answer is using *type-level functions* which operates on input/output types that represent shapes.
 
 
 These shape-dependent functions are declared as traits and defined through the implicits mechanism. For instance, the declaration of the type-level function between trees and lists is as follows:
@@ -308,7 +308,7 @@ type Out &lt;: List[A] def get(t: In): Out def update(t: In): Out =&gt; In
 }
 ```
 
-The `LeavesShape` trait is parameterised with respect to any <em>shape</em> of tree. Its instance for a particular shape will give us the list shape that we can use to store the current leaves of the tree, or the new values required for those leaves. Moreover, for that particular shape of tree we also obtain its corresponding get and update implementations.
+The `LeavesShape` trait is parameterised with respect to any *shape* of tree. Its instance for a particular shape will give us the list shape that we can use to store the current leaves of the tree, or the new values required for those leaves. Moreover, for that particular shape of tree we also obtain its corresponding get and update implementations.
 
 
 Concerning the implementation of the shape-dependent function `LeavesShape`, i.e. how do we compute the shape of list corresponding to a given shape of tree, we proceed through implicits defined in its companion object. The following signatures (not for the faint of heart …) suffice:
@@ -421,9 +421,9 @@ The downside of the Scala implementation is, evidently, its verbosity and the am
 ## Conclusion
 
 
-We may have mimicked the Agda implementation style in Scala. In the `shapeless` framework, for instance, we have available the `Sized` and `Nat` types to represent lists of a fixed size (see the implementation <a href="https://github.com/hablapps/shapeaware/blob/master/src/test/scala/code.scala#L207">here</a>), and we may even use <a href="https://docs.scala-lang.org/sips/42.type.html">literal types</a> to overcome the limitation of using values in type declarations. Alternatively, we proposed an implementation fully based on shape-aware algebraic data types. This version is in our opinion more idiomatic to solve our particular problem in Scala. It also allows us to grasp the idiosyncrasy of Scala with respect to competing approaches like the one proposed in Agda. In this regard, we found the notion of <a href="http://www.cs.nott.ac.uk/~psztxa/publ/fossacs03.pdf"><em>shape</em></a> to be extremely useful.
+We may have mimicked the Agda implementation style in Scala. In the `shapeless` framework, for instance, we have available the `Sized` and `Nat` types to represent lists of a fixed size (see the implementation <a href="https://github.com/hablapps/shapeaware/blob/master/src/test/scala/code.scala#L207">here</a>), and we may even use <a href="https://docs.scala-lang.org/sips/42.type.html">literal types</a> to overcome the limitation of using values in type declarations. Alternatively, we proposed an implementation fully based on shape-aware algebraic data types. This version is in our opinion more idiomatic to solve our particular problem in Scala. It also allows us to grasp the idiosyncrasy of Scala with respect to competing approaches like the one proposed in Agda. In this regard, we found the notion of <a href="http://www.cs.nott.ac.uk/~psztxa/publ/fossacs03.pdf">*shape*</a> to be extremely useful.
 
 
-In next posts we will likely go on exploring Agda in one of its most characteristic applications: certified programming. For instance, we may generalise the example shown in this post and talk about <em>traversals</em> (a kind of optic, like lenses) and its laws. One of these laws, applied to our example, tells us that if you update the leaves of the tree with its current leaf values, you will obtain the same tree. Using Agda, we can state that law and <em>prove</em> that our implementation satisfies it. No need to enumerate test cases, or empirically test the given property (e.g., as in Scalacheck). Till the next post!
+In next posts we will likely go on exploring Agda in one of its most characteristic applications: certified programming. For instance, we may generalise the example shown in this post and talk about *traversals* (a kind of optic, like lenses) and its laws. One of these laws, applied to our example, tells us that if you update the leaves of the tree with its current leaf values, you will obtain the same tree. Using Agda, we can state that law and *prove* that our implementation satisfies it. No need to enumerate test cases, or empirically test the given property (e.g., as in Scalacheck). Till the next post!
 
 
