@@ -7,6 +7,11 @@ image: /img/pattern.jpg
 intro_image_ratio: is-16by9
 toc: true
 ---
+
+## Repositorio
+Si prefieres leer este post en formato notebook, lo tienes disponible en [github](https://github.com/alfonsorr/pattern-matching-post).
+Si quieres comentar este post, hacer alguna pregunta o sugerencia, puedes usar nuestro [foro del post](https://github.com/hablapps/blog/discussions/3)
+
 ## ¿Que es el pattern matching?
 
 Una estructura de control, pensada para comprobar si un elemento cumple ciertas condiciones. Si no la conocías antes es similar en sintaxis a un `switch`, pero nos permite mayor precisión.
@@ -706,6 +711,3 @@ dibujaJerarquia(empresa)
 ## Resumen final
 Como habrás visto, el pattern matching es una herramienta que permite simplificar códigos muy complejos de una manera estructurada. No es algo que sea exclusivo de scala, ni siquiera es el primero en tenerlo (otros lenguajes ya han introducido herramientas similares) pero podrás ver que siempre va de la mano con el paradigma funcional. Una tendencia que cada vez vemos en más lenguajes.
 En el siguiente post, podrás ver elementos avanzados para poder crear tus propios extractores,  como mejorar los posibles errores que puedan surgirte y más.
-
-## Repositorio
-Si prefieres leer este post en formato notebook, lo tienes subido en [github](https://github.com/alfonsorr/pattern-matching-post)
