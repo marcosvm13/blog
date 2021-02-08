@@ -8,8 +8,9 @@ intro_image_ratio: is-16by9
 toc: true
 ---
 
-## Repositorio
+## Repositorio
 Si prefieres leer este post en formato notebook, lo tienes disponible en [github](https://github.com/alfonsorr/pattern-matching-post).
+
 Si quieres comentar este post, hacer alguna pregunta o sugerencia, puedes usar nuestro [foro del post](https://github.com/hablapps/blog/discussions/3)
 
 ## ¿Que es el pattern matching?
