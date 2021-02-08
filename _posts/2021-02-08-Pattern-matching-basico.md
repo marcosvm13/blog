@@ -33,8 +33,8 @@ stringExample match {
 
 
 
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
-<span style="color:cyan">res3_1</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
+<span style="color:cyan">res3_1</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
 
 
 
@@ -65,8 +65,8 @@ cmd4.sc:3: patterns after a variable pattern cannot match (SLS 8.1.1)
 ```
 
 
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
-<span style="color:cyan">res4_1</span>: <span style="color:green">String</span> = <span style="color:green">"???"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
+<span style="color:cyan">res4_1</span>: <span style="color:green">String</span> = <span style="color:green">"???"</span>  
 
 
 
@@ -99,10 +99,10 @@ stringExample2 match {
 
 
 
-<span style="color:cyan">stringExample1</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
-<span style="color:cyan">res5_1</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
-<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"holi"</span>  
-<span style="color:cyan">res5_3</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
+<span style="color:cyan">stringExample1</span>: <span style="color:green">String</span> = <span style="color:green">"hola"</span>  
+<span style="color:cyan">res5_1</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"holi"</span>  
+<span style="color:cyan">res5_3</span>: <span style="color:green">String</span> = <span style="color:green">"saludos"</span>  
 
 
 
@@ -123,8 +123,8 @@ stringExample match {
 
 
 
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"ya estoy"</span>  
-<span style="color:cyan">res6_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor ya estoy no est\u00e1 contemplado"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"ya estoy"</span>  
+<span style="color:cyan">res6_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor ya estoy no est\u00e1 contemplado"</span>  
 
 
 
@@ -149,9 +149,9 @@ stringExample match {
 
 
 
-<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"ya estoy"</span>  
-<span style="color:cyan">res7_2</span>: <span style="color:green">String</span> = <span style="color:green">"el valor ya estoy no est\u00e1 contemplado"</span>  
+<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"ya estoy"</span>  
+<span style="color:cyan">res7_2</span>: <span style="color:green">String</span> = <span style="color:green">"el valor ya estoy no est\u00e1 contemplado"</span>  
 
 
 
@@ -172,9 +172,9 @@ stringExample match {
 }
 ```
 
-<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">res8_2</span>: <span style="color:green">String</span> = <span style="color:green">"es el valor que ten\u00eda en x"</span>  
+<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">res8_2</span>: <span style="color:green">String</span> = <span style="color:green">"es el valor que ten\u00eda en x"</span>  
 
 
 
@@ -193,9 +193,9 @@ stringExample2 match {
 }
 ```
 
-<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"no soy x"</span>  
-<span style="color:cyan">res9_2</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno de los anteriores"</span>  
+<span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"no soy x"</span>  
+<span style="color:cyan">res9_2</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno de los anteriores"</span>  
 
 Otra forma más sencilla es seguir [la guia de estilo de scala](https://docs.scala-lang.org/style/naming-conventions.html#constants-values-variable-and-methods). En ella se indica que los valores constantes definidos a nivel de clase han de empezar con mayúscula, lo que reconoce que no es un valor a asignar.
 
@@ -211,9 +211,9 @@ stringExample match {
 }
 ```
 
-<span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">res10_2</span>: <span style="color:green">String</span> = <span style="color:green">"es el valor que ten\u00eda en x"</span>  
+<span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">res10_2</span>: <span style="color:green">String</span> = <span style="color:green">"es el valor que ten\u00eda en x"</span>  
 
 
 
@@ -233,9 +233,9 @@ stringExample2 match {
 
 
 
-<span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
-<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"no soy x"</span>  
-<span style="color:cyan">res11_2</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno de los anteriores"</span>  
+<span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">"soy x"</span>  
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"no soy x"</span>  
+<span style="color:cyan">res11_2</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno de los anteriores"</span>  
 
 
 
@@ -256,8 +256,8 @@ stringExample2 match {
 
 
 
-<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"habana"</span>  
-<span style="color:cyan">res12_1</span>: <span style="color:green">String</span> = <span style="color:green">"comienza por h"</span>  
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"habana"</span>  
+<span style="color:cyan">res12_1</span>: <span style="color:green">String</span> = <span style="color:green">"comienza por h"</span>  
 
 
 
@@ -277,8 +277,8 @@ stringExample2 match {
 
 
 
-<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"habana"</span>  
-<span style="color:cyan">res13_1</span>: <span style="color:green">String</span> = <span style="color:green">"comienza por h"</span>  
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">"habana"</span>  
+<span style="color:cyan">res13_1</span>: <span style="color:green">String</span> = <span style="color:green">"comienza por h"</span>  
 
 
 
@@ -306,7 +306,7 @@ def matchfun(x: Any): String =
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">matchfun</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">matchfun</span>  
 
 
 
@@ -320,9 +320,9 @@ matchfun(12.4)
 
 
 
-<span style="color:cyan">res15_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el string hola"</span>  
-<span style="color:cyan">res15_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el integer 42"</span>  
-<span style="color:cyan">res15_2</span>: <span style="color:green">String</span> = <span style="color:green">"es otro tipo"</span>  
+<span style="color:cyan">res15_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el string hola"</span>  
+<span style="color:cyan">res15_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el integer 42"</span>  
+<span style="color:cyan">res15_2</span>: <span style="color:green">String</span> = <span style="color:green">"es otro tipo"</span>  
 
 
 
@@ -341,7 +341,7 @@ def matchfun2(x: Any): String =
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span>  
 
 
 
@@ -355,9 +355,9 @@ matchfun2(12.4)
 
 
 
-<span style="color:cyan">res17_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el string hola"</span>  
-<span style="color:cyan">res17_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el integer 42"</span>  
-<span style="color:cyan">res17_2</span>: <span style="color:green">String</span> = <span style="color:green">"es otro tipo"</span>  
+<span style="color:cyan">res17_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el string hola"</span>  
+<span style="color:cyan">res17_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo el integer 42"</span>  
+<span style="color:cyan">res17_2</span>: <span style="color:green">String</span> = <span style="color:green">"es otro tipo"</span>  
 
 
 
@@ -390,7 +390,7 @@ cmd18.sc:3: non-variable type argument String in type pattern List[String] (the 
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span>  
 
 
 
@@ -404,9 +404,9 @@ matchfun2(List(4.2f))
 
 
 
-<span style="color:cyan">res19_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 2"</span>  
-<span style="color:cyan">res19_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 1"</span>  
-<span style="color:cyan">res19_2</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 1"</span>  
+<span style="color:cyan">res19_0</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 2"</span>  
+<span style="color:cyan">res19_1</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 1"</span>  
+<span style="color:cyan">res19_2</span>: <span style="color:green">String</span> = <span style="color:green">"tengo una lista de string de longitud 1"</span>  
 
 
 
@@ -424,7 +424,7 @@ case class Usuario(nombre: String, edad: Int)
 
 
 
-defined <span style="color:green">class</span> <span style="color:cyan">Usuario</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">Usuario</span>  
 
 
 
@@ -440,9 +440,9 @@ case class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajad
 
 
 
-defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span>  
-defined <span style="color:green">class</span> <span style="color:cyan">Currito</span>  
-defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span>  
+defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">Currito</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span>  
 
 
 
@@ -468,8 +468,8 @@ o match {
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">quienEs</span>  
-defined <span style="color:green">function</span> <span style="color:cyan">tengoDato</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">quienEs</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">tengoDato</span>  
 
 
 
@@ -485,10 +485,10 @@ tengoDato(None)
 
 
 
-<span style="color:cyan">res23_0</span>: <span style="color:green">String</span> = <span style="color:green">"JM es jefe de 2 empleados"</span>  
-<span style="color:cyan">res23_1</span>: <span style="color:green">String</span> = <span style="color:green">"Ar es un gran trabajador"</span>  
-<span style="color:cyan">res23_2</span>: <span style="color:green">String</span> = <span style="color:green">"tenemos el valor 23"</span>  
-<span style="color:cyan">res23_3</span>: <span style="color:green">String</span> = <span style="color:green">"no tenemos valor"</span>  
+<span style="color:cyan">res23_0</span>: <span style="color:green">String</span> = <span style="color:green">"JM es jefe de 2 empleados"</span>  
+<span style="color:cyan">res23_1</span>: <span style="color:green">String</span> = <span style="color:green">"Ar es un gran trabajador"</span>  
+<span style="color:cyan">res23_2</span>: <span style="color:green">String</span> = <span style="color:green">"tenemos el valor 23"</span>  
+<span style="color:cyan">res23_3</span>: <span style="color:green">String</span> = <span style="color:green">"no tenemos valor"</span>  
 
 
 
@@ -510,7 +510,7 @@ def tuplaMatch(x: (String, Int)): String =
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch</span>  
 
 
 
@@ -525,10 +525,10 @@ tuplaMatch(("adios", 42))
 
 
 
-<span style="color:cyan">res25_0</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor igual que 10"</span>  
-<span style="color:cyan">res25_1</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor mayor que 10"</span>  
-<span style="color:cyan">res25_2</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor menor a 10"</span>  
-<span style="color:cyan">res25_3</span>: <span style="color:green">String</span> = <span style="color:green">"la palabra es adios con valor 42"</span>  
+<span style="color:cyan">res25_0</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor igual que 10"</span>  
+<span style="color:cyan">res25_1</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor mayor que 10"</span>  
+<span style="color:cyan">res25_2</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor menor a 10"</span>  
+<span style="color:cyan">res25_3</span>: <span style="color:green">String</span> = <span style="color:green">"la palabra es adios con valor 42"</span>  
 
 
 
@@ -544,7 +544,7 @@ val tupla: (String, Int) = ("texto", 1)
 
 
 
-<span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">"texto"</span>, <span style="color:green">1</span>)
+<span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">"texto"</span>, <span style="color:green">1</span>)
 
 
 
@@ -562,7 +562,7 @@ def tuplaMatch2(x: (String, Int)): String =
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch2</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch2</span>  
 
 
 
@@ -577,10 +577,10 @@ tuplaMatch(("adios", 42))
 
 
 
-<span style="color:cyan">res28_0</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor igual que 10"</span>  
-<span style="color:cyan">res28_1</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor mayor que 10"</span>  
-<span style="color:cyan">res28_2</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor menor a 10"</span>  
-<span style="color:cyan">res28_3</span>: <span style="color:green">String</span> = <span style="color:green">"la palabra es adios con valor 42"</span>  
+<span style="color:cyan">res28_0</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor igual que 10"</span>  
+<span style="color:cyan">res28_1</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor mayor que 10"</span>  
+<span style="color:cyan">res28_2</span>: <span style="color:green">String</span> = <span style="color:green">"hola con valor menor a 10"</span>  
+<span style="color:cyan">res28_3</span>: <span style="color:green">String</span> = <span style="color:green">"la palabra es adios con valor 42"</span>  
 
 
 
@@ -595,9 +595,9 @@ val (primero, segundo) = tupla
 
 
 
-<span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">"texto"</span>, <span style="color:green">1</span>)
-<span style="color:cyan">primero</span>: <span style="color:green">String</span> = <span style="color:green">"texto"</span>  
-<span style="color:cyan">segundo</span>: <span style="color:green">Int</span> = <span style="color:green">1</span>  
+<span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">"texto"</span>, <span style="color:green">1</span>)
+<span style="color:cyan">primero</span>: <span style="color:green">String</span> = <span style="color:green">"texto"</span>  
+<span style="color:cyan">segundo</span>: <span style="color:green">Int</span> = <span style="color:green">1</span>  
 
 
 
@@ -617,7 +617,7 @@ def tuplaAnyMatch(x: (Any, Any)): String =
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">tuplaAnyMatch</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">tuplaAnyMatch</span>  
 
 
 
@@ -632,10 +632,10 @@ tuplaAnyMatch((1, 42))
 
 
 
-<span style="color:cyan">res31_0</span>: <span style="color:green">String</span> = <span style="color:green">"dos strings primero: hola segundo: adios"</span>  
-<span style="color:cyan">res31_1</span>: <span style="color:green">String</span> = <span style="color:green">"solo el primero es string: hola"</span>  
-<span style="color:cyan">res31_2</span>: <span style="color:green">String</span> = <span style="color:green">"solo el segundo es string: adios"</span>  
-<span style="color:cyan">res31_3</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno es string"</span>  
+<span style="color:cyan">res31_0</span>: <span style="color:green">String</span> = <span style="color:green">"dos strings primero: hola segundo: adios"</span>  
+<span style="color:cyan">res31_1</span>: <span style="color:green">String</span> = <span style="color:green">"solo el primero es string: hola"</span>  
+<span style="color:cyan">res31_2</span>: <span style="color:green">String</span> = <span style="color:green">"solo el segundo es string: adios"</span>  
+<span style="color:cyan">res31_3</span>: <span style="color:green">String</span> = <span style="color:green">"ninguno es string"</span>  
 
 
 
@@ -651,9 +651,9 @@ case class Jefe(nombre: String, subordinados: List[Trabajador]) extends Trabajad
 
 
 
-defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span>  
-defined <span style="color:green">class</span> <span style="color:cyan">Currito</span>  
-defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span>  
+defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">Currito</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span>  
 
 
 
@@ -673,7 +673,7 @@ def dibujaJerarquia(t:Trabajador, nivel: Int = 0):Unit = {
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">dibujaJerarquia</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">dibujaJerarquia</span>  
 
 
 
@@ -700,12 +700,12 @@ dibujaJerarquia(empresa)
       - H 🧑‍🏭
 ```
 
-<span style="color:cyan">empresa</span>: <span style="color:green">Jefe</span> = <span style="color:yellow">Jefe</span>(
-<span style="color:green">"A"</span>,
-<span style="color:yellow">List</span>(
-<span style="color:yellow">Jefe</span>(<span style="color:green">"B"</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">"C"</span>), <span style="color:yellow">Currito</span>(<span style="color:green">"D"</span>))),
-<span style="color:yellow">Jefe</span>(<span style="color:green">"E"</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">"F"</span>), <span style="color:yellow">Currito</span>(<span style="color:green">"G"</span>))),
-<span style="color:yellow">Currito</span>(<span style="color:green">"H"</span>)
+<span style="color:cyan">empresa</span>: <span style="color:green">Jefe</span> = <span style="color:yellow">Jefe</span>(
+<span style="color:green">"A"</span>,
+<span style="color:yellow">List</span>(
+<span style="color:yellow">Jefe</span>(<span style="color:green">"B"</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">"C"</span>), <span style="color:yellow">Currito</span>(<span style="color:green">"D"</span>))),
+<span style="color:yellow">Jefe</span>(<span style="color:green">"E"</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">"F"</span>), <span style="color:yellow">Currito</span>(<span style="color:green">"G"</span>))),
+<span style="color:yellow">Currito</span>(<span style="color:green">"H"</span>)
     )
 )
 

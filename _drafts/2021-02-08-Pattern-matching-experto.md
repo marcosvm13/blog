@@ -37,7 +37,7 @@ object ValidIntString { // creamos el objeto que permitirá extraer el string si
 
 
 
-defined <span style="color:green">object</span> <span style="color:cyan">ValidIntString</span>  
+defined <span style="color:green">object</span> <span style="color:cyan">ValidIntString</span>  
 
 
 
@@ -59,8 +59,8 @@ Ahora podemos usar nuestro flamante nuevo extractor
 
 
 
-<span style="color:cyan">res36_0</span>: <span style="color:green">String</span> = <span style="color:green">"es un integer con valor 123"</span>  
-<span style="color:cyan">res36_1</span>: <span style="color:green">String</span> = <span style="color:green">"no es integer"</span>  
+<span style="color:cyan">res36_0</span>: <span style="color:green">String</span> = <span style="color:green">"es un integer con valor 123"</span>  
+<span style="color:cyan">res36_1</span>: <span style="color:green">String</span> = <span style="color:green">"no es integer"</span>  
 
 
 
@@ -82,7 +82,7 @@ object ValidIntStringWithDouble { // creamos el objeto que permitirá extraer el
 
 
 
-defined <span style="color:green">object</span> <span style="color:cyan">ValidIntStringWithDouble</span>  
+defined <span style="color:green">object</span> <span style="color:cyan">ValidIntStringWithDouble</span>  
 
 
 
@@ -102,8 +102,8 @@ defined <span style="color:green">object</span> <span style="color:cyan">Vali
 
 
 
-<span style="color:cyan">res38_0</span>: <span style="color:green">String</span> = <span style="color:green">"es un integer con valor 123 y su doble 246"</span>  
-<span style="color:cyan">res38_1</span>: <span style="color:green">String</span> = <span style="color:green">"no es integer"</span>  
+<span style="color:cyan">res38_0</span>: <span style="color:green">String</span> = <span style="color:green">"es un integer con valor 123 y su doble 246"</span>  
+<span style="color:cyan">res38_1</span>: <span style="color:green">String</span> = <span style="color:green">"no es integer"</span>  
 
 
 
@@ -131,7 +131,7 @@ object SplitDecimals { // creamos el objeto que permitirá extraer el string si 
 
 
 
-defined <span style="color:green">object</span> <span style="color:cyan">SplitDecimals</span>  
+defined <span style="color:green">object</span> <span style="color:cyan">SplitDecimals</span>  
 
 
 
@@ -159,9 +159,9 @@ defined <span style="color:green">object</span> <span style="color:cyan">Spli
 
 
 
-<span style="color:cyan">res40_0</span>: <span style="color:green">String</span> = <span style="color:green">"es entero y tenemos 123 solo"</span>  
-<span style="color:cyan">res40_1</span>: <span style="color:green">String</span> = <span style="color:green">"tiene decimales: 123 . 564537"</span>  
-<span style="color:cyan">res40_2</span>: <span style="color:green">String</span> = <span style="color:green">"no es numerico"</span>  
+<span style="color:cyan">res40_0</span>: <span style="color:green">String</span> = <span style="color:green">"es entero y tenemos 123 solo"</span>  
+<span style="color:cyan">res40_1</span>: <span style="color:green">String</span> = <span style="color:green">"tiene decimales: 123 . 564537"</span>  
+<span style="color:cyan">res40_2</span>: <span style="color:green">String</span> = <span style="color:green">"no es numerico"</span>  
 
 
 
@@ -179,7 +179,7 @@ object IsEaven {
 
 
 
-defined <span style="color:green">object</span> <span style="color:cyan">IsEaven</span>  
+defined <span style="color:green">object</span> <span style="color:cyan">IsEaven</span>  
 
 
 
@@ -199,8 +199,8 @@ defined <span style="color:green">object</span> <span style="color:cyan">IsEa
 
 
 
-<span style="color:cyan">res42_0</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es par"</span>  
-<span style="color:cyan">res42_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es impar"</span>  
+<span style="color:cyan">res42_0</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es par"</span>  
+<span style="color:cyan">res42_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es impar"</span>  
 
 
 
@@ -216,7 +216,7 @@ case class GreaterThan(c: Int) {
 
 
 
-defined <span style="color:green">class</span> <span style="color:cyan">GreaterThan</span>  
+defined <span style="color:green">class</span> <span style="color:cyan">GreaterThan</span>  
 
 
 
@@ -238,9 +238,9 @@ val mayor45 = GreaterThan(45)
 
 
 
-<span style="color:cyan">mayor45</span>: <span style="color:green">GreaterThan</span> = <span style="color:yellow">GreaterThan</span>(<span style="color:green">45</span>)
-<span style="color:cyan">res44_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es mayor que 45"</span>  
-<span style="color:cyan">res44_2</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es menor o igual"</span>  
+<span style="color:cyan">mayor45</span>: <span style="color:green">GreaterThan</span> = <span style="color:yellow">GreaterThan</span>(<span style="color:green">45</span>)
+<span style="color:cyan">res44_1</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es mayor que 45"</span>  
+<span style="color:cyan">res44_2</span>: <span style="color:green">String</span> = <span style="color:green">"el valor es menor o igual"</span>  
 
 
 
@@ -266,9 +266,9 @@ val fecha = raw"(\d{4})-(\d{2})-(\d{2})".r
 
 
 
-<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})
-<span style="color:cyan">res45_1</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2004, mes: 01, dia: 20"</span>  
-<span style="color:cyan">res45_2</span>: <span style="color:green">String</span> = <span style="color:green">"no es una fecha"</span>  
+<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})
+<span style="color:cyan">res45_1</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2004, mes: 01, dia: 20"</span>  
+<span style="color:cyan">res45_2</span>: <span style="color:green">String</span> = <span style="color:green">"no es una fecha"</span>  
 
 
 
@@ -301,9 +301,9 @@ List(1, 2, 3, 4) match {
 
 
 
-<span style="color:cyan">res46_0</span>: <span style="color:green">String</span> = <span style="color:green">"tiene tres elementos 1, 2, 3"</span>  
-<span style="color:cyan">res46_1</span>: <span style="color:green">String</span> = <span style="color:green">"tiene solo un elemento 1"</span>  
-<span style="color:cyan">res46_2</span>: <span style="color:green">String</span> = <span style="color:green">"tiene demasiados elementos, exactamente  4"</span>  
+<span style="color:cyan">res46_0</span>: <span style="color:green">String</span> = <span style="color:green">"tiene tres elementos 1, 2, 3"</span>  
+<span style="color:cyan">res46_1</span>: <span style="color:green">String</span> = <span style="color:green">"tiene solo un elemento 1"</span>  
+<span style="color:cyan">res46_2</span>: <span style="color:green">String</span> = <span style="color:green">"tiene demasiados elementos, exactamente  4"</span>  
 
 
 
@@ -324,8 +324,8 @@ val fecha = raw"(\d{4})-(\d{2})-(\d{2})".r
 
 
 
-<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})  
-<span style="color:cyan">res47_1</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2004, mes: 01, dia: 20 original 2004-01-20"</span>  
+<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})  
+<span style="color:cyan">res47_1</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2004, mes: 01, dia: 20 original 2004-01-20"</span>  
 
 
 
@@ -363,10 +363,10 @@ dateStr match {
 
 
 
-<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})
-<span style="color:cyan">anio19xx</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = 19(\d{2})
-<span style="color:cyan">anioEspecial</span>: <span style="color:green">String</span> = <span style="color:green">"2001"</span>  
-defined <span style="color:green">function</span> <span style="color:cyan">queDiaEs</span>  
+<span style="color:cyan">fecha</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = (\d{4})-(\d{2})-(\d{2})
+<span style="color:cyan">anio19xx</span>: <span style="color:green">scala</span>.<span style="color:green">util</span>.<span style="color:green">matching</span>.<span style="color:green">Regex</span> = 19(\d{2})
+<span style="color:cyan">anioEspecial</span>: <span style="color:green">String</span> = <span style="color:green">"2001"</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">queDiaEs</span>  
 
 
 
@@ -386,15 +386,15 @@ queDiaEs("2021")
 
 
 
-<span style="color:cyan">res49_0</span>: <span style="color:green">String</span> = <span style="color:green">"mi a\u00f1o especial :D"</span>  
-<span style="color:cyan">res49_1</span>: <span style="color:green">String</span> = <span style="color:green">"feliz a\u00f1o nuevo!"</span>  
-<span style="color:cyan">res49_2</span>: <span style="color:green">String</span> = <span style="color:green">"es a\u00f1o bisiesto 2020-02-29"</span>  
-<span style="color:cyan">res49_3</span>: <span style="color:green">String</span> = <span style="color:green">"eso es muy viejo"</span>  
-<span style="color:cyan">res49_4</span>: <span style="color:green">String</span> = <span style="color:green">"eso es muy viejo"</span>  
-<span style="color:cyan">res49_5</span>: <span style="color:green">String</span> = <span style="color:green">"la fecha es capicua 20200202"</span>  
-<span style="color:cyan">res49_6</span>: <span style="color:green">String</span> = <span style="color:green">"03 del 02 del a\u00f1o 95"</span>  
-<span style="color:cyan">res49_7</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2021, mes: 31, dia: 10"</span>  
-<span style="color:cyan">res49_8</span>: <span style="color:green">String</span> = <span style="color:green">"no es una fecha"</span>  
+<span style="color:cyan">res49_0</span>: <span style="color:green">String</span> = <span style="color:green">"mi a\u00f1o especial :D"</span>  
+<span style="color:cyan">res49_1</span>: <span style="color:green">String</span> = <span style="color:green">"feliz a\u00f1o nuevo!"</span>  
+<span style="color:cyan">res49_2</span>: <span style="color:green">String</span> = <span style="color:green">"es a\u00f1o bisiesto 2020-02-29"</span>  
+<span style="color:cyan">res49_3</span>: <span style="color:green">String</span> = <span style="color:green">"eso es muy viejo"</span>  
+<span style="color:cyan">res49_4</span>: <span style="color:green">String</span> = <span style="color:green">"eso es muy viejo"</span>  
+<span style="color:cyan">res49_5</span>: <span style="color:green">String</span> = <span style="color:green">"la fecha es capicua 20200202"</span>  
+<span style="color:cyan">res49_6</span>: <span style="color:green">String</span> = <span style="color:green">"03 del 02 del a\u00f1o 95"</span>  
+<span style="color:cyan">res49_7</span>: <span style="color:green">String</span> = <span style="color:green">"a\u00f1o: 2021, mes: 31, dia: 10"</span>  
+<span style="color:cyan">res49_8</span>: <span style="color:green">String</span> = <span style="color:green">"no es una fecha"</span>  
 
 
 
@@ -421,7 +421,7 @@ o match {
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">tengoDato</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">tengoDato</span>  
 
 
 
@@ -458,7 +458,7 @@ o match {
 
 
 
-defined <span style="color:green">function</span> <span style="color:cyan">noExhaustivo</span>  
+defined <span style="color:green">function</span> <span style="color:cyan">noExhaustivo</span>  
 
 
 
@@ -531,7 +531,7 @@ val isEven: PartialFunction[Int, String] = new PartialFunction[Int, String]{
 
 
 
-<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
+<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
 
 
 
@@ -547,7 +547,7 @@ val isEven: PartialFunction[Int, String] = {
 
 
 
-<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
+<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
 
 
 
@@ -563,7 +563,7 @@ List(1, 2, 3, 4).collect(isEven)
 
 
 
-<span style="color:cyan">res56</span>: <span style="color:green">List</span>[<span style="color:green">String</span>] = <span style="color:yellow">List</span>(<span style="color:green">"2 is even"</span>, <span style="color:green">"4 is even"</span>)
+<span style="color:cyan">res56</span>: <span style="color:green">List</span>[<span style="color:green">String</span>] = <span style="color:yellow">List</span>(<span style="color:green">"2 is even"</span>, <span style="color:green">"4 is even"</span>)
 
 
 
@@ -587,10 +587,10 @@ List(1, 2, 3, 4).map(pf)
 
 
 
-<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
-<span style="color:cyan">isOdd</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
-<span style="color:cyan">pf</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
-<span style="color:cyan">res57_3</span>: <span style="color:green">List</span>[<span style="color:green">String</span>] = <span style="color:yellow">List</span>(<span style="color:green">"1 is odd"</span>, <span style="color:green">"2 is even"</span>, <span style="color:green">"3 is odd"</span>, <span style="color:green">"4 is even"</span>)
+<span style="color:cyan">isEven</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
+<span style="color:cyan">isOdd</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
+<span style="color:cyan">pf</span>: <span style="color:green">PartialFunction</span>[<span style="color:green">Int</span>, <span style="color:green">String</span>] = <function1>
+<span style="color:cyan">res57_3</span>: <span style="color:green">List</span>[<span style="color:green">String</span>] = <span style="color:yellow">List</span>(<span style="color:green">"1 is odd"</span>, <span style="color:green">"2 is even"</span>, <span style="color:green">"3 is odd"</span>, <span style="color:green">"4 is even"</span>)
 
 
 
@@ -616,8 +616,8 @@ optval.map(x => x match {
 
 
 
-<span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
-<span style="color:cyan">res58_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
+<span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
+<span style="color:cyan">res58_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
 
 
 
@@ -637,8 +637,8 @@ optval.map{
 
 
 
-<span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
-<span style="color:cyan">res59_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
+<span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
+<span style="color:cyan">res59_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
 
 
 
@@ -689,8 +689,8 @@ foo.collect{
 
 
 
-<span style="color:cyan">foo</span>: <span style="color:green">List</span>[<span style="color:green">Option</span>[<span style="color:green">Int</span>]] = <span style="color:yellow">List</span>(<span style="color:yellow">Some</span>(<span style="color:green">4</span>), <span style="color:green">None</span>, <span style="color:yellow">Some</span>(<span style="color:green">1</span>))
-<span style="color:cyan">res61_1</span>: <span style="color:green">List</span>[<span style="color:green">Int</span>] = <span style="color:yellow">List</span>(<span style="color:green">5</span>, <span style="color:green">5</span>)
+<span style="color:cyan">foo</span>: <span style="color:green">List</span>[<span style="color:green">Option</span>[<span style="color:green">Int</span>]] = <span style="color:yellow">List</span>(<span style="color:yellow">Some</span>(<span style="color:green">4</span>), <span style="color:green">None</span>, <span style="color:yellow">Some</span>(<span style="color:green">1</span>))
+<span style="color:cyan">res61_1</span>: <span style="color:green">List</span>[<span style="color:green">Int</span>] = <span style="color:yellow">List</span>(<span style="color:green">5</span>, <span style="color:green">5</span>)
 
 
 
