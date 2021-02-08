@@ -38,3 +38,5 @@ defaults:
 collections:
   authors:
     output: true
+
+google_analytics: UA-140060849-1
