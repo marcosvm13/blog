@@ -51,12 +51,12 @@ type IOLens[S, A] = IOCoalgebra[LensAlg[A, ?[_]], State, S]
 If we expand `IOLens[S, A]`, we get `LensAlg[A, State[S, ?]]`, which is a perfectly valid representation for lenses as demonstrated by the following isomorphism:
 
 ```scala
-def lensIso[S, A] = new (Lens[S, A] &lt;=&gt; IOLens[S, A]) {
+def lensIso[S, A] = new (Lens[S, A] <=> IOLens[S, A]) {
 
-  def from: IOLens[S, A] =&gt; Lens[S, A] =
-    ioln =&gt; Lens[S, A](ioln.get.eval)(a =&gt; ioln.set(a).exec)
+  def from: IOLens[S, A] => Lens[S, A] =
+    ioln => Lens[S, A](ioln.get.eval)(a => ioln.set(a).exec)
 
-  def to: Lens[S, A] =&gt; IOLens[S, A] = ln =&gt; new IOLens[S, A] {
+  def to: Lens[S, A] => IOLens[S, A] = ln => new IOLens[S, A] {
     def get: State[S, A] = State.gets(ln.get)
     def set(a: A): State[S, Unit] = State.modify(ln.set(a))
   }
@@ -78,7 +78,7 @@ This optic just replaces IOLens' `get` with `getOption`, stating that it's not a
 
 ```scala
 trait SetterAlg[A, P[_]] {
-  def modify(f: A =&gt; A): P[Unit]
+  def modify(f: A => A): P[Unit]
 }
 
 type IOSetter[S, A] = IOCoalgebra[SetterAlg[A, ?[_]], State, S]
@@ -106,10 +106,10 @@ trait MonadState[F[_], S] extends Monad[F] {
   def get: F[S]
   def put(s: S): F[Unit]
 
-  def gets[A](f: S =&gt; A): F[A] =
+  def gets[A](f: S => A): F[A] =
     map(get)(f)
 
-  def modify(f: S =&gt; S): F[Unit] =
+  def modify(f: S => S): F[Unit] =
     bind(get)(f andThen put)
 }
 ```
@@ -122,14 +122,14 @@ trait LensAlg[A, P[_]] {
   def set(a: A): P[Unit]
 
   def gets[B](
-      f: A =&gt; B)(implicit
+      f: A => B)(implicit
       F: Functor[P]): P[B] =
     get map f
 
   def modify(
-      f: A =&gt; A)(implicit
+      f: A => A)(implicit
       M: Monad[P]): P[Unit] =
-    get &gt;&gt;= (f andThen set)
+    get >>= (f andThen set)
 }
 ```
 
@@ -151,7 +151,7 @@ Connections between optics and state have already been identified. Proof of this
 ```scala
 class StateLensOps[S, A](lens: Lens[S, A]) {
   def toState: State[S, A] = ...
-  def mod(f: A =&gt; A): State[S, A] = ...
+  def mod(f: A => A): State[S, A] = ...
   def assign(a: A): State[S, A] = ...
   ...
 }
@@ -162,12 +162,12 @@ For instance, `mod` is a shortcut for applying `lens.modify` over the standing o
 ```scala
 case class Person(name: String, age: Int)
 val _age: Lens[Person, Int] = GenLens[Person](_.age)
-val p: Person = Person(&quot;John&quot;, 30)
+val p: Person = Person("John", 30)
 
-test(&quot;mod&quot;) {
+test("mod") {
   val increment: State[Person, Int] = _age mod (_ + 1)
 
-  increment.run(p) shouldEqual ((Person(&quot;John&quot;, 31), 31))
+  increment.run(p) shouldEqual ((Person("John", 31), 31))
 }
 ```
 
@@ -176,14 +176,14 @@ That said, how can we harness from our optic representation to analyze this modu
 ```scala
 case class Person(name: String, age: Int)
 val _ioage: IOLens[Person, Int] =
-  IOLens(_.age)(age =&gt; _.copy(age = age))
-val p: Person = Person(&quot;John&quot;, 30)
+  IOLens(_.age)(age => _.copy(age = age))
+val p: Person = Person("John", 30)
 
-test(&quot;mod&quot;) {
+test("mod") {
   val increment: State[Person, Int] =
-    (_ioage modify (_ + 1)) &gt;&gt; (_ioage get)
+    (_ioage modify (_ + 1)) >> (_ioage get)
 
-  increment.run(p) shouldEqual ((Person(&quot;John&quot;, 31), 31))
+  increment.run(p) shouldEqual ((Person("John", 31), 31))
 }
 ```
 

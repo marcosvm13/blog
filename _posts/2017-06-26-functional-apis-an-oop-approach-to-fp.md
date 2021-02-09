@@ -63,8 +63,8 @@ trait IO { // Async
 }
 
 trait IO { // Pure state transformations
-  def write(msg: String): IOState =&gt; (IOState, Unit)
-  def read(): IOState =&gt; (IOState, String)
+  def write(msg: String): IOState => (IOState, Unit)
+  def read(): IOState => (IOState, String)
 }
 ```
 
@@ -91,7 +91,7 @@ type SynchIO = IO[Id]
 type AsyncIO = IO[Future]
 
 // Pure state transformations
-type State[A] = IOState =&gt; (IOState, A)
+type State[A] = IOState => (IOState, A)
 type StateIO = IO[State]
 ```
 
@@ -104,7 +104,7 @@ Ain't it easy? Let's see what we have so far. We have a type class that models I
 
 ```scala
 def hello[P[_]](IO: IO[P]): P[Unit] =
-  IO.write(&quot;Hello, world!&quot;)
+  IO.write("Hello, world!")
 
 def sayWhat[P[_]](IO: IO[P]): P[String] =
   IO.read
@@ -114,7 +114,7 @@ Not very impressive, we don't have any problem to build simple programs, what ab
 
 ```scala
 def helloSayWhat[P[_]](IO: IO[P]): P[String] = {
-  IO.write(&quot;Hello, say something:&quot;)
+  IO.write("Hello, say something:")
   IO.read()
 } // This doesn't work as expected
 ```
@@ -123,7 +123,7 @@ Houston, we have a problem! The program above just reads the input but it's not 
 
 ```scala
 trait Monad[P[_]] {
-  def flatMap[A, B](pa: P[A])(f: A =&gt; P[B]): P[B]
+  def flatMap[A, B](pa: P[A])(f: A => P[B]): P[B]
   def pure[A](a: A): P[A]
 }
 ```
@@ -132,18 +132,18 @@ Well, you won't believe it but we can already *define* every single program we h
 
 ```scala
 def helloSayWhat[P[_]](M: Monad[P], IO: IO[P]): P[String] =
-  M.flatMap(IO.write(&quot;Hello, say something:&quot;)){ _ =&gt;
+  M.flatMap(IO.write("Hello, say something:")){ _ =>
     IO.read
   }
 
 def echo[P[_]](M: Monad[P], IO: IO[P]): P[Unit] =
-  M.flatMap(IO.read){ msg =&gt;
+  M.flatMap(IO.read){ msg =>
     IO.write(msg)
   }
 
 def echo2[P[_]](M: Monad[P], IO: IO[P]): P[String] =
-  M.flatMap(IO.read){ msg =&gt;
-    M.flatMap(IO.write(msg)){ _ =&gt;
+  M.flatMap(IO.read){ msg =>
+    M.flatMap(IO.write(msg)){ _ =>
       M.pure(msg)
     }
   }
@@ -153,15 +153,15 @@ Ok, the previous code is pretty modular but isn't very sweet. But with a little 
 
 ```scala
 def helloSayWhat[P[_]: Monad: IO]: P[String] =
-  write(&quot;Hello, say something:&quot;) &gt;&gt;
+  write("Hello, say something:") >>
   read
 
 def echo[P[_]: Monad: IO]: P[Unit] =
-  read &gt;&gt;= write[P]
+  read >>= write[P]
 
 def echo2[P[_]: Monad: IO]: P[String] = for {
-  msg &lt;- read
-  _ &lt;- write(msg)
+  msg <- read
+  _ <- write(msg)
 } yield msg
 ```
 
@@ -178,7 +178,7 @@ implicit object ioTerminal extends IO[Id] {
 }
 
 implicit object idMonad extends Monad[Id] {
-  def flatMap[A, B](pa: Id[A])(f: A =&gt; Id[B]): Id[B] = f(pa)
+  def flatMap[A, B](pa: Id[A])(f: A => Id[B]): Id[B] = f(pa)
   def pure[A](a: A): Id[A] = a
 }
 
@@ -219,7 +219,7 @@ About the question of which alternative is better, GADTs or Functional APIs, the
 * <strong>Reification: </strong>if you need somehow to pass around your programs, or read programs from a file, then you need to represent programs as values, and for that purpose ADTs come in very handy.
 * <strong>Modular interpreters: </strong>Arguably, we can write interpreters in a more modular fashion when working with GADTs, as, for instance, with the `<a href="https://github.com/atnos-org/eff">Eff</a>` monad.
 
-## Conclusion &amp; next steps
+## Conclusion & next steps
 We have seen how we can do purely functional programming in an object-oriented fashion using so-called functional APIs, i.e. using type classes instead of plain abstract interfaces. This little change allowed us to widen the type of interpretations that our OO APIs can handle, and write programs in a purely declarative fashion. And, significantly, all of this was achieved while working in the realm of object-oriented programming! So, this style of doing FP, which is also known as MTL, tagless final and related to object-algebras, is more closely aligned with OO programmers, and don't require knowledge of alien abstractions to the OO world such as GADTs and natural transformations. But we just scratched the surface, as this is a very large subject to tackle in one post. Some of the topics we may see in the future are:
 
 

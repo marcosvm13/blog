@@ -32,14 +32,14 @@ This is a possible way of writing the "Hello, world!" program in Scala:
 ```scala
 object Example1{
   def hello(): Unit =
-    println(&quot;Hello, world!&quot;)
+    println("Hello, world!")
 }
 ```
 
 which can be run in the Scala REPL as follows:
 
 ```scala
-scala&gt; Example1.hello()
+scala> Example1.hello()
 Hello, world!
 ```
 
@@ -69,12 +69,12 @@ object Example1{
 
     // Program
     def pureHello(): IOProgram =
-      Print(&quot;Hello, world!&quot;)
+      Print("Hello, world!")
 
     // Interpreter
     def run(program: IOProgram): Unit =
       program match {
-        case Print(msg) =&gt; println(msg)
+        case Print(msg) => println(msg)
       }
 
     // Composition
@@ -89,19 +89,19 @@ Now, an important remark concerning the above code: note that we defined the al
 
 
 * First, our effect data type can be regarded as the *language* we use to describe the desired effects of our application. As part of this language, we can have different types of single effects, such as the `Print` effect or instruction. Also, since languages are used to write programs, expressions in our effect language can be called *programs*, and we can use the word "program" to name the type of the overall effect language. In our case, since we are dealing with IO effects, `IOProgram` is a good name. Last, note that the purpose of our language is very specific: we want to be able to write programs that just build upon IO instructions, so `IOProgram` is actually a *domain-specific* language (DSL). Here there are some hand-crafted programs of our IO DSL:```scala
-scala&gt; import Example1.Fun._
+scala> import Example1.Fun._
 import Example1.Fun._
-scala&gt; val program1: IOProgram = Print(&quot;hi!&quot;)
+scala> val program1: IOProgram = Print("hi!")
 program1: Example1.Fun.IOProgram = Print(hi!)
-scala&gt; val program2: IOProgram = Print(&quot;dummy program!&quot;)
+scala> val program2: IOProgram = Print("dummy program!")
 program2: Example1.Fun.IOProgram = Print(dummy program!)
 ```
 * So, pure functions return programs: this means that functional programming is intimately related to metaprogramming! And when we say that functional programming is *declarative*, we mean that functional programs just *declare* or *describe* what has to be done in terms of expressions or values. To convince yourself that our `pureHello` function is really declarative (i.e. pure), just execute it on the REPL. You will see that the only thing that happens during its execution is that a new value is computed by the runtime system (note that the output that you'll see in the REPL is not a result of the `pureHello` execution, but of the REPL itself):```scala
-scala&gt; Example1.Fun.pureHello()
+scala> Example1.Fun.pureHello()
 res1: Example1.Fun.IOProgram = Print(Hello, world!)
 ```
 * Once we execute a pure function and obtain a program, what is left is to actually *run* that program. But our program is an expression, pure syntax, so we have to choose a particular *interpretation* before we can actually run it. In our case, we chose to interpret our `IOProgram`s in term of console instructions, but we are free to interpret it otherwise (file IO, socket, etc.). When you run the program computed by our `pureHello` function, you will actually see the intended side effects:```scala
-scala&gt; Example1.Fun.run(Example1.Fun.pureHello())
+scala> Example1.Fun.run(Example1.Fun.pureHello())
 Hello, world!
 ```
 

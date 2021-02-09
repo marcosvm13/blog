@@ -25,7 +25,7 @@ permalink: "/2017/02/20/algebras-for-the-masses/"
 According to Wikipedia, *"an <a href="https://en.wikipedia.org/wiki/Algebraic_structure">Algebraic Structure</a> is a set with one or more finitary operations defined on it that satisfies a list of axioms"*. From a programming perspective, that sounds like a bunch of methods defined on a type. In fact, we can find many of those algebras represented as *type classes* in libraries such as *scalaz* or *cats*. This way of representing algebras is pretty related to <a href="https://www.cs.utexas.edu/~wcook/Drafts/2012/ecoop2012.pdf">*object algebras*</a>. However, it's quite common to hear about <a href="https://www.schoolofhaskell.com/user/bartosz/understanding-algebras">*F-algebras*</a> as well, an abstraction that arises from the field of *Category Theory*. Today, we'll see not only that both representations are isomorphic, but also how to systematically generate conversions between them. To validate those transformations, we'll scratch the surface of <a href="https://github.com/slamdata/matryoshka">Matryoshka</a> to fold several expressions with the aforementioned algebra representations. So here we go!
 
 ## Algebras and Their Representations
-Undoubtedly, one of the most widespread algebraic structures in the functional programming community is *monoid*. Despite its simplicity, it turns out to be <a href="http://repository.upenn.edu/cgi/viewcontent.cgi?article=1773&amp;context=cis_papers">very powerful</a>. Typically, in Scala type class libraries, monoid is represented as follows:
+Undoubtedly, one of the most widespread algebraic structures in the functional programming community is *monoid*. Despite its simplicity, it turns out to be <a href="http://repository.upenn.edu/cgi/viewcontent.cgi?article=1773&context=cis_papers">very powerful</a>. Typically, in Scala type class libraries, monoid is represented as follows:
 
 ```scala
 trait OMonoid[A] {
@@ -46,7 +46,7 @@ val sumOMonoid: OMonoid[Int] = new OMonoid[Int] {
 Once we have shown object algebra fundamentals, it's time to focus on F-algebras. This is a really simple abstraction that consists of a *Functor* `F[_]`, a *carrier* type `A` and an algebra *structure* (the function itself):
 
 ```scala
-type FAlgebra[F[_], A] = F[A] =&gt; A
+type FAlgebra[F[_], A] = F[A] => A
 ```
 
 At first glance, this looks very different from the object algebra approach for monoids. However, as we will see, the translation is completely natural. Indeed, this representation just packs all the algebra operations into a unique function. Thereby, the major challenge here is to identify the corresponding functor for monoids, which is an Algebraic Data Type with a representative for every operation conforming the algebra. We refer to it as the algebra signature:
@@ -67,24 +67,24 @@ Finally, we could provide a *sum* instance for the brand new monoid representati
 
 ```scala
 val sumFMonoid: FMonoid[Int] = {
-  case Mzero() =&gt; 0
-  case Mappend(a1, a2) =&gt; a1 + a2
+  case Mzero() => 0
+  case Mappend(a1, a2) => a1 + a2
 }
 ```
 
 We claim that `sumFMonoid` is isomorphic to `sumOMonoid`. In order to provide such an evidence, we show the isomorphism between `OMonoid` and `FMonoid`:
 
 ```scala
-val monoidIso = new (OMonoid &lt;~&gt; FMonoid) {
+val monoidIso = new (OMonoid <~> FMonoid) {
 
-  val to = new (OMonoid ~&gt; FMonoid) {
+  val to = new (OMonoid ~> FMonoid) {
     def apply[A](omonoid: OMonoid[A]) = {
-      case Mzero() =&gt; omonoid.mzero
-      case Mappend(a1, a2) =&gt; omonoid.mappend(a1, a2)
+      case Mzero() => omonoid.mzero
+      case Mappend(a1, a2) => omonoid.mappend(a1, a2)
     }
   }
 
-  val from = new (FMonoid ~&gt; Monoid) {
+  val from = new (FMonoid ~> Monoid) {
     def apply[A](fmonoid: FAlgebra[Σ, A]) = new FMonoid[A] {
       def mzero = fmonoid(Mzero())
       def mappend(a1: A, a2: A) = fmonoid(Mappend(a1, a2))

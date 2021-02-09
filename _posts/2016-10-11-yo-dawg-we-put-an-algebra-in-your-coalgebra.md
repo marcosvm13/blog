@@ -34,18 +34,18 @@ As Dan Piponi suggested in <a href="http://blog.sigfpe.com/2014/05/cofree-meets-
 *F-coalgebra* (or functor-coalgebra) is just a reversed version of the more popular concept of <a href="https://www.schoolofhaskell.com/user/bartosz/understanding-algebras">*F-algebra*</a>, both of them belonging to the mystical world of Category Theory. The most widespread representation of an F-algebra is
 
 ```scala
-type Algebra[F[_], X] = F[X] =&gt; X
+type Algebra[F[_], X] = F[X] => X
 ```
 
 (using *Scala* here) Paraphrasing Bartosz Milewski, "It always amazes me how much you can do with so little". I believe that its dual counterpart
 
 ```scala
-type Coalgebra[F[_], X] = X =&gt; F[X]
+type Coalgebra[F[_], X] = X => F[X]
 ```
 
 deserves the very same amazingness, so today we'll put focus on them.
 
-Given the previous representation, we notice that F-coalgebras are composed of a carrier `X`, a functor `F[_]` and a structure `X =&#062; F[X]` itself. What can we do with such a thing? Since we are just software developer muggles (vs matemagicians), we need familiar abstractions to deal with coalgebras. Therefore, we like to think of them as machines with buttons, which know how to forward a particular state (maybe requiring some input) to the next one (maybe attaching some output along) by pressing the aforementioned buttons. Now, let's find out some examples of mainstream machines that we, as functional programmers, already know:
+Given the previous representation, we notice that F-coalgebras are composed of a carrier `X`, a functor `F[_]` and a structure `X => F[X]` itself. What can we do with such a thing? Since we are just software developer muggles (vs matemagicians), we need familiar abstractions to deal with coalgebras. Therefore, we like to think of them as machines with buttons, which know how to forward a particular state (maybe requiring some input) to the next one (maybe attaching some output along) by pressing the aforementioned buttons. Now, let's find out some examples of mainstream machines that we, as functional programmers, already know:
 
 ```scala
 // Generator Machine (Streams)
@@ -53,19 +53,19 @@ type GeneratorF[A, S] = (A, S)
 type Generator[A, S]  = Coalgebra[GeneratorF[A, ?], S]
 
 // Mealy Automata Machine
-type AutomataF[I, S] = I =&gt; (Boolean, S)
+type AutomataF[I, S] = I => (Boolean, S)
 type Automata[I, S]  = Coalgebra[AutomataF[I, ?], S]
 
 // Lens Machine
-type LensF[A, S] = (A, A =&gt; S)
+type LensF[A, S] = (A, A => S)
 type Lens[A, S]  = Coalgebra[LensF[A, ?], S]
 ```
 
-Firstly, let's expand `Generator[A, S]` into `S =&#062; (A, S)` which is something easier to deal with. Indeed, it's just a function that, given an initial state `S`, it returns both the head `A` and the tail `S` associated to that original state. It's the simplest specification of a generator machine that one could find! Given a concrete specification and once provided an initial state, we could build a standard `Stream` of `A`s.
+Firstly, let's expand `Generator[A, S]` into `S => (A, S)` which is something easier to deal with. Indeed, it's just a function that, given an initial state `S`, it returns both the head `A` and the tail `S` associated to that original state. It's the simplest specification of a generator machine that one could find! Given a concrete specification and once provided an initial state, we could build a standard `Stream` of `A`s.
 
-Secondly, we showed a Mealy `Automata`. Again, let's turn `Automata[I, S]` into `S =&#062; I =&#062; (Boolean, S)` to see it clearer: given the current state `S` and any input `I` we can determine both the finality `Boolean` condition and the new state `S`.
+Secondly, we showed a Mealy `Automata`. Again, let's turn `Automata[I, S]` into `S => I => (Boolean, S)` to see it clearer: given the current state `S` and any input `I` we can determine both the finality `Boolean` condition and the new state `S`.
 
-Finally, we saw `Lens`. Notice that the type parameters are reversed if we compare this lens with the "official" representation (eg. *lens*, *Monocle*, etc.). This is just to provide homogeneity with the rest of machines, where the state `S` is kept as the last parameter. As usual, let's expand `Lens[A, S]` to obtain `S =&#062; (A, A =&#062; S)`. This tell us that given an initial state `S`, we could either *get* the smaller piece `A` or *set* the whole state with a brand new `A`.
+Finally, we saw `Lens`. Notice that the type parameters are reversed if we compare this lens with the "official" representation (eg. *lens*, *Monocle*, etc.). This is just to provide homogeneity with the rest of machines, where the state `S` is kept as the last parameter. As usual, let's expand `Lens[A, S]` to obtain `S => (A, A => S)`. This tell us that given an initial state `S`, we could either *get* the smaller piece `A` or *set* the whole state with a brand new `A`.
 
 So far, we have seen the typical representation for some prominent coalgebras. On the other hand, we claimed that we like to think of those coalgebras as machines with buttons that let us make them work. That machine abstraction seems nice, but I agree it's difficult to see those buttons right now. So, let's find them!
 
@@ -73,37 +73,37 @@ So far, we have seen the typical representation for some prominent coalgebras. O
 As promised, we'll dive into F-coalgebras to find some buttons. I anticipate that those buttons are kind of special, since they could require some input in order to be pressed and they could return some output after that action. We're going to use `Lens` as a guiding example but we'll show the final derivation for our three machines at the end as well. So, we start from this representation:
 
 ```scala
-type Lens[A, S] = S =&gt; (A, (A =&gt; S))
+type Lens[A, S] = S => (A, (A => S))
 ```
 
 If we apply basic math, we can split this representation into a tuple, getting an isomorphic one:
 
 ```scala
-type Lens[A, S] = (S =&gt; A, S =&gt; A =&gt; S)
+type Lens[A, S] = (S => A, S => A => S)
 ```
 
 Trust me when I say that every element in this tuple corresponds with an input-output button, but we still have to make them uniform. First of all, we're going to flip the function at the second position, so the input for that button stays in the left hand side:
 
 ```scala
-type Lens[A, S] = (S =&gt; A, A =&gt; S =&gt; S)
+type Lens[A, S] = (S => A, A => S => S)
 ```
 
 Our button at the first position has no input, but we can create an artificial one to make the input slot uniform:
 
 ```scala
-type Lens[A, S] = (Unit =&gt; S =&gt; A, A =&gt; S =&gt; S)
+type Lens[A, S] = (Unit => S => A, A => S => S)
 ```
 
-Once provided the input for the buttons, we reach different situations. On the first button there is `S =&#062; A` which is a kind of observation where the state remains as is. However, in the second button, there is `S =&#062; S` which is clearly a state transformation with no output attached to it. If we return the original state along with the observed output in the first button and provide an artificial output for the second one, we get our uniform buttons, both with an input, an output and the resulting state.
+Once provided the input for the buttons, we reach different situations. On the first button there is `S => A` which is a kind of observation where the state remains as is. However, in the second button, there is `S => S` which is clearly a state transformation with no output attached to it. If we return the original state along with the observed output in the first button and provide an artificial output for the second one, we get our uniform buttons, both with an input, an output and the resulting state.
 
 ```scala
-type Lens[A, S] = (Unit =&gt; S =&gt; (S, A), A =&gt; S =&gt; (S, Unit))
+type Lens[A, S] = (Unit => S => (S, A), A => S => (S, Unit))
 ```
 
 If we squint a bit, we can find an old good friend hidden in the right hand side of our buttons, the *State* monad, leading us to a new representation where both tuple elements are *Kleisli* arrows:
 
 ```scala
-type Lens[A, S] = (Unit =&gt; State[S, A], A =&gt; State[S, Unit])
+type Lens[A, S] = (Unit => State[S, A], A => State[S, Unit])
 ```
 
 Finally, we can achieve a final step, aiming at both naming the buttons and being closer to an object-oriented mindset:
@@ -115,7 +115,7 @@ trait Lens[A, S] {
 }
 ```
 
-So here we are! We have turned an F-coalgebra into a trait that represents a machine where buttons (get &amp; set) are certainly determined. Obviously, pressing a button is synonym for invoking a method belonging to that machine. The returning value represents the state transformation that we must apply over the current state to make it advance. If we apply the same derivation to streams and automata we get similar representations:
+So here we are! We have turned an F-coalgebra into a trait that represents a machine where buttons (get & set) are certainly determined. Obviously, pressing a button is synonym for invoking a method belonging to that machine. The returning value represents the state transformation that we must apply over the current state to make it advance. If we apply the same derivation to streams and automata we get similar representations:
 
 ```scala
 trait Generator[A, S] {
@@ -146,17 +146,17 @@ So, lenses can be understood as a state-based interpretation of a particular Inp
 
 ```scala
 def modify[A, P[_]](
-    f: A =&gt; A)(implicit
+    f: A => A)(implicit
     P: LensAlg[A, P],
     M: Monad[P]): P[Unit] =
-  P.get &gt;&gt;= (P.set compose f)
+  P.get >>= (P.set compose f)
 ```
 
 Notice that although `modify` constrains `P` to be monadic, this restriction could be different in other scenarios, as we can see with `gets`, where `Functor` is powerful enough to fulfil the programmer needs:
 
 ```scala
 def gets[A, B, P[_]](
-    f: A =&gt; B)(implicit
+    f: A => B)(implicit
     P: LensAlg[A, P],
     F: Functor[P]): P[B] =
   P.get map f
@@ -165,7 +165,7 @@ def gets[A, B, P[_]](
 These programs are absolutely declarative since nothing has been said about `P[_]` yet, except for the fundamental constraints. Indeed, this way of programming should be pretty familiar for a functional programmer: the step that abstracted the state away led us to a (Higher Kinded) <a href="https://www.cs.utexas.edu/~wcook/Drafts/2012/ecoop2012.pdf">object-algebra</a> interface, which is just an alternative way of representing algebras (as F-algebras are).
 
 ## Ongoing Work
-We started this post talking about F-coalgebras, `type Coalgebra[F[_], X] = X =&#062; F[X]`, and then we turned our lens coalgebra example into a new representation where buttons and state transformation concerns are clearly identified (rather than being hidden into the functor 'F'). Indeed, we may tentatively put forward IO-coalgebras as a particular class of coalgebras, and define lenses as follows:
+We started this post talking about F-coalgebras, `type Coalgebra[F[_], X] = X => F[X]`, and then we turned our lens coalgebra example into a new representation where buttons and state transformation concerns are clearly identified (rather than being hidden into the functor 'F'). Indeed, we may tentatively put forward IO-coalgebras as a particular class of coalgebras, and define lenses as follows:
 
 ```scala
 type IOCoalgebra[IOAlg[_[_]], Step[_, _], S] = IOAlg[Step[S, ?]]

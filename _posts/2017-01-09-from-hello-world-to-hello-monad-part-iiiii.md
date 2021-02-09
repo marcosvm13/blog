@@ -29,7 +29,7 @@ In the following paragraphs, you'll find a series of impure IO programs that rep
 object HelloWorld{
   /* Impure program */
   def helloWorld: String =
-    println(&quot;Hello, world!&quot;)
+    println("Hello, world!")
 
   /* Functional solution */
   object Fun {
@@ -39,12 +39,12 @@ object HelloWorld{
 
     // Pure function
     def pureHello(): IOProgram =
-      Print(&quot;Hello, world!&quot;)
+      Print("Hello, world!")
 
     // Interpreter
     def run(program: IOProgram): Unit =
       program match {
-        case Print(msg) =&gt; println(msg)
+        case Print(msg) => println(msg)
       }
 
     // Impure program (modularised)
@@ -64,9 +64,9 @@ def sayWhat: String =
 Similarly to the "Hello, world!" program, the "sayWhat" program consists of a single IO instruction. In this case, when the program is run it will immediately block until we type something in the console. Then, it will return the string typed, rather than `Unit`:
 
 ```scala
-scala&gt; SayWhat.sayWhat
-(type &quot;something&quot;)
-res0: String = &quot;something&quot;
+scala> SayWhat.sayWhat
+(type "something")
+res0: String = "something"
 ```
 
 In order to purify any program we have to return pure values that represent a description of the logic we want to accomplish. In order to describe this logic, we use the IOProgram DSL, but the current version of this DSL does only offer a `Write` instruction, so we have to extend it with a new `Read` command:
@@ -103,8 +103,8 @@ Now our programs are parameterized so we need to change the signature a little b
 ```scala
 def run[A](program: IOProgram[A]): A =
   program match {
-    case Write(msg) =&gt; println(msg)
-    case Read =&gt; readLine
+    case Write(msg) => println(msg)
+    case Read => readLine
   }
 ```
 
@@ -130,8 +130,8 @@ object SayWhat {
     // Interpreter
     def run[A](program: IOProgram[A]): A =
       program match {
-        case Write(msg) =&gt; println(msg)
-        case Read =&gt; readLine
+        case Write(msg) => println(msg)
+        case Read => readLine
       }
 
     // Composition
@@ -146,7 +146,7 @@ We'll start now building programs with more than one instruction. In this case w
 ### Impure program
 ```scala
 def helloSayWhat: String = {
-  println(&quot;Hello, say something:&quot;)
+  println("Hello, say something:")
   readLine
 }
 ```
@@ -163,7 +163,7 @@ case class Sequence[A, B](e1: IOProgram[A], e2: IOProgram[B]) extends IOProgram[
 
 def pureHelloSayWhat: IOProgram[String] =
   Sequence(
-    Single(Write(&quot;Hello, say something:&quot;)),
+    Single(Write("Hello, say something:")),
     Single(Read))
 ```
 
@@ -175,15 +175,15 @@ We must now change the interpreter accordingly. In particular, we need two inter
 ```scala
 def run[A](program: IOProgram[A]): A =
   program match {
-    case Single(e) =&gt; runEffect(e)
-    case Sequence(p1, p2) =&gt;
+    case Single(e) => runEffect(e)
+    case Sequence(p1, p2) =>
       runProgram(p1) ; runProgram(p2)
   }
 
 def runEffect[A](effect: IOEffect[A]): A =
   effect match {
-    case Write(msg) =&gt; println(msg)
-    case Read =&gt; readLine
+    case Write(msg) => println(msg)
+    case Read => readLine
   }
 ```
 
@@ -212,11 +212,11 @@ Note that the `println` instruction is writing the result of the `read` operati
 sealed trait IOProgram[A]
 case class Single[A](e: IOEffect[A]) extends IOProgram[A]
 case class Sequence[A, B](e1: IOProgram[A],
-  e2: A =&gt; IOProgram[B]) extends IOProgram[B]
+  e2: A => IOProgram[B]) extends IOProgram[B]
 
 def pureEcho: IOProgram[Unit] =
   Sequence(
-    Single(Read), read =&gt;
+    Single(Read), read =>
     Single(Write(read)) )
 ```
 
@@ -228,8 +228,8 @@ As commented previously, the new version of the interpreter will simply need to 
 ```scala
 def runProgram[A](program: IOProgram[A]): A =
   program match {
-    case Single(e) =&gt; runEffect(e)
-    case Sequence(p, next) =&gt;
+    case Single(e) => runEffect(e)
+    case Sequence(p, next) =>
       val res = runProgram(p)
       runProgram(next(res))
   }
@@ -261,14 +261,14 @@ This program is similar to the last one, but this time we return the *String* re
 sealed trait IOProgram[A]
 case class Single[A](e: IOEffect[A]) extends IOProgram[A]
 case class Sequence[A, B](e1: IOProgram[A],
-  e2: A =&gt; IOProgram[B]) extends IOProgram[B]
+  e2: A => IOProgram[B]) extends IOProgram[B]
 case class Value[A](a: A) extends IOProgram[A]
 
 def pureEcho: IOProgram[String] =
   Sequence(
-    Single(Read), read =&gt;
+    Single(Read), read =>
       Sequence(
-        Write(read), _ =&gt;
+        Write(read), _ =>
           Value(read)))
 ```
 
@@ -285,11 +285,11 @@ In order to update the interpreter, we just have to deal with our new type of IO
 ```scala
 def runProgram[A](program: IOProgram[A]): A =
   program match {
-    case Single(e) =&gt; runEffect(e)
-    case Sequence(p, next) =&gt;
+    case Single(e) => runEffect(e)
+    case Sequence(p, next) =>
       val res = runProgram(p)
       runProgram(next(res))
-    case Value(a) =&gt; a
+    case Value(a) => a
   }
 ```
 
@@ -305,7 +305,7 @@ def echo: String = runProgram(pureEcho)
 ## Conclusion
 This post aimed at showing that no matter how complex you impure programs are, you can always design a DSL to represent those programs in a purely declarative way. In our case, the DSL for building IO programs we ended up with is pretty expressive. In fact, we can represent any kind of imperative control flow with it. Try it!
 
-There are, however, two major flaws we have still to deal with. First, we have to admit that the readability of programs written in the final `IOProgram` DSL is ... poor, to say the least. Second, there is a lot of boilerplate involved in the design of the `IOProgram` type. Indeed, no matter the type of DSL we are dealing with (based on IO instructions, File system operations, Web service calls, etc.), if we need imperative features, we will need to copy &amp; paste the same `Sequence` and `Value` cases. We leave the solution to these problems for the next and last post of this series!
+There are, however, two major flaws we have still to deal with. First, we have to admit that the readability of programs written in the final `IOProgram` DSL is ... poor, to say the least. Second, there is a lot of boilerplate involved in the design of the `IOProgram` type. Indeed, no matter the type of DSL we are dealing with (based on IO instructions, File system operations, Web service calls, etc.), if we need imperative features, we will need to copy & paste the same `Sequence` and `Value` cases. We leave the solution to these problems for the next and last post of this series!
 
 <strong>Edit:</strong> All code from this post can be found <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/hello-monads/partII.scala" target="_blank">here</a>.
 

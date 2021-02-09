@@ -31,7 +31,7 @@ In the <a href="http://blog.hablapps.com/2016/01/22/from-hello-world-to-hello-mo
   case class Single[A](e: IOProgram.Effect[A])
     extends IOProgram[A]
   case class Sequence[A, B](p1: IOProgram[A],
-    p2: A =&gt; IOProgram[B]) extends IOProgram[B]
+    p2: A => IOProgram[B]) extends IOProgram[B]
   case class Value[A](a: A) extends IOProgram[A]
 
   object IOProgram{
@@ -43,8 +43,8 @@ In the <a href="http://blog.hablapps.com/2016/01/22/from-hello-world-to-hello-mo
   // Sample IO program
 
   def echo(): IOProgram[String] =
-    Sequence(Single(Read()), (msg: String) =&gt;
-      Sequence(Write(msg), (_ : Unit) =&gt;
+    Sequence(Single(Read()), (msg: String) =>
+      Sequence(Write(msg), (_ : Unit) =>
         Value(msg)))
 ```
 
@@ -74,9 +74,9 @@ Next, let's introduce some smart constructors for sequencing programs. We will n
 
 ```scala
 sealed trait IOProgram[A]{
-  def flatMap[B](f: A =&gt; IOProgram[B]): IOProgram[B] =
+  def flatMap[B](f: A => IOProgram[B]): IOProgram[B] =
     Sequence(this, f)
-  def map[B](f: A =&gt; B): IOProgram[B] =
+  def map[B](f: A => B): IOProgram[B] =
     flatMap(f andThen Value.apply)
 }
 ```
@@ -87,8 +87,8 @@ Using all these smart constructors we can already write our program in a more co
 import IOProgram.Syntax._
 
 def echo: IOProgram[String] =
-  read() flatMap { msg =&gt;
-    write(msg) map { _ =&gt; msg }
+  read() flatMap { msg =>
+    write(msg) map { _ => msg }
   }
 ```
 
@@ -109,8 +109,8 @@ For one thing at least: in case that our program consists of a long sequence of 
 import IOProgram.Syntax._
 
 def echo(): IOProgram[String] = for{
-  msg &lt;- read()
-  _ &lt;- write(msg)
+  msg <- read()
+  _ <- write(msg)
 } yield msg
 ```
 
@@ -124,7 +124,7 @@ sealed trait FileSystemProgram[A]
 case class Single[A](e: FileSystemProgram.Effect[A])
   extends FileSystemProgram[A]
 case class Sequence[A, B](p1: FileSystemProgram[A],
-  p2: A =&gt; FileSystemProgram[B]) extends FileSystemProgram[B]
+  p2: A => FileSystemProgram[B]) extends FileSystemProgram[B]
 case class Value[A](a: A) extends FileSystemProgram[A]
 
 object FileSystemProgram{
@@ -140,16 +140,16 @@ The only remarkable change is related to the kinds of effects we are dealing wit
 
 ```scala
 sealed trait ImperativeProgram[Effect[_],A]{
-  def flatMap[B](f: A =&gt; ImperativeProgram[Effect,B]) =
+  def flatMap[B](f: A => ImperativeProgram[Effect,B]) =
     Sequence(this, f)
-  def map[B](f: A =&gt; B) =
+  def map[B](f: A => B) =
     flatMap(f andThen Value.apply)
 }
 case class Single[Effect[_],A](e: Effect[A])
   extends ImperativeProgram[Effect,A]
 case class Sequence[Effect[_],A, B](
   p1: ImperativeProgram[Effect,A],
-  p2: A =&gt; ImperativeProgram[Effect,B])
+  p2: A => ImperativeProgram[Effect,B])
   extends ImperativeProgram[Effect,B]
 case class Value[Effect[_],A](a: A)
   extends ImperativeProgram[Effect,A]

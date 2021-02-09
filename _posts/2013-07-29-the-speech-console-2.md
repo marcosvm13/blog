@@ -72,9 +72,9 @@ object Main extends App{
 
 Running this program will make the Speech server available at the localhost:8111 default address. Then, you can point the browser to the URL localhost:8111/console to get access to the Speech console. The following video illustrates this process and a sample session with two users.
 
-[youtube=http://www.youtube.com/watch?feature=player_embedded&amp;v=zrE0ufY7y78]
+[youtube=http://www.youtube.com/watch?feature=player_embedded&v=zrE0ufY7y78]
 
-&nbsp;
+ 
 
 ## *The Speech Server as a structured communication infrastructure*
 But the Speech Virtual Machine is much more than a simple chat server, of course. Even with its minimal configuration, the Speech server allows users to structure their communications around a hierarchy of interaction contexts (akin to *chat rooms*), and their activity in terms of a hierarchy of roles played within those interactions. Thus, besides saying arbitrary things, the previous video showed how users can *set up* new interaction contexts, *join* and *assign* other users to them, say things within those contexts, and, eventually, *leave* and *close* the interactions.

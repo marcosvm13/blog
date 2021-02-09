@@ -78,16 +78,16 @@ The following snippet represents an implementation sketch of the first layer:
 
 ```scala
 trait Speech {
-  trait Interaction[This &lt;: Interaction[This]] { self: This =&gt;
-    type Member &lt;: Agent[Member]
+  trait Interaction[This <: Interaction[This]] { self: This =>
+    type Member <: Agent[Member]
     def member: Set[Member]
     def member_=(agent: Set[Member]): This
   }
 
-  trait Agent[This &lt;: Agent[This]] { self: This =&gt;
+  trait Agent[This <: Agent[This]] { self: This =>
   }
 
-  def play[I &lt;: Interaction[I]](i: I)(a: i.Member): I =
+  def play[I <: Interaction[I]](i: I)(a: i.Member): I =
     i.member = i.member + a
 }
 ```
@@ -115,7 +115,7 @@ trait Twitter extends Speech {
 The Twitter layer simply extends the Speech traits and sets the abstract members to the desired values. Of course, a real implementation will include additional *domain-dependent* attributes, methods, etc., to the *Account *and *Follower* traits (think of the Speech *member* attribute as a kind of *standard* attribute). Note that we also included factory methods for the *Account* and *Follower* types. In a real implementation, it is more than likely that we will need them. And we don't want to commit to any specific implementation class, so we declare them abstract. The next portion of the cake will provide the implementations of the Twitter types - using case classes:
 
 ```scala
-  trait TwitterImpl { self: Twitter =&gt;
+  trait TwitterImpl { self: Twitter =>
 
     private case class AccountClass(member: Set[Follower]) extends Account {
       def member_=(agent: Set[Follower]) = copy(member = agent)
@@ -155,7 +155,7 @@ The major structural change to the above implementation is that we don't need th
 ```scala
 trait Speech {
   trait Interaction {
-    type Member &lt;: Agent
+    type Member <: Agent
     val member: Set[Member]
   }
 
@@ -166,7 +166,7 @@ trait Speech {
 
   implicit val Agent = weakBuilder[Agent]
 
-  def play[I &lt;: Interaction: Builder](i: I)(a: i.Member): I =
+  def play[I <: Interaction: Builder](i: I)(a: i.Member): I =
     i.member := i.member + a
 }
 ```
@@ -208,7 +208,7 @@ assert(((a.member += f2).member -= f2).member == Set())
 val a1 = play(a)(f1)
 assert(a1.member == Set(f1))
 
-println(&quot;ok!&quot;)
+println("ok!")
 ```
 
 Note that the factory method provided by the *Account* builder include default parameters as well. These default parameters are defined through the *Default* type class. The companion object of this type class comes equipped with default values for common Scala types, but you can also provide default values for your own specific types. As you can see, the default value defined for types *Set[_] *is the empty set.
@@ -219,7 +219,7 @@ Concerning the rest of the snippet, we also illustrated the use of the '+=' and 
 Let's suppose that we changed slightly the signature of the *play* method:
 
 ```scala
-def playAll[I &lt;: Interaction: Builder](i: I)(ags: Set[i.Member]): I =
+def playAll[I <: Interaction: Builder](i: I)(ags: Set[i.Member]): I =
   i.member := ags
 ```
 
@@ -229,12 +229,12 @@ We may have forbidden non-final attributes to be used as part of update sentence
 
 ```scala
 trait Interaction {
-  type MemberCol[x] &lt;: Set[x]
-  type Member &lt;: Agent
+  type MemberCol[x] <: Set[x]
+  type Member <: Agent
   val member: MemberCol[Member]
 }
 
-def playAll[I &lt;: Interaction: Builder](i: I)(ags: i.MemberCol[i.Member]): I =
+def playAll[I <: Interaction: Builder](i: I)(ags: i.MemberCol[i.Member]): I =
   i.member := ags
 ```
 
