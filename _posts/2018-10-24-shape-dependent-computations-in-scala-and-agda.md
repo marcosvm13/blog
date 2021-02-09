@@ -345,6 +345,7 @@ object LeavesShape{
     ShapeR: Output[R, ROut],
     Conc: Concatenate[A, LOut, ROut]
   ): Output[Node[L, A, R], Conc.Out] = ???
+}
 ```
 
 We omit the implementations of the `get` and `update` functions to focus on the list shape computation, which is shown through the type alias `Output`. The first case is easy: the shape of list which we need to hold the leaves of a tree of type `Leaf[A]` is the one that allows us to store a single element of type `A`, i.e. `Cons[A, Nil[A]]`. For arbitrary node trees, the situation is in appearance more complicated, though conceptually simple. Given a tree of shape `Node[L, A, R]`, we first need to know the list shapes for the left and right subtrees `L` and `R`. The implicit arguments `ShapeL` and `ShapeR` provide us with the `LOut` and `ROut` shapes. The resulting list shape will be precisely their concatenation, which we achieve through an auxiliary type-level function `Concatenate` (not shown for brevity, but implemented in a similar way). The shape concatenation will be accessible through the `Out` type member variable of that function. The `Conc.Out` type is an example of path-dependent type, a truly dependent type since it depends on the value `Conc` obtained through the implicits mechanism.
@@ -359,7 +360,8 @@ class Leaves[A]{
   def update[In <: Tree[A]](t : In)(implicit S: LeavesShape[In]): S.Out => In = S.update(t)
 
 
-  trait LeavesShape[In <: Tree[A]]{ ... } object LeavesShape{ ... } }
+  trait LeavesShape[In <: Tree[A]]{ ... } object LeavesShape{ ... }
+}
 ```
 
 The auxiliary functions `get` and `update` are the typesafe counterparts of the original signatures. The first difference that we may emphasise is that the type of input trees is not a plain, uninformative `Tree[A]`, but a particular shape of tree `In`. The compiler can then use this shape as input to the type-level function `LeavesShape`, to compute the shape of the resulting list `S.Out`. The output of these functions is thus declared as a path-dependent type. Last, note that the implementation of these functions is wholly delegated to the corresponding implementations of the inferred type-level function. Let’s see how this works in the following REPL session:
