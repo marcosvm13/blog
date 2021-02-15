@@ -13,7 +13,6 @@ plugins:
   - jekyll-seo-tag
   - kramdown
   - rouge
-  - jekyll-toc
 
 
 livereload: true

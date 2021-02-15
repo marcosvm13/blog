@@ -7,6 +7,10 @@ image: /img/pattern.jpg
 intro_image_ratio: is-16by9
 toc: true
 ---
+## Repositorio
+Si prefieres leer este post en formato notebook, lo tienes disponible en [github](https://github.com/alfonsorr/pattern-matching-post).
+
+Si quieres comentar este post, hacer alguna pregunta o sugerencia, puedes usar nuestro [foro del post](https://github.com/hablapps/blog/discussions/4)
 
 ## Conocimientos avanzados de pattern matching
 En el anterior post ya vimos todas las posibilidades que nos ofrece el pattern matching para realizar nuestras condiciones. Ahora verás como puedes llevar esta herramienta a un nivel superior
@@ -16,7 +20,7 @@ Ya vimos que los extractores nos permiten descomponer el elemento que pasamos al
 
 ¿Y cómo puede ser esto posible? ¿Cuándo se que algo se puede descomponer o no? Muy sencillo, tenemos que ver si existe en una clase u objeto un método llamado `unapply`. Este es el truco que usa scala para poder descomponer algo. Scala tiene ya preparado este método en el objeto de compañía para todos sus tipos básicos (tuplas, listas o toda case class que creas).
 
-##### Extractores básicos
+### Extractores básicos
 
 Lo primero a tener en cuenta son los elementos que entran en el método, en este caso siempre tiene que ser uno y del tipo que queremos descomponer, y lo que devolverá siempre ha de ser un Option, que será del tipo extraido.
 
@@ -614,11 +618,8 @@ optval.map(x => x match {
 ```
 
 
-
-
 <span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
 <span style="color:cyan">res58_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
-
 
 
 Como hemos visto en el ejemplo anterior, si la lógica que queremos en esa lambda solo se compone de un pattern matching, podemos simplificar el código. Scala permite realizar un pattern matching con los parámetros pasados a la lambda cambiando el inicio `x => x match {` por las llaves que tienen los casos directamente:
@@ -634,16 +635,10 @@ optval.map{
 }
 ```
 
-
-
-
 <span style="color:cyan">optval</span>: <span style="color:green">Some</span>[<span style="color:green">Int</span>] = <span style="color:yellow">Some</span>(<span style="color:green">4</span>)
 <span style="color:cyan">res59_1</span>: <span style="color:green">Option</span>[<span style="color:green">String</span>] = <span style="color:yellow">Some</span>(<span style="color:green">"es otro n\u00famero"</span>)
 
-
-
 Y tranquilo, si lo que esperas ha de ser una función completa o pura, ya te avisará el compilador si es exhaustivo o no (en los casos que vimos previamente).
-
 
 ```scala
 val foo: List[Option[Int]] = List(Some(4), None, Some(1))
@@ -687,12 +682,8 @@ foo.collect{
 ```
 
 
-
-
 <span style="color:cyan">foo</span>: <span style="color:green">List</span>[<span style="color:green">Option</span>[<span style="color:green">Int</span>]] = <span style="color:yellow">List</span>(<span style="color:yellow">Some</span>(<span style="color:green">4</span>), <span style="color:green">None</span>, <span style="color:yellow">Some</span>(<span style="color:green">1</span>))
 <span style="color:cyan">res61_1</span>: <span style="color:green">List</span>[<span style="color:green">Int</span>] = <span style="color:yellow">List</span>(<span style="color:green">5</span>, <span style="color:green">5</span>)
-
-
 
 ## Scala 3
 
@@ -758,6 +749,3 @@ Y como último apunte ya que hablamos de extractores, se permitirá su uso en lo
 ## Resumen final
 Conociendo que hacen los métodos unapply, o las funciones parciales podemos aplicar la herramienta adecuada en cada momento. Siempre con la intención de hacer un código legible y mantenible.
 En scala el `pattern matching` siempre ha sido una de sus caracteristicas estrella, y ha madurado mucho. Tanto que en nuevas versiones solo tiene algunas mejoras para poder reutilizar algunos de sus elementos en más lugares.
-
-## Repositorio
-Si prefieres leer este post en formato notebook, lo tienes subido en [github](https://github.com/alfonsorr/pattern-matching-post)
