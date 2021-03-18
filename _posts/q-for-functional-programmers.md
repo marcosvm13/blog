@@ -89,10 +89,11 @@ q)3|2
 Scala also has a REPL as part of its ecosystem, where the default prompt is
 `scala> `. We could translate the very same logic into Scala using `Math.max`:
 ```scala
-scala> Math.max(3, 2)
+scala> import Math.max
+scala> max(3, 2)
 val res0: Int = 3
 ```
-As can be seen, we need to access the `Math` module in order to get such
+As can be seen, we need to import the `Math` module in order to get such
 functionality. This can be extrapolated to many other math operators, which are
 loaded by default in q, mainly becauses of its bias towards analytics.
 
@@ -101,15 +102,15 @@ It would not be difficult to supply an infix alias for `Math.max` in Scala
 to the *bitwise or* operator):
 ```scala
 scala> implicit class IntExt(x: Int) {
-     |   def ||(y: Int): Int = Math.max(x, y)
+     |   def ||(y: Int): Int = max(x, y)
      | }
 
 scala> 3 || 2
 val res1: Int = 3
 ```
-However, it is perhaps more interesting to follow the opposite path and move `|`
-to its prefix notation, in a way which is closer to the Haskell programmer,
-placing the operator in parentheses:
+However, it is perhaps more interesting to follow the opposite path and move
+`|` to its prefix notation, using a familiar syntax for Haskellers, where we
+place the operator in parentheses:
 ```q
 q)(|)[3;2]
 3
@@ -117,15 +118,102 @@ q)(|)[3;2]
 As can be seen, the arguments are separated by semicolons and surrounded by
 square brackets. Have you noticed the lack of space characters among them? Q is
 really committed to shortness and invites the programmer to limit them. This
-subtle difference has a considerable impact while reading q code.
+subtle difference has a considerable impact while reading q code, although
+eventually, you get used to it.
 
-variables
-types
-lambdas/def/unit
+In the previous snippets, we have just produced an output and we have let the
+REPL to show it, but we could have assigned a name to the resulting value. The q
+notation to introduce a variable `x` is as follows:
+```q
+q)x:3|2
+q)x
+3
+```
+Which we translate into Scala by means of a `var` instead of a`val`, since q
+variables can be reassigned:
+```scala
+scala> var x: Int = max(3, 2)
+scala> x
+val res0: Int = 3
+```
+Despite q embraces immutability for a wide range of situations, it is clearly
+not a pure functional language. It neither put the same level of pressure on
+avoiding mutable state as the one exhibited by Scala.
+
+Another important aspect from the previous snippets are the variable types. We
+can see that the Scala version indicates that the type of `x` is `Int`, although
+we could have removed it and let the type inferencer work for us. In the case of
+q, which is a dynamic language, we could use the `type` primitive to find it:
+```q
+q)type x
+-7h
+```
+Where you hoping to find something more familiar? Welcome to q! The number 7
+indicates that the value of this type is a long. On its part, the negative
+symbol sugggests an atomic value, ie. not a list of longs. The final `h` just
+indicates that the value that `type` returns has *short* as type. You can find
+the complete relation between numbers and types in [this
+section](https://code.kx.com/q/basics/datatypes/) from the official
+documentation.
+
+Once we know how to get the max value of two numbers, we will extend it in order
+to calculate the max price of a given list, which corresponds to our first
+instrument. To do so, we will generate a list of random numbers to play with. In
+particular, we will generate a different price for each intraday second,
+starting at 09:00 and closing at 17:30. How many seconds are there in such
+interval?
+```q
+q)7h$17:30:00-09:00:00
+30600
+```
+We clumsily adapt the previous expression into Scala as follows:
+```scala
+scala> import scala.concurrent.duration._
+import scala.concurrent.duration._
+
+scala> (17.hours+30.minutes - 9.hours).toSeconds
+val res18: Long = 30600
+```
+There are several aspects to discuss here, but we start emphasising that q
+primitives for dates and times are just superb. Creating, operating and casting
+different units of times is a clean, elegant and intuitive task. In the example
+above, we just create the opening and closing seconds and then we subtract them.
+See that `7h$` at the beginning? We use the `$` operator to cast an expression
+to another type. As you already know, `7` is associated to the *long* type, so
+we are casting the subtraction result to its numeric form. Dates and times in
+Scala and the JVM are object of discussion, where we can find a vast field of
+non-interoperable libraries that make the hell out of a programmer, so we will
+not go into further detail around dates. However, we can see that the Scala
+expression includes parenthesis to determine associativity, so we will take the
+opportunity to discuss it, along with operator precedence.
+
+At first sight, we could infer that `x$y-z` interprets the subtraction before
+the casting due to `-` having a higher precedence. But this is not the case. In
+fact, no operator has higher precedende than another, since q will always
+interpret expressions from right to left. For instance, `2*3+1` returns `8`.  If
+you combine this right-biased way of interpretating with the fact that it is
+possible to introduce variable names at any point of an expression, you can find
+yourself spending a non-negligible amount of time trying to understand why the
+following expression does return `4`:
+```q
+q)x:0
+q)x*3+2-x:1
+4
+```
+Notice that the second line rewrites `x` at the very beginning, I mean, at the
+rightmost expression. We show now the Scala analogous:
+```scala
+scala> var x = 0
+var x: Int = 0
+
+scala> x = 1; x * (3 + (2 - x))
+val res23: Int = 4
+```
+
 lists
-dictionaries
 iterators
-math api
+lambdas/def/unit
+dictionaries
 apply
 curry
 
