@@ -50,7 +50,7 @@ introducing q in terms of a more conventional functional language, for merely
 didactic purposes. Indeed, connecting new knowledge to existing one has proven
 to be a useful tool for learning.
 
-## Q as a functional language
+## Q as an (impure) functional language
 
 Q relies on the shoulders of Kenneth E. Iverson and his (Turing awarded) work on
 *A Programming Language* (APL) that started more than six decades ago. Iverson
@@ -163,7 +163,7 @@ particular, we will generate a different price for each intraday second,
 starting at 09:00 and closing at 17:30. How many seconds are there in such
 interval?
 ```q
-q)7h$17:30:00-09:00:00
+q)n:7h$17:30:00-09:00:00
 30600
 ```
 We clumsily adapt the previous expression into Scala as follows:
@@ -171,8 +171,8 @@ We clumsily adapt the previous expression into Scala as follows:
 scala> import scala.concurrent.duration._
 import scala.concurrent.duration._
 
-scala> (17.hours+30.minutes - 9.hours).toSeconds
-val res18: Long = 30600
+scala> val n = (17.hours+30.minutes - 9.hours).toSeconds
+val n: Long = 30600
 ```
 There are several aspects to discuss here, but we start emphasising that q
 primitives for dates and times are just superb. Creating, operating and casting
@@ -189,10 +189,10 @@ opportunity to discuss it, along with operator precedence.
 
 At first sight, we could infer that `x$y-z` interprets the subtraction before
 the casting due to `-` having a higher precedence. But this is not the case. In
-fact, no operator has higher precedende than another, since q will always
-interpret expressions from right to left. For instance, `2*3+1` returns `8`.  If
-you combine this right-biased way of interpretating with the fact that it is
-possible to introduce variable names at any point of an expression, you can find
+fact, no q operator has higher precedende than another, since it will always
+interpret expressions from right to left. For instance, `2*3+1` returns `8`. If
+you combine this right-biased interpretation with the fact that it is possible
+to introduce variable names at any point of an expression, you can find
 yourself spending a non-negligible amount of time trying to understand why the
 following expression does return `4`:
 ```q
@@ -200,8 +200,10 @@ q)x:0
 q)x*3+2-x:1
 4
 ```
-Notice that the second line rewrites `x` at the very beginning, I mean, at the
-rightmost expression. We show now the Scala analogous:
+Notice that the second line rewrites `x` at the very beginning, remember, at
+the rightmost expression. In particular, the subexpression `x:1` assigns `1` to
+`x` and returns it as output, just to proceed with the rest of operations. We
+show the Scala analogous to remark this aspect:
 ```scala
 scala> var x = 0
 var x: Int = 0
@@ -209,15 +211,96 @@ var x: Int = 0
 scala> x = 1; x * (3 + (2 - x))
 val res23: Int = 4
 ```
+Again, this way of interpreting code is yet another hurdle that makes q
+difficult to read for newbies, but eventually, you get used to it. Before moving
+on, we want to clarify that q programmers can change associativity by using
+parenthesis, for instance: `(2*3)+1`, although it is more idiomatic to avoid
+them and reorder the code, if possible.
 
-lists
-iterators
+At this point, we know the number of random prices that the intraday list will
+contain, which we assigned to the variable `n`, so let's generate them. To do
+so, we simply use the `?` operator:
+```q
+q)prices:n?1000f
+231.8545 102.0847 974.3216 673.6161 404.1387 626.0377 211.9141 604.1371 52.77..
+```
+This code generates `n` float numbers in the range that goes from zero to one
+thousand. Now, we show what we have considered its Scala counterpart:
+```scala
+scala> val prices = List.fill(n)(util.Random.nextFloat).map(_ * 1000)
+val prices: Seq[Float] = List(618.7332, 216.10922, 481.55737, 257.13562, 95.020..
+```
+Once again, the generation of random numbers by means of `?` is quite simple
+but impure, since this operation is not referentially transparent. We avoid
+introducing seeds in the Scala version to keep the comparison clear. Indeed, we
+have not seen references to seeds in our brief experience as q programmers.
+
+A nice feature from both q and Scala is that most of times the output reflects
+the very same code that we need to build such value. For instance, we can
+generate a list of floats using the very same notation:
+```q
+q)231.8545 102.0847 974.3216
+231.8545 102.0847 974.3216
+```
+whose associated type is `9h`, meaning a list of floats, and that we adapt to
+Scala as follows:
+```scala
+scala> List(231.8545f, 102.0847f, 974.3216f)
+val res10: List[Float] = List(231.8545, 102.0847, 974.3216)
+```
+Having generated a (completely crazy) list of intraday prices, we will finally
+proceed to calculate its higher value.
+
+As functional programmers, we would find the greatest value in a list by using
+*fold* (which comes from the general notion of
+[*catamorphism*](https://bartoszmilewski.com/2013/06/10/understanding-f-algebras/)),
+a higher order function that collapses a data structure. In q, the analogous for
+this function is the so-called `over` *iterator* (`/`). This operator takes the
+reducing function and the list itself as input arguments, so we could get the
+highest price by passing the `|` operator as reducer:
+```q
+q)(|/)prices
+999.9987
+```
+We can get the analogous behaviour in Scala by using the `reduce` method and
+`max` as reducer:
+```scala
+scala> prices.reduce(max)
+val res9: Float = 999.99884
+```
+Note that they don't produce the same value since each version produces its own
+random numbers.
+
+As a pure and total functional programmer you might be missing the part of the
+algebra that corresponds to the `Nil` (or empty list) case. In fact, `over`
+would return `()` when we pass an empty list as second argument. This value
+represents the empty list and I guess we could map it as a kind of Scala's `()`,
+which is the unique instance for the *Unit* type. So, to a certain extent, we
+could consider that `(+/)` returns either the greatest value or `()`, which is
+the dynamic poor man's `Option` type. The Scala version simply raises an
+exception when `reduce` is invoked from an empty list. To make things safer,
+`over` can take an additional argument to contemplate the `Nil` case, as we show
+in the following snippet:
+```q
+q)0|/prices
+999.9987
+```
+which would produce `0` when prices correspond to an empty list. From the Scala
+viewpoint, we can use the nicer `fold` method instead:
+```scala
+scala> prices.fold(0f)(max)
+val res11: Float = 999.99884
+```
+
+Can we pass our own functions?
+
+iterators: over, each
 lambdas/def/unit
-dictionaries
-apply
 curry
 
 ## Q as an array processing language
+
+apply
 
 ## Q as a query language
 
