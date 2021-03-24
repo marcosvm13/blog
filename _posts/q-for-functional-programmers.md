@@ -79,6 +79,8 @@ have an specialist nearby. But do not worry about it, we will try to keep it
 very easy. In fact, we will start by calculating the max and min price of an
 instrument.
 
+### Basic operators and types
+
 The q language allows us to calculate the max of two numbers by means of the
 operator `|`. We show how to use it in the following snippet, extracted from a
 q REPL session, where `q)` acts as the default prompt:
@@ -156,6 +158,8 @@ the complete relation between numbers and types in [this
 section](https://code.kx.com/q/basics/datatypes/) from the official
 documentation.
 
+### Dealing with times
+
 Once we know how to get the max value of two numbers, we will extend it in order
 to calculate the max price of a given list, which corresponds to our first
 instrument. To do so, we will generate a list of random numbers to play with. In
@@ -187,6 +191,8 @@ not go into further detail around dates. However, we can see that the Scala
 expression includes parenthesis to determine associativity, so we will take the
 opportunity to discuss it, along with operator precedence.
 
+### Operator precedence and associativity
+
 At first sight, we could infer that `x$y-z` interprets the subtraction before
 the casting due to `-` having a higher precedence. But this is not the case. In
 fact, no q operator has higher precedende than another, since it will always
@@ -216,6 +222,8 @@ difficult to read for newbies, but eventually, you get used to it. Before moving
 on, we want to clarify that q programmers can change associativity by using
 parenthesis, for instance: `(2*3)+1`, although it is more idiomatic to avoid
 them and reorder the code, if possible.
+
+### Lists and random values
 
 At this point, we know the number of random prices that the intraday list will
 contain, which we assigned to the variable `n`, so let's generate them. To do
@@ -251,6 +259,8 @@ val res10: List[Float] = List(231.8545, 102.0847, 974.3216)
 Having generated a (completely crazy) list of intraday prices, we will finally
 proceed to calculate its higher value.
 
+### Iterators
+
 As functional programmers, we would find the greatest value in a list by using
 *fold* (which comes from the general notion of
 [*catamorphism*](https://bartoszmilewski.com/2013/06/10/understanding-f-algebras/)),
@@ -268,35 +278,155 @@ We can get the analogous behaviour in Scala by using the `reduce` method and
 scala> prices.reduce(max)
 val res9: Float = 999.99884
 ```
-Note that they don't produce the same value since each version produces its own
-random numbers.
+Note that they don't lead to the very same value since each version produces
+its own random numbers.
 
 As a pure and total functional programmer you might be missing the part of the
 algebra that corresponds to the `Nil` (or empty list) case. In fact, `over`
 would return `()` when we pass an empty list as second argument. This value
-represents the empty list and I guess we could map it as a kind of Scala's `()`,
-which is the unique instance for the *Unit* type. So, to a certain extent, we
-could consider that `(+/)` returns either the greatest value or `()`, which is
-the dynamic poor man's `Option` type. The Scala version simply raises an
-exception when `reduce` is invoked from an empty list. To make things safer,
-`over` can take an additional argument to contemplate the `Nil` case, as we show
-in the following snippet:
+represents the empty list and I guess we could map it as a kind of Scala's
+`()`, which corresponds to the unique instance for the *Unit* type. So, to a
+certain extent, we could consider that `(+/)` returns either the greatest value
+or `()` (`Either[Unit, Float]`), [isomorphic to the `Option`
+type](https://bartoszmilewski.com/2015/01/13/simple-algebraic-data-types/). The
+Scala version simply raises an exception when `reduce` is invoked from an empty
+list. To make things safer, `over` can take an additional argument to
+contemplate the `Nil` case as well, as we show in the following snippet:
 ```q
 q)0|/prices
 999.9987
 ```
 which would produce `0` when prices correspond to an empty list. From the Scala
-viewpoint, we can use the nicer `fold` method instead:
+viewpoint, we can use the pure `fold` method instead of `reduce`:
 ```scala
 scala> prices.fold(0f)(max)
 val res11: Float = 999.99884
 ```
 
-Can we pass our own functions?
+One of the fundamental pilars of APL is the *suggestivity* of notation, where
+Iverson emphasises the importance of inferring new behaviours from existing
+expressions. In this sense, we could guess that by passing the operator that
+calculates the minumum of two values as an argument for `over`, we should be
+able to obtain the lowest price:
+```q
+q)(&/)prices
+0.0008079223
+```
+The same suggestivity applies to Scala, where we can pass the proper operation
+as an argument to `reduce`:
+```scala
+scala> prices.reduce(Math.min)
+val res4: Float = 0.02861023
+```
+Calculating the maximum and minimum values from a given list is so common, that
+q supplies `max` as an alias for `+/`, as in `max prices`. Scala does also
+supply the analogous alternative, as in `prices.max`.
 
-iterators: over, each
-lambdas/def/unit
-curry
+### Lambda expressions
+
+Calculating the maximum and minimum prices is ok, but we could be interested on
+implementing more sophisticated operations over the list of prices. As a simple
+example, we could calculate the higher price that don't exceed a given limit. At
+this point, one could be wondering if `over` is restricted to native predefined
+operators or if we could pass our own operator as argument in order to implement
+that logic. Q, being a functional language, provides support for lambda
+expressions, as we show next:
+```q
+q)0{[x;y]$[y<500f;x|y;x]}/prices
+499.9798
+```
+We rely on the Scala adaptation to explain what is going on:
+```scala
+scala> prices.fold(0f)((x, y) => if (y < 500f) max(x, y) else x)
+val res5: Float = 499.98163
+```
+As you can see, we replace `|` with the lambda expression that implements the
+desired logic: getting the max of `x` and `y` as long as `y` is lower than
+`500f`. The Scala translation allows inferring that a Q lambda is surrounded by
+curly braces, where `[x;y]` correspond to the input parameters and the rest of
+the expression (`$[y<500f;x|y;x]`) acts as the body. The `$` operator is just
+the analogous for an `if` statement. It's worth mentioning that when the
+parameter block is omitted, q will understand names `x`, `y` and `z` as the
+first, second and third parameters, respectively. It's quite similar to the
+Scala *placeholder* syntax (`_ + _`), without the limitation of having to use
+each parameter exactly once. On its part, q has the limitation of lacking
+additional names for functions with a number of parameters greater than three.
+
+We could have parameterized the hardcoded limit as an additional argument and
+assign the resulting function a name aiming at facilitating its reutilization.
+While doing so, we omit the parameter list, as stated in the previous paragraph:
+```q
+q)lim:{$[y<z;x|y;x]}
+```
+The Scala counterpart would be:
+```scala
+scala> val lim: (Float, Float, Float) => Float = (x, y, z) => if (y < z) max(x, y) else x
+```
+Or perhaps more idiomatically:
+```scala
+scala> def lim(x: Float, y: Float, z: Float): Float = if (y < z) max(x, y) else x
+```
+After we've defined them, we could invoke them by supplying the expected
+arguments:
+```q
+q)lim[0f;499.9798f;500f]
+499.9798
+```
+Invocation that can be adapted as follows:
+```scala
+scala> lim(0f, 499.9798f, 500f)
+val res10: Float = 499.9798
+```
+where both q and Scala use a consistent notation to declare the parameters and
+to supply the arguments.
+
+It might worth remarking that the difference between `val` and `def` is that the
+first of them evaluates just once, while the second re-evaluates for each usage.
+In this sense, we could determine that the q expression `n:{0}`, a lambda
+expression which takes no arguments, would be equivalent to the Scala expression
+`def n = 0`.
+
+### Projection
+
+Once we have defined the new name to get the maximum value which is in turn
+lower than a given limit, we can modularise the previous logic:
+```q
+q)0 lim[;;500f]/prices
+499.9798
+```
+We can clumsily adapt this code into Scala, but it requires us to rewrite the
+order of `lim` parameters and separate them into different parameter blocks:
+```
+scala> def lim(z: Float)(x: Float, y: Float): Float = if (y < z) max(x, y) else x
+
+scala> prices.fold(0f)(lim(500f))
+val res8: Float = 499.88913
+```
+As you have probably guessed, what q achieves in `lim[;;500f]` is to currificate
+it in its third parameter, where the semicolons just determine that we don't
+know the first and second arguments yet. Scala can't compete with such
+flexibility, since q enables currying on any parameter, so projection has become
+one of our favourite q features.
+
+Before moving on to the next section, we'd like to clarify that the *limit*
+logic could benefit from a different implementation. In fact, we think that the
+following implementation is more idiomatic in q:
+```q
+q)max prices where prices<500f
+499.9798
+```
+We could say that the previous code is adapted into Scala as follows:
+```scala
+scala> prices.filter(_ < 500f).max
+val res0: Float = 499.88913
+```
+However, the q approach is radically different, but we should wait for the next
+post to understand it in detail.
+
+### More iterators
+
+Using each for list of lists
+Monads! (,/)
 
 ## Q as an array processing language
 
