@@ -421,18 +421,88 @@ scala> prices.filter(_ < 500f).max
 val res0: Float = 499.88913
 ```
 However, the q approach is radically different, but we should wait for the next
-post to understand it in detail.
+post to fully understand why.
 
 ### More iterators
 
-Using each for list of lists
-Monads! (,/)
+Once we know how to calculate the highest price from a particular day, we could
+be slightly more ambitious and calculate the highest price given a whole year.
+In this particular situation, it is common practice to introduce an extra layer
+of nesting so we end up with a list of days, where each day contains a list of
+prices in turn. First of all, we need to generate a whole year of random prices:
+```q
+q)prices:{n?1000f}each til 365
+```
+We adapt it into Scala using the following expression:
+```scala
+scala> val prices = (0 to (365-1)).map(_ => List.fill(n)(util.Random.nextFloat).map(_ * 1000))
+```
+The previous expressions generate a list of 365 elements and then assign a list
+of random prices to each of them. In this sense, the q primitive `til` is able
+to produce all the numbers that go from 0 til the number passed as argument. In
+fact, this is pretty much the `to` Scala primitive, but in this case you can
+specify not only the ending range limit, but also the starting one.  Also, note
+that `to` includes the ending limit on the output, so a minor adjustment is
+required. We replace each element by the list of random prices by means of the q
+primitive `each`, which takes the mapping function as first argument and the
+list of elements as the second one. As the Scala snippet shows, `each`
+corresponds to the Scala's `map` method, that we functional programmers
+associate to the `Functor` typeclass. In fact, taking into account the constant
+mapper, we could have used the derived `as` method (from Scalaz) instead:
+```scala
+scala> val prices = (0 to (365-1)).as(List.fill(n)(util.Random.nextFloat).map(_ * 1000))
+```
+We don't know if there exists an equivalent for `as` in q, but given the
+simplicity to express constant functions in q, we find that the current
+expression is perfectly fine just as it is.
 
-## Q as an array processing language
+Given the year prices, we think that there are two main approaches to calculate
+the higher price: 
+- Calculate the maximum price for each day and then calculate the maximum one
+  among them
+- Put all the prices together and just calculate the maximum one
+The first approach is carried out in the next code:
+```q
+q)max max each prices
+999.9998
+```
+that we can easily translate into Scala:
+```scala
+scala> prices.map(_.max).max
+```
+Both expressions should be self-content now.
 
-apply
+The second approach is implemented as follows:
+```q
+q)max raze prices
+999.9998
+```
+It is adapted into Scala using `flatten`:
+```scala
+scala> prices.flatten.max
+```
+Indeed, `raze` just flattens the list of lists, and corresponds to the `join`
+monadic operation. If we take into account that `,` is the list concatenation
+operator, it should be straightforward to understand the implementation of
+`raze`:
+```q
+q)raze
+,/
+```
+As can be seen, it just uses the `over` iterator using `,` as mapper.
 
-## Q as a query language
+At this point we must say that the first approach is preferable, since it's more
+modular and therefore parallelizable. In fact, there's a variant of `each` which
+is referred to as `peach` that we could use to exploit such aspect. However, we
+wanted to show the second approach since it's almost mandatory for a functional
+programming-related post to make *yet another monad* reference, isn't it?
 
 ## Takeaways
+
+- Q is a functional programming language: lambda expressions, currying,
+  higher-order functions (iterators), etc.
+- Q is impure: side-effects for randomness, mutability, etc.
+- Q is dynamic: no typeclasses, no option, either, etc.
+- Q code is hard to read: shortness, associativity, etc.
+- Really nice financial features, like the date interface
 
