@@ -7,54 +7,55 @@ This series of posts describes our experience while learning
 Systems. Although q is also a functional programming language, it has many
 features (highlighting its capabilities for array processing) that make it
 different from other conventional languages such as Haskell, OCaml, etc. Given
-this situation, we will try to provide an overview of q basics, connecting the
+this situation, we'll try to provide an overview of q basics, connecting the
 missing pieces to our previous knowledge on functional programming, using Scala
 and Spark as vehicles. We hope it also works in the opposite direction, so q
 programmers can benefit from this article as well.
 
-It is worth noting that this is the first of two posts that will focus on q and
-kdb, respectively. Since we know that the line that divides q and kdb is
-unclear, we want to clarify that the first post introduces q as a
-general-purpose programming language, from the functional programmer
-perspective, while the second one emphasizes persistence and interaction with
-the file system, to make the data engineer happy. In this sense, data structures
-such as tables and the q-sql interface will be unavoidable included in both
-articles. Hopefully, each post will emphasize different aspects from them, to
-avoid the overlapping of content. Having said so, we are ready to go now!
+It is worth noting that this is the first of four posts that will focus on q
+and kdb, which we present here:
 
-## Why q?
+1. Q as an (impure) functional language
+2. Q as an array processing language
+3. Q as a query language
+4. Q as a column-oriented database (kdb+)
 
-Each day, our small team spend some time experimenting with new technologies,
+Since we know that the line that divides q and kdb is unclear, we want to
+clarify that the first three posts introduce q as a general-purpose programming
+language, from different perspectives, while the last one emphasizes persistence
+and interaction with the file system, to make the data engineer happy. In this
+sense, data structures such as tables and the q-sql interface will be
+unavoidable included in several articles. Hopefully, each of them will emphasize
+different aspects, to avoid the overlapping of content.
+
+### Why q?
+
+Each day, the Habla team spend some time experimenting with new technologies,
 and we are especially interested on functional languages. A colleague from the
-Scala community pointed us towards q. The following items summarise the reasons
-why we decided to give it a go:
+Scala community pointed us towards q. The following items summarise the alleged
+language benefits why we decided to give it a go:
 
 - Q is fast, sooo fast
 - Q is a functional query language
 - Q is a well-founded language that relies on APL
 - Q is highly demanded in the financial industry
-- Q is quite a challenge!
+- Q is quite a challenge
+- Q is beutiful!
 
 After a few months of reading q material and coding, we can confirm that none of
 the previous items is a myth. Although we feel that we still have a long way to
 master q/kdb, we are confident that we have now a good perspective on how hard
 it is to learn this language. In fact, reflecting this experience is perhaps the
-major contribution of this post.
-
-From now on, we will introduce q from different perspectives: as yet another
-functional language, as an array processing language and finally, as a query
-language. We will use examples from trading to guide the explanations, where we
-will show q and Scala snippets side by side. We want to remark that our
-intention is not to provide a comparison of these languages, but rather
-introducing q in terms of a more conventional functional language, for merely
-didactic purposes. Indeed, connecting new knowledge to existing one has proven
-to be a useful tool for learning.
+major contribution of this series of posts. Having said so, we're ready to go
+now!
 
 ## Q as an (impure) functional language
 
-Q relies on the shoulders of Kenneth E. Iverson and his (Turing awarded) work on
-*A Programming Language* (APL) that started more than six decades ago. Iverson
-emphasises the [importance of
+Q was implemented by [Arthur
+Whitney](https://queue.acm.org/detail.cfm?id=1531242) (Kx Systems), having its
+first appearence in 2003. It relies on the shoulders of Kenneth E. Iverson and
+his (Turing awarded) work on *A Programming Language* (APL) that started more
+than six decades ago. Iverson emphasises the [importance of
 notation](https://dl.acm.org/doi/pdf/10.1145/358896.358899) to concentrate on
 more advanced problems, and finds in programming languages the idoneous setting
 to make math notation universal, executable and unambiguous. In accordance with
@@ -65,7 +66,7 @@ of [Q Tips](https://www.q-tips.net): *"Q is an interpreted, dynamic,
 event-driven, functional, array programming language."*. That long definition
 let us infer why learning q becomes such a challenge. Letting the eternal war
 between interpreted/compiled and dynamic/static aside (compiled and static
-always win, right? :), this section put focus on the *functional* feature, where
+always win, right? :), this article put focus on the *functional* feature, where
 we functional programmers can benefit from, since we have walked this road
 before.
 
@@ -75,9 +76,41 @@ I think it is fair to say that nowadays, most of q-related job positions fall
 under this umbrella. Thereby, we find it convenient to use different trading
 indicators to guide the explanations. In this sense, we must say that most of
 kdb examples and tutorials revolve around them, so it is sometimes helpful to
-have an specialist nearby. But do not worry about it, we will try to keep it
-very easy. In fact, we will start by calculating the max and min price of an
-instrument.
+have an specialist nearby. But do not worry about it, we'll try to keep it to
+the bare minimum.
+
+Our indicator simply consists on calculating the max price of a given instrument
+(for instance: AAPL, AMZN, etc.) in the last year. To do so, we'll assume that
+the price is updated every single second from every working day (Monday-Friday
+from 09:00 to 17:30). This is the outline of the post:
+
+1. We'll calculate the max of two numbers, where basics of q operators and types
+   will be introduced.
+
+2. We'll calculate how many ticks there are in a working day. It serves us as an
+   excuse to introduce the q date and time interface.
+
+3. Then, we'll use the output from the previous item to generate the random
+   prices for a working day, where q lists and the generation of random numbers
+   will be shown.
+
+4. Once we have a list of prices for a given day to play with, we'll calculate
+   its max price. Here, the so-called q *Iterators*, which are essentially
+   higher order functions over lists, will be introduced.
+
+5. Then, we'll supply a slight variation where we calculate the max price of the
+   day, as long as it doesn't exceed a given limit. It's the perfect excuse to
+   introduce lambda expressions and projections.
+
+6. Finally, we'll move to a more realistic example, where we'll calculate the
+   max price given a whole year. Here, new iterators and their connection with
+   *Monad* is presented.
+
+In this post, we embrace an innovative approach (to us) where we will show q and
+scala snippets side by side. We want to remark that our intention isn't to
+provide a comparison of these languages, but rather support our explanations by
+means of a more conventional functional language like scala, for merely didactic
+purposes.
 
 ### Basic operators and types
 
@@ -489,7 +522,7 @@ operator, it should be straightforward to understand the implementation of
 q)raze
 ,/
 ```
-As can be seen, it just uses the `over` iterator using `,` as mapper.
+As can be seen, it just uses the `over` iterator using `,` as reducer.
 
 At this point we must say that the first approach is preferable, since it's more
 modular and therefore parallelizable. In fact, there's a variant of `each` which
