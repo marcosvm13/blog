@@ -83,25 +83,19 @@ Our indicator simply consists on calculating the max price of a given instrument
 (for instance: AAPL, AMZN, etc.) in the last year. To do so, we'll assume that
 the price is updated every single second from every working day (Monday-Friday
 from 09:00 to 17:30). This is the outline of the post:
-
 1. We'll calculate the max of two numbers, where basics of q operators and types
    will be introduced.
-
 2. We'll calculate how many ticks there are in a working day. It serves us as an
    excuse to introduce the q date and time interface.
-
 3. Then, we'll use the output from the previous item to generate the random
    prices for a working day, where q lists and the generation of random numbers
    will be shown.
-
 4. Once we have a list of prices for a given day to play with, we'll calculate
    its max price. Here, the so-called q *Iterators*, which are essentially
    higher order functions over lists, will be introduced.
-
 5. Then, we'll supply a slight variation where we calculate the max price of the
    day, as long as it doesn't exceed a given limit. It's the perfect excuse to
    introduce lambda expressions and projections.
-
 6. Finally, we'll move to a more realistic example, where we'll calculate the
    max price given a whole year. Here, new iterators and their connection with
    *Monad* is presented.
