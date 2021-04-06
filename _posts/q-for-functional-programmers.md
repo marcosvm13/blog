@@ -103,8 +103,8 @@ from 09:00 to 17:30). This is the outline of the post:
 In this post, we embrace an innovative approach (to us) where we will show q and
 scala snippets side by side. We want to remark that our intention isn't to
 provide a comparison of these languages, but rather support our explanations by
-means of a more conventional functional language like scala, for merely didactic
-purposes.
+means of snippets from a more conventional functional language such as scala,
+for merely didactic purposes.
 
 ### Basic operators and types
 
