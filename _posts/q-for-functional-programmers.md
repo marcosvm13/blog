@@ -84,6 +84,7 @@ correspond with the following sections:
 1. Calculate the max of two numbers
 2. Calculate the max price within a day
 3. Calculate the max price within the whole year
+
 The first one is just a first contact with the language, where q operators and
 types basics are introduced. The second one serves us as an excuse to show the
 date api, lists, lambda expressions and *iterators* (which are essentially
