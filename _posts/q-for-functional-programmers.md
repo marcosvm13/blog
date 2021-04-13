@@ -19,10 +19,10 @@ articles. We enumerate them right now:
 The first post introduces q as a functional language, where we'll show the main
 q features that are already familiar to the conventional functional programmer
 which could be used from the very first day. For its part, the second post put
-focus on q as an array processing language, which is probably the main source of
-q weirdness, so we'll try to connect it to existing theory on the functional
-paradigm. Finally, the last post introduces q and kdb+ as a query language and a
-column-oriented database, respectively, to make the data engineer happy.
+focus on q as an array processing language, which is probably the main source
+of q weirdness, so we'll try to connect it to existing theory on the functional
+paradigm. Finally, the last post introduces q and kdb+ as a query language and
+a column-oriented database, respectively, to make the data engineer happy.
 
 ### Why q?
 
@@ -69,21 +69,21 @@ Although there is an emerging interest on [taking q and kdb beyond financial
 services](https://www.efinancialcareers.co.uk/news/2017/05/kdbq-banking-alternatives),
 I think it is fair to say that nowadays, most of q-related job positions fall
 under this umbrella. Thereby, we find it convenient to use a trading indicator
-as an example. We'll try to keep it very easy.
+as an example. In this sense, we'll try to keep it very easy.
 
 > Most of the q/kdb+ tutorials and code snippets revolve around trading
 > examples, so it is sometimes helpful to have an specialist nearby.
 
-Our indicator simply consists on calculating the max price of an instrument (for
-instance: AAPL, AMZN, etc.) in the last year. We'll assume that the instrument
-prices are organized as a kind of table containing all the working days
-(Monday-Friday) within the last year. In turn, each of them contains a price
-update for every second within the working hours (in particular, within the
-range from 09:00 to 17:30). We split the problem in three steps, which
-correspond with the following sections:
-1. Calculate the max of two numbers
-2. Calculate the max price within a day
-3. Calculate the max price within the whole year
+Our indicator simply consists on calculating the max price of an instrument
+(for instance: AAPL, AMZN, etc.) in the last year. We'll assume that the
+instrument prices are organized as a kind of table containing all the working
+days (Monday-Friday) within the last year. In turn, each of them contains a
+price update for every second within the working hours (in particular, from
+09:00 to 17:30). We split the problem in three steps, where each of them
+corresponds to the following post sections:
+1. Calculating the max of two numbers
+2. Calculating the max price within a day
+3. Calculating the max price within the whole year
 
 The first one is just a first contact with the language, where q operators and
 types basics are introduced. The second one serves us as an excuse to show the
@@ -98,7 +98,8 @@ our intention isn't to provide a comparison of these languages, but rather
 support our explanations by means of snippets from a more conventional
 functional language such as scala, for merely didactic purposes.
 
-### Basic operators and types
+
+### Calculating the max of two numbers
 
 The q language allows us to calculate the max of two numbers by means of the
 operator `|`. We show how to use it in the following snippet, extracted from a
@@ -116,7 +117,7 @@ val res0: Int = 3
 ```
 As can be seen, we need to import the `Math` module in order to get such
 functionality. This can be extrapolated to many other math operators, which are
-loaded by default in q, mainly becauses of its bias towards analytics.
+loaded by default in q, mainly because of its bias towards analytics.
 
 It would not be difficult to supply an infix alias for `Math.max` in Scala
 (although we adopt `||` instead of `|`, since the latter is already associated
@@ -131,19 +132,24 @@ val res1: Int = 3
 ```
 However, it is perhaps more interesting to follow the opposite path and move
 `|` to its prefix notation, using a familiar syntax for Haskellers, where we
-place the operator in parentheses:
+place the operator symbol in parentheses:
 ```q
 q)(|)[3;2]
 3
 ```
 As can be seen, the arguments are separated by semicolons and surrounded by
-square brackets. Have you noticed the lack of space characters among them? Q is
-really committed to shortness and invites the programmer to limit them. This
-subtle difference has a considerable impact while reading q code, although
-eventually, you get used to it.
+square brackets. It's worth mentioning that Q supplies many flavours of
+syntactic sugar while invoking functions beyond these ones, but we just wanted
+to remark that the operator `|` could behave as any other function. This notion
+will become relevant later on.
 
-In the previous snippets, we have just produced an output and we have let the
-REPL to show it, but we could have assigned a name to the resulting value. The q
+> Have you noticed the lack of space characters among them? Q is really
+> committed to shortness and invites the programmer to limit them. This subtle
+> difference has a considerable impact while reading q code, although
+> eventually, you get used to it.
+
+In the previous snippets, we've just produced an output and we've let the REPL
+to show it, but we could have assigned a name to the resulting value. The q
 notation to introduce a variable `x` is as follows:
 ```q
 q)x:3|2
@@ -155,11 +161,16 @@ variables can be reassigned:
 ```scala
 scala> var x: Int = max(3, 2)
 scala> x
-val res0: Int = 3
+val res2: Int = 3
 ```
 Despite q embraces immutability for a wide range of situations, it is clearly
 not a pure functional language. It neither put the same level of pressure on
 avoiding mutable state as the one exhibited by Scala.
+
+> A remarkably interesting q feature is that variables can be introduced at any
+> point. For instance the expression `x:3|y:2` introduces `y` *on the fly* and
+> just returns its value to keep going. We'd need two different statements to do
+> the proper in Scala, as in `var y = 2; var x = 3 || y`.
 
 Another important aspect from the previous snippets are the variable types. We
 can see that the Scala version indicates that the type of `x` is `Int`, although
@@ -172,12 +183,15 @@ q)type x
 Where you hoping to find something more familiar? Welcome to q! The number 7
 indicates that the value of this type is a long. On its part, the negative
 symbol sugggests an atomic value, ie. not a list of longs. The final `h` just
-indicates that the value that `type` returns has *short* as type. You can find
+manifests that the value that `type` returns has *short* as type. You can find
 the complete relation between numbers and types in [this
 section](https://code.kx.com/q/basics/datatypes/) from the official
 documentation.
 
-### Dealing with times
+
+### Calculating the max price within a day
+
+#### Generating random prices for a working day
 
 Once we know how to get the max value of two numbers, we will extend it in order
 to calculate the max price of a given list, which corresponds to our first
@@ -210,39 +224,37 @@ not go into further detail around dates. However, we can see that the Scala
 expression includes parenthesis to determine associativity, so we will take the
 opportunity to discuss it, along with operator precedence.
 
-### Operator precedence and associativity
+> At first sight, we could infer that `x$y-z` interprets the subtraction before
+> the casting due to `-` having a higher precedence. But this is not the case. In
+> fact, no q operator has higher precedende than another, since it will always
+> interpret expressions from right to left. For instance, `2*3+1` returns `8`. If
+> you combine this right-biased interpretation with the fact that it is possible
+> to introduce variable names at any point of an expression, you can find
+> yourself spending a non-negligible amount of time trying to understand why the
+> following expression does return `4`:
+> ```q
+> q)x:0
+> q)x*3+2-x:1
+> 4
+> ```
+> Notice that the second line rewrites `x` at the very beginning, remember, at
+> the rightmost expression. In particular, the subexpression `x:1` assigns `1` to
+> `x` and returns it as output, just to proceed with the rest of operations. We
+> show the Scala analogous to remark this aspect:
+> ```scala
+> scala> var x = 0
+> var x: Int = 0
+> 
+> scala> x = 1; x * (3 + (2 - x))
+> val res23: Int = 4
+> ```
+> Again, this way of interpreting code is yet another hurdle that makes q
+> difficult to read for newbies, but eventually, you get used to it. Before moving
+> on, we want to clarify that q programmers can change associativity by using
+> parenthesis, for instance: `(2\*3)+1`, although it's more idiomatic to avoid
+> them and reorder the code, if possible.
 
-At first sight, we could infer that `x$y-z` interprets the subtraction before
-the casting due to `-` having a higher precedence. But this is not the case. In
-fact, no q operator has higher precedende than another, since it will always
-interpret expressions from right to left. For instance, `2*3+1` returns `8`. If
-you combine this right-biased interpretation with the fact that it is possible
-to introduce variable names at any point of an expression, you can find
-yourself spending a non-negligible amount of time trying to understand why the
-following expression does return `4`:
-```q
-q)x:0
-q)x*3+2-x:1
-4
-```
-Notice that the second line rewrites `x` at the very beginning, remember, at
-the rightmost expression. In particular, the subexpression `x:1` assigns `1` to
-`x` and returns it as output, just to proceed with the rest of operations. We
-show the Scala analogous to remark this aspect:
-```scala
-scala> var x = 0
-var x: Int = 0
-
-scala> x = 1; x * (3 + (2 - x))
-val res23: Int = 4
-```
-Again, this way of interpreting code is yet another hurdle that makes q
-difficult to read for newbies, but eventually, you get used to it. Before moving
-on, we want to clarify that q programmers can change associativity by using
-parenthesis, for instance: `(2*3)+1`, although it is more idiomatic to avoid
-them and reorder the code, if possible.
-
-### Lists and random values
+#### Lists and random values
 
 At this point, we know the number of random prices that the intraday list will
 contain, which we assigned to the variable `n`, so let's generate them. To do
@@ -442,7 +454,8 @@ val res0: Float = 499.88913
 However, the q approach is radically different, but we should wait for the next
 post to fully understand why.
 
-### More iterators
+
+### Calculating the max price within a whole year
 
 Once we know how to calculate the highest price from a particular day, we could
 be slightly more ambitious and calculate the highest price given a whole year.
