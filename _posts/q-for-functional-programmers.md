@@ -525,8 +525,6 @@ q)prices
 2020.01.02| 601.4124 818.0695 549.0516 985.867  387.0052 315.4341 338.4381 40..
 2020.01.03| 811.1749 237.0332 220.7359 435.7565 190.276  35.80185 491.0418 82..
 2020.01.06| 780.8859 5.676414 286.5235 149.7137 568.0527 916.0366 66.16259 46..
-2020.01.07| 815.8859 437.1713 987.4931 682.8157 565.1745 165.5631 827.4045 96..
-2020.01.08| 929.1904 188.3507 237.2812 895.0453 675.0007 128.6111 633.8908 5...
 ..
 ```
 It's adapted into Scala as follows:
@@ -606,12 +604,26 @@ wanted to show the second approach since it's almost mandatory for a functional
 programming-related post to make [*yet another
 monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
-## Takeaways
+## Conclusions
 
-- Q is a functional programming language: lambda expressions, currying,
-  higher-order functions (iterators), etc.
-- Q is impure: side-effects for randomness, mutability, etc.
-- Q is dynamic: no typeclasses, no option, either, etc.
-- Q code is hard to read: shortness, associativity, etc.
-- Really nice financial features, like the date interface
+Q is a functional programming language that supports lambda expressions,
+higher-order functions (iterators), etc. It even supply novel but natural
+features like projection, that takes currying to the next level. We could easily
+migrate our functional knowledge to start coding with such features from the
+very first day.
+
+Q is also impure, where side effects are the norm in certain situations, such as
+the generation of random numbers or the reassignment of variables. This could be
+an impediment for the purest minds, but I think it's fine for the average Scala
+programmer who's accustomed to this kind of mixture. Anyway, as we could
+experience in the last weeks, most of interfaces support immutability, but we
+lack the whole picture to evaluate its implications on performance.
+
+Finally, I must say that q is beautiful and really concise, even when we let the
+insane lack of space characters and overloading of operators aside (but I also
+acknowledge that it isn't for everyone). In fact, I find its notation very clean
+and consistent. It takes a while to experience the Zen, but you get a really
+powerful *tool of thought* as a reward. We invite you to read the next post on
+this series, where we'll keep delving into this aspect by showing q from the
+array processing perspective.
 
