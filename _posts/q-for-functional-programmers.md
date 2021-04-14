@@ -83,14 +83,14 @@ price update for every second within the working hours (in particular, from
 corresponds to the following post sections:
 1. Calculating the max of two numbers
 2. Calculating the max price within a day
-3. Calculating the max price within the whole year
+3. Calculating the max price within a whole year
 
 The first one is just a first contact with the language, where q operators and
 types basics are introduced. The second one serves us as an excuse to show the
 date api, lists, lambda expressions and *iterators* (which are essentially
 higher order functions over collections). Finally, the last section presents
 dictionaries and more iterators, where we briefly show an interesting connection
-with monads.
+with functors and monads.
 
 We embrace an innovative approach (when compared with other articles in this
 blog) where we show q and scala snippets side by side. We want to remark that
@@ -226,22 +226,22 @@ to another type. As you already know, `7` is associated to the *long* type, so
 we are casting the subtraction result to its numeric form.
 
 > At first sight, we could infer that `x$y-z` interprets the subtraction before
-> the casting due to `-` having a higher precedence. But this is not the case. In
-> fact, no q operator has higher precedende than another, since it will always
-> interpret expressions from right to left. For instance, `2*3+1` returns `8`. If
-> you combine this right-biased interpretation with the fact that it is possible
-> to introduce variable names at any point of an expression, you can find
-> yourself spending a non-negligible amount of time trying to understand why the
-> following expression does return `4`:
+> the casting due to `-` having a higher precedence. But this is not the case.
+> In fact, no q operator has higher precedende than another, since it will
+> always interpret expressions from right to left. For instance, `2*3+1` returns
+> `8`. If you combine this right-biased interpretation with the fact that it is
+> possible to introduce variable names at any point of an expression, you can
+> find yourself spending a non-negligible amount of time trying to understand
+> why the following expression does return `4`:
 > ```q
 > q)x:0
 > q)x*3+2-x:1
 > 4
 > ```
 > Notice that the second line rewrites `x` at the very beginning, remember, at
-> the rightmost expression. In particular, the subexpression `x:1` assigns `1` to
-> `x` and returns it as output, just to proceed with the rest of operations. We
-> show the Scala analogous to remark this aspect:
+> the rightmost expression. In particular, the subexpression `x:1` assigns `1`
+> to `x` and returns it as output, just to proceed with the rest of operations.
+> We show the Scala analogous to remark this aspect:
 > ```scala
 > scala> var x = 0
 > var x: Int = 0
@@ -250,10 +250,10 @@ we are casting the subtraction result to its numeric form.
 > val res3: Int = 4
 > ```
 > Again, this way of interpreting code is yet another hurdle that makes q
-> difficult to read for newbies, but eventually, you get used to it. Before moving
-> on, we want to clarify that q programmers can change associativity by using
-> parenthesis, for instance: `(2\*3)+1`, although it's more idiomatic to avoid
-> them and reorder the code, if possible.
+> difficult to read for newbies, but eventually, you get used to it. Before
+> moving on, we want to clarify that q programmers can change associativity by
+> using parenthesis, for instance: `(2\*3)+1`, although it's more idiomatic to
+> avoid them and reorder the code, if possible.
 
 Once we know the number of random prices that the intraday list will contain,
 which we assigned to the variable `n`, it is time to generate them. To do so, we
@@ -474,52 +474,111 @@ post to fully understand why.
 
 ### Calculating the max price within a whole year
 
-Once we know how to calculate the highest price from a particular day, we could
-be slightly more ambitious and calculate the highest price given a whole year.
-In this particular situation, it is common practice to introduce an extra layer
-of nesting so we end up with a list of days, where each day contains a list of
-prices in turn. First of all, we need to generate a whole year of random prices:
-```q
-q)prices:{n?1000f}each til 365
-```
-We adapt it into Scala using the following expression:
-```scala
-scala> val prices = (0 to (365-1)).map(_ => List.fill(n)(util.Random.nextFloat).map(_ * 1000))
-```
-The previous expressions generate a list of 365 elements and then assign a list
-of random prices to each of them. In this sense, the q primitive `til` is able
-to produce all the numbers that go from 0 til the number passed as argument. In
-fact, this is pretty much the `to` Scala primitive, but in this case you can
-specify not only the ending range limit, but also the starting one.  Also, note
-that `to` includes the ending limit on the output, so a minor adjustment is
-required. We replace each element by the list of random prices by means of the q
-primitive `each`, which takes the mapping function as first argument and the
-list of elements as the second one. As the Scala snippet shows, `each`
-corresponds to the Scala's `map` method, that we functional programmers
-associate to the `Functor` typeclass. In fact, taking into account the constant
-mapper, we could have used the derived `as` method (from Scalaz) instead:
-```scala
-scala> val prices = (0 to (365-1)).as(List.fill(n)(util.Random.nextFloat).map(_ * 1000))
-```
-We don't know if there exists an equivalent for `as` in q, but given the
-simplicity to express constant functions in q, we find that the current
-expression is perfectly fine just as it is.
+Again, we find it interesting to generate the random prices from scratch. In
+fact, instead of using a longer list of prices, we'll produce a list of prices
+associated to every working day, to keep data tidier. Once generated, we'll move
+on to the actual calculation of the max value within the brand new structure.
 
-Given the year prices, we think that there are two main approaches to calculate
-the higher price: 
+#### Generating a whole year of random prices
+
+First of all, we'll use the techniques that we've been learning on the previous
+section to make the existing functions more reusable. For example, we adapt the
+generation of the prices for a day as follows:
+```q
+q)rnd_prices:{(7h$y-x)?z}
+```
+As usual, we adapt the snippet into Scala:
+```scala
+scala> def rnd_prices(x: Duration, y: Duration, z: Float): List[Float] =
+     |   List.fill((y-x).toSeconds)(nextFloat).map(_ * z)
+```
+As you can see, we've just parameterize the starting time, ending time and
+higher price as `x`, `y` and `z`, respectively. This function will be reused to
+generate different random prices for each working day.
+
+Before moving on, we need to identify the working days within a range of dates.
+We do so by means of the next function:
+```q
+q)working_days:{dates where((dates:x+til(y-x))mod 7)>1}
+```
+This time we avoid showing the Scala counterpart, since it doesn't add value
+from a didactic perspective but rather the opposite. Anyway, the previous
+function just keeps working days, those whose modulo 7 is greater than 1. To
+understand why, we need to take into account that q dates start counting on
+2000.01.01, which happened to be Saturday. We supply the starting and ending
+dates that allow us to collect the working days from 2020 (such a wonderful
+year):
+```q
+q)wds:working_days[2020.01.01;2021.01.01]
+```
+We'll assume that such list was generated in Scala somehow:
+```scala
+scala> val wds: List[Date] = ...
+```
+
+Now, it's time to associate the random prices for each working day. We do so by
+means of the following expression, where two new features are introduced:
+```q
+q)prices:wds!{rnd_prices[09:00:00;17:30:00;1000f]}each wds
+q)prices
+2020.01.01| 447.9321 687.9944 491.4469 426.7794 650.8995 147.1279 440.327  37..
+2020.01.02| 601.4124 818.0695 549.0516 985.867  387.0052 315.4341 338.4381 40..
+2020.01.03| 811.1749 237.0332 220.7359 435.7565 190.276  35.80185 491.0418 82..
+2020.01.06| 780.8859 5.676414 286.5235 149.7137 568.0527 916.0366 66.16259 46..
+2020.01.07| 815.8859 437.1713 987.4931 682.8157 565.1745 165.5631 827.4045 96..
+2020.01.08| 929.1904 188.3507 237.2812 895.0453 675.0007 128.6111 633.8908 5...
+..
+```
+It's adapted into Scala as follows:
+```scala
+scala> val prices: Map[Date, List[Float]] =
+     |   wds.zip(wds.map(_ => rnd_prices(9.hours, 17.hours+30.minutes, 1000f))).toMap
+val prices: Map[Date,List[Float]] = Map(2020.01.01 -> List(977.59784, 185.63521,
+586.2779, 221.09216, 775.3352, 645.992, 206.07281, 427.91003, 166.2563,
+639.81836, 717.57886, 842.7385, 189.36241, 755.4852, 229.79778, 548.248,
+472.32468, 383.4009, 920.29846, 211.65651, 132.54398, 514.35223, 135....
+```
+On the one hand, we remark the iterator `each`. It corresponds to the `map`
+invocation on the Scala snippet, that we associate to the `Functor` typeclass.
+In fact, they both allow us to apply a function over each element at the
+collection. The mapper ignores the existing value, since the objective here is
+to replace the date with the random prices, so we could have used the [derived
+`as`
+method](https://github.com/scalaz/scalaz/blob/ea81ca782a634d4cd93c56529c082567a207c9f6/core/src/main/scala/scalaz/syntax/FunctorSyntax.scala#L21)
+instead. We don't think there's an equivalent for `as` in q, given its
+simplicity to define constant functions.
+
+On the other hand, we must focus on the `!` operator as well, since it's
+introducing a major abstraction from q: *dictionaries*. Although the inner
+implementation details may be completely different, I find it fair to compare
+dictionaries with maps. The `!` operator is adapted as a combination of `zip`,
+to place keys with values together, and `toMap`, to turn the list of pairs into
+an actual map. By using it we end up with a collection where each workind day
+has a list of prices associated.
+
+#### Finding the max value
+
+Given the generated prices, we think that there are two main approaches to
+calculate the higher price: 
 - Calculate the maximum price for each day and then calculate the maximum one
   among them
 - Put all the prices together and just calculate the maximum one
+
 The first approach is carried out in the next code:
 ```q
 q)max max each prices
 999.9998
 ```
-that we can easily translate into Scala:
+that we can translate into Scala this way:
 ```scala
-scala> prices.map(_.max).max
+scala> prices.mapValues(_.max).max._2
+val res12: Float = 999.9997
 ```
-Both expressions should be self-content now.
+As suggested by the Scala expression, when we use the `each` iterator over a
+dictionary, we are actually applying the mapper over the values, keeping the
+keys as is. Once we've calculated the max value associated to each day, we can
+invoke `max` directly over the resulting collection. In the Scala case, we need
+to pick the value as a final step, since the involved key is also returned.
 
 The second approach is implemented as follows:
 ```q
@@ -528,23 +587,24 @@ q)max raze prices
 ```
 It is adapted into Scala using `flatten`:
 ```scala
-scala> prices.flatten.max
+scala> prices.values.flatten.max
 ```
-Indeed, `raze` just flattens the list of lists, and corresponds to the `join`
-monadic operation. If we take into account that `,` is the list concatenation
-operator, it should be straightforward to understand the implementation of
-`raze`:
+Indeed, `raze` just flattens the dictionaries of lists, and roughly corresponds
+to the `join` monadic operation. If we take into account that `,` is the list
+concatenation operator, it should be straightforward to understand the
+implementation of `raze`:
 ```q
 q)raze
 ,/
 ```
-As can be seen, it just uses the `over` iterator using `,` as reducer.
+Indeed, it just uses the `over` iterator using `,` as reducer.
 
 At this point we must say that the first approach is preferable, since it's more
 modular and therefore parallelizable. In fact, there's a variant of `each` which
 is referred to as `peach` that we could use to exploit such aspect. However, we
 wanted to show the second approach since it's almost mandatory for a functional
-programming-related post to make *yet another monad* reference, isn't it?
+programming-related post to make [*yet another
+monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
 ## Takeaways
 
