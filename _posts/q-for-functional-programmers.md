@@ -119,8 +119,7 @@ scala> import Math.max
 scala> max(3, 2)
 val res0: Int = 3
 ```
-%%JM > 3 max 2 ALSO WORKS, not sure if the implicit class example is
-useful here
+%%JM > 3 max 2 ALSO WORKS, not sure if the implicit class example is useful here
 
 As can be seen, we need to import the `Math` module in order to get such
 functionality. This can be extrapolated to many other math operators, which are
