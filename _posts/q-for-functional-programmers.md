@@ -451,10 +451,17 @@ scala> def lim(z: Float)(x: Float, y: Float): Float = if (y < z) max(x, y) else 
 scala> prices.fold(0f)(lim(500f))
 val res10: Float = 499.88913
 ```
+%%JM Or else: prices.fold(0f)(lim(_, _, 500f)), without introducing another version of lim and
+more in-line with q code lim[;;500f]
+
+
 As you have probably guessed, what q achieves in `lim[;;500f]` is to fix the
 third argument to `500f` and return a function that still expects the first and
 second ones, as determined by the lack of arguments for such positions. Scala
-can't compete with such flexibility, since q enables this kind of *projection*
+can't compete with such flexibility
+
+%%JM: this is not clear to me
+, since q enables this kind of *projection*
 on any parameter, so it has become one of my favourite q features.
 
 > Clearly, projection is somehow related to currification. In a way, q deploys
@@ -469,6 +476,7 @@ on any parameter, so it has become one of my favourite q features.
 > lim[;;3][;2][1]
 > lim[1;;3][2]
 > ```
+%%JM yes, this is nice
 
 Before moving on to the next section, we'd like to clarify that the *limit*
 logic could benefit from a different implementation. In fact, we think that the
@@ -477,13 +485,12 @@ following code is more idiomatic in q:
 q)max prices where prices<500f
 499.9798
 ```
-We could say that the previous code is adapted into Scala as follows:
+The previous code could be adapted into Scala as follows:
 ```scala
 scala> prices.filter(_ < 500f).max
 val res11: Float = 499.88913
 ```
-However, the q approach is radically different, but we should wait for the next
-post to fully understand why.
+However, the q approach is radically different, as the next post will show.
 
 
 ### Calculating the max price within a whole year
@@ -516,7 +523,8 @@ We do so by means of the next function:
 q)working_days:{dates where((dates:x+til(y-x))mod 7)>1}
 ```
 This time we avoid showing the Scala counterpart, since it doesn't add value
-from a didactic perspective but rather the opposite. Anyway, the previous
+from a didactic perspective but rather the opposite.%%JM: you mean that it's much more complex in scala?
+Anyway, the previous
 function just keeps working days, those whose modulo 7 is greater than 1. To
 understand why, we need to take into account that q dates start counting on
 2000.01.01, which happened to be Saturday. We supply the starting and ending
@@ -545,6 +553,8 @@ It's adapted into Scala as follows:
 ```scala
 scala> val prices: Map[Date, List[Float]] =
      |   wds.zip(wds.map(_ => rnd_prices(9.hours, 17.hours+30.minutes, 1000f))).toMap
+%%JM: seems better a single map: wds.map((_, rnd_prices(...))). Could it be done something similar en q? (since wds appears twice ...)
+
 val prices: Map[Date,List[Float]] = Map(2020.01.01 -> List(977.59784, 185.63521,
 586.2779, 221.09216, 775.3352, 645.992, 206.07281, 427.91003, 166.2563,
 639.81836, 717.57886, 842.7385, 189.36241, 755.4852, 229.79778, 548.248,
@@ -559,6 +569,7 @@ to replace the date with the random prices, so we could have used the [derived
 method](https://github.com/scalaz/scalaz/blob/ea81ca782a634d4cd93c56529c082567a207c9f6/core/src/main/scala/scalaz/syntax/FunctorSyntax.scala#L21)
 instead. We don't think there's an equivalent for `as` in q, given its
 simplicity to define constant functions.
+%%JM: and you could save this discussion on `as`  
 
 On the other hand, we must focus on the `!` operator as well, since it's
 introducing a major abstraction from q: *dictionaries*. Although the inner
@@ -620,6 +631,8 @@ monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
 ## Conclusions
 
+%%JM Items?
+
 Q is a functional programming language that supports lambda expressions,
 higher-order functions (iterators), etc. It even supply novel but natural
 features like projection, that takes currying to the next level. We could easily
@@ -641,3 +654,9 @@ powerful *tool of thought* as a reward. We invite you to read the next post on
 this series, where we'll keep delving into this aspect by showing q from the
 array processing perspective.
 
+
+%%JM: lessons from this post: q enjoys the common traits of functional
+  languages (lambdas, hofs, etc.) with some nice features for
+  currying, and, specially, a powerful and concise notation. But this
+  is not where q shines, wait to our next post on array processing! (
+  I don't know where to put the impure aspect).
