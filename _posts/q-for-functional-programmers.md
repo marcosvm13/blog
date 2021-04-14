@@ -9,27 +9,29 @@ features that make it different from other conventional languages such as
 Haskell, OCaml, etc. Given this situation, we'll try to provide an overview of q
 basics, connecting the missing pieces to our previous knowledge on functional
 programming, using Scala and Spark to guide the explanations. We hope it also
-works in the opposite direction, so q programmers can also benefit from these
-articles. We enumerate them right now:
+works in the opposite direction, so q programmers can also benefit
+from this introduction, which will be divided into the following posts:
 
 1. Q as an (impure) functional language
 2. Q as an array processing language
 3. Q as a query language for kdb+
 
-The first post introduces q as a functional language, where we'll show the main
-q features that are already familiar to the conventional functional programmer
-which could be used from the very first day. For its part, the second post put
-focus on q as an array processing language, which is probably the main source
-of q weirdness, so we'll try to connect it to existing theory on the functional
-paradigm. Finally, the last post introduces q and kdb+ as a query language and
-a column-oriented database, respectively, to make the data engineer happy.
+The first post introduces q as a functional language, showing the main
+q features that are already familiar to the conventional functional
+programmer which could be used from the very first day. The second
+post will put focus on q as an array processing language, which is
+probably the main source of q weirdness, so we'll try to connect it to
+existing theory on the functional paradigm. Finally, the last post
+will introduce q and kdb+ as a query language and a column-oriented
+database, respectively, to make the data engineer happy.
 
 ### Why q?
 
-Each day, we set aside a time to experiment with new technologies, and we are
-especially interested on functional languages. A colleague from the Scala
-community pointed us towards q. The following items summarise the alleged
-language benefits why we decided to give it a go:
+Each day, we set aside a time to experiment with new technologies, and
+we are especially interested on functional languages. A colleague from
+the Scala community pointed us towards q. The following items
+summarise the alleged language benefits which decided us to give it a
+go:
 
 - Q is fast, sooo fast
 - Q is a functional query language
@@ -59,17 +61,17 @@ such spirit, most of the APL primitives are still available on q.
 We cannot find a better overview for q as the one contained in the first pages
 of [Q Tips](https://www.q-tips.net): *"Q is an interpreted, dynamic,
 event-driven, functional, array programming language."*. That long definition
-let us infer why learning q becomes such a challenge. Letting the eternal war
+lets us infer why learning q becomes such a challenge. Letting the eternal war
 between interpreted/compiled and dynamic/static aside (compiled and static
-always win, right? :), this article put focus on the *functional* feature, where
+always win, right? :), this article focuses on the *functional* feature, where
 we functional programmers can benefit from, since we have walked this road
 before.
 
-Although there is an emerging interest on [taking q and kdb beyond financial
+Although there is an emerging interest on [taking q and kdb beyond
+financial
 services](https://www.efinancialcareers.co.uk/news/2017/05/kdbq-banking-alternatives),
-I think it is fair to say that nowadays, most of q-related job positions fall
-under this umbrella. Thereby, we find it convenient to use a trading indicator
-as an example. In this sense, we'll try to keep it very easy.
+we won't be too original here and will use a trading indicator as an
+example. In this sense, we'll try to keep it very easy.
 
 > Most of the q/kdb+ tutorials and code snippets revolve around trading
 > examples, so it is sometimes helpful to have an specialist nearby.
@@ -92,11 +94,13 @@ higher order functions over collections). Finally, the last section presents
 dictionaries and more iterators, where we briefly show an interesting connection
 with functors and monads.
 
-We embrace an innovative approach (when compared with other articles in this
-blog) where we show q and scala snippets side by side. We want to remark that
-our intention isn't to provide a comparison of these languages, but rather
-support our explanations by means of snippets from a more conventional
-functional language such as scala, for merely didactic purposes.
+Throughout these posts, we will show q and scala snippets side by
+side. We want to remark that our intention isn't to provide a
+comparison of these languages, though, but rather support our
+explanations by means of snippets from a more conventional functional
+language such as Scala, for merely didactic purposes.
+
+%% LITERATE POST %%
 
 
 ### Calculating the max of two numbers
@@ -115,6 +119,9 @@ scala> import Math.max
 scala> max(3, 2)
 val res0: Int = 3
 ```
+%% 3 max 2 ALSO WORKS, not sure if the implicit class example is
+useful here
+
 As can be seen, we need to import the `Math` module in order to get such
 functionality. This can be extrapolated to many other math operators, which are
 loaded by default in q, mainly because of its bias towards analytics.
@@ -163,14 +170,14 @@ scala> var x: Int = max(3, 2)
 scala> x
 val res2: Int = 3
 ```
-Despite q embraces immutability for a wide range of situations, it is clearly
-not a pure functional language. It neither put the same level of pressure on
+Although q embraces immutability for a wide range of situations, it is clearly
+not a pure functional language. It neither puts the same level of pressure on
 avoiding mutable state as the one exhibited by Scala.
 
 > A remarkably interesting q feature is that variables can be introduced at any
 > point. For instance the expression `x:3|y:2` introduces `y` *on the fly* and
 > just returns its value to keep going. We'd need two different statements to do
-> the proper in Scala, as in `var y = 2; var x = 3 || y`.
+> that in Scala, as in `var y = 2; var x = 3 || y`.
 
 Another important aspect from the previous snippets are the variable types. We
 can see that the Scala version indicates that the type of `x` is `Int`, although
@@ -181,8 +188,8 @@ q)type x
 -7h
 ```
 Where you hoping to find something more familiar? Welcome to q! The number 7
-indicates that the value of this type is a long. On its part, the negative
-symbol sugggests an atomic value, ie. not a list of longs. The final `h` just
+indicates that the value of this type is a long; the negative
+symbol sugggests an atomic value, i.e. not a list of longs; and the final `h` just
 manifests that the value that `type` returns has *short* as type. You can find
 the complete relation between numbers and types in [this
 section](https://code.kx.com/q/basics/datatypes/) from the official
@@ -194,7 +201,7 @@ documentation.
 Instead of assuming a predefined input list to play with, we find it convenient
 to show how to generate a list of random prices. Once generated, we'll move on
 to the actual calculation of the max value within it. Finally, we'll introduce a
-variation of the problem, where we'll calculate the max value, as long as it
+variation of the problem, where we'll calculate the max value as long as it
 doesn't exceed a given limit.
 
 #### Generating random prices for a working day
