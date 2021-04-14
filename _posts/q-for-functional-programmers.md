@@ -119,7 +119,7 @@ scala> import Math.max
 scala> max(3, 2)
 val res0: Int = 3
 ```
-%%JM 3 max 2 ALSO WORKS, not sure if the implicit class example is
+%%JM > 3 max 2 ALSO WORKS, not sure if the implicit class example is
 useful here
 
 As can be seen, we need to import the `Math` module in order to get such
@@ -311,7 +311,7 @@ As functional programmers, we would find the greatest value in a list by using
 a higher order function that collapses a data structure. In q, the analogous for
 this function is the so-called `over` *iterator* (`/`).
 
-%%JM is foldRight (the catamorphism of List) the equivalent of '/' or is it foldLEFT (from the Foldable type class).
+%%JM is foldRight (the catamorphism of List) the equivalent of '/' or is it foldLEFT (from the Foldable type class)?
 
 
 > The notion of *iterator* in Scala refers to a different concept, namely generators. Indeed, we
@@ -327,7 +327,7 @@ q)(|/)prices
 ```
 We can get the analogous behaviour in Scala by using the `reduce` method and
 `max` as reducer:
-%%JM should be the same `max` as before, maybe _ max _
+%%JM should be the same `max` as before, maybe `_ max _`
 ```scala
 scala> prices.reduce(max)
 val res5: Float = 999.99884
@@ -435,7 +435,8 @@ scala> def lim(x: Float, y: Float, z: Float): Float = if (y < z) max(x, y) else 
 > just once, while the second re-evaluates for each usage. In this sense, we
 > could determine that the q expression `n:{0}`, a lambda expression which takes
 > no arguments, would be equivalent to the Scala expression `def n = 0`.
-%%JM It's also equivalente to `val n = () => 0`
+%%JM It's also equivalent to `val n = () => 0`. I would avoid the val/def discussion
+
 
 Once we have defined the new name to get the maximum value which is in turn
 lower than a given limit, we can modularise the previous logic:
