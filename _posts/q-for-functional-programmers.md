@@ -100,7 +100,7 @@ comparison of these languages, though, but rather support our
 explanations by means of snippets from a more conventional functional
 language such as Scala, for merely didactic purposes.
 
-%% LITERATE POST %%
+%%JM SAY THIS IS A LITERATE POST - encourage readers to program %%
 
 
 ### Calculating the max of two numbers
@@ -119,7 +119,7 @@ scala> import Math.max
 scala> max(3, 2)
 val res0: Int = 3
 ```
-%% 3 max 2 ALSO WORKS, not sure if the implicit class example is
+%%JM 3 max 2 ALSO WORKS, not sure if the implicit class example is
 useful here
 
 As can be seen, we need to import the `Math` module in order to get such
@@ -311,7 +311,10 @@ As functional programmers, we would find the greatest value in a list by using
 a higher order function that collapses a data structure. In q, the analogous for
 this function is the so-called `over` *iterator* (`/`).
 
-> The notion of *iterator* in Scala refers to a different concept. Indeed, we
+%%JM is foldRight (the catamorphism of List) the equivalent of '/' or is it foldLEFT (from the Foldable type class).
+
+
+> The notion of *iterator* in Scala refers to a different concept, namely generators. Indeed, we
 > should understand q iterators as a catalogue of higher-order functions over
 > collections such as lists.
 
@@ -324,6 +327,7 @@ q)(|/)prices
 ```
 We can get the analogous behaviour in Scala by using the `reduce` method and
 `max` as reducer:
+%%JM should be the same `max` as before, maybe _ max _
 ```scala
 scala> prices.reduce(max)
 val res5: Float = 999.99884
@@ -349,6 +353,7 @@ q)0|/prices
 ```
 which would produce `0` when prices correspond to an empty list. From the Scala
 viewpoint, we can use the pure `fold` method instead of `reduce`:
+%%JM the plain scala fold is foldLeft according to the API
 ```scala
 scala> prices.fold(0f)(max)
 val res6: Float = 999.99884
@@ -376,10 +381,9 @@ does also supply the analogous alternative, as in `prices.max`.
 
 #### Finding the max value with an upper bound
 
-Calculating the maximum and minimum prices is ok, but we could be interested on
-implementing more sophisticated operations. As an example, we could be
-interested on calculating the higher price that don't exceed a given limit. At
-this point, one could be wondering if `over` is restricted to native predefined
+Calculating the maximum and minimum prices is ok, but we could be interested in
+implementing more sophisticated operations. For instance, calculating the higher price that don't exceed a given limit. At
+this point, one may wonder if `over` is restricted to native predefined
 operators or if we could pass our own operator as argument in order to implement
 that logic. Q, being a functional language, provides support for lambda
 expressions, as we show next:
@@ -394,7 +398,7 @@ val res8: Float = 499.98163
 ```
 As you can see, we replace `|` with the lambda expression that implements the
 desired logic: getting the max of `x` and `y` as long as `y` is lower than
-`500f`. The Scala translation allows inferring that a q lambda is surrounded by
+`500f`. The q lambda expression is surrounded by
 curly braces, where `[x;y]` correspond to the input parameters, using a
 consistent notation with regard to the argument passing style. The rest of the
 expression (`$[y<500f;x|y;x]`) acts as the body, where the `$` operator is
@@ -404,10 +408,11 @@ therefore the analogous for an `if` statement.
 > as the *if* statement. These kind of symbol overloading is very frequent and
 > turns out to be a major barrier to start reading q code from experienced
 > programmers.
+%%JM similarly to the overloading of _ in Scala?
 
 It's worth mentioning that when the parameter block is omitted, q will
 understand names `x`, `y` and `z` as the first, second and third parameters,
-respectively. It's quite similar to the Scala *placeholder* syntax (`_ + \_`),
+respectively. It's quite similar to the Scala *placeholder* syntax (`_ + _`),
 without the limitation of having to use each parameter exactly once. On its
 part, q has the limitation of lacking additional names for functions with a
 number of parameters greater than three. We apply this idea in the following
@@ -424,16 +429,18 @@ Or perhaps, more idiomatically:
 ```scala
 scala> def lim(x: Float, y: Float, z: Float): Float = if (y < z) max(x, y) else x
 ```
+%%JM I would only mention the first one
 
 > The difference between `val` and `def` is that the first of them evaluates
 > just once, while the second re-evaluates for each usage. In this sense, we
 > could determine that the q expression `n:{0}`, a lambda expression which takes
 > no arguments, would be equivalent to the Scala expression `def n = 0`.
+%%JM It's also equivalente to `val n = () => 0`
 
 Once we have defined the new name to get the maximum value which is in turn
 lower than a given limit, we can modularise the previous logic:
 ```q
-q)0 lim[;;500f]/prices
+q)0 lim[;;500f]/prices	
 499.9798
 ```
 We can clumsily adapt this code into Scala, but it requires us to rewrite the
