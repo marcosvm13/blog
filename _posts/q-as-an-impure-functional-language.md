@@ -1,5 +1,12 @@
-# Q: The Tool of Functional Thought
-## Q as an (impure) functional language
+---
+layout: post
+title: "Q: The Tool of Functional Thought. Part I"
+author: Jesús López-González
+intro: "Q as an (Impure) Functional Language"
+image: /img/trilogia-espejismo.jpg
+intro_image_ratio: is-16by9
+toc: true
+---
 
 Q was implemented by [Arthur
 Whitney](https://queue.acm.org/detail.cfm?id=1531242) (Kx Systems), having its
@@ -53,7 +60,7 @@ conventional functional language such as Scala, for merely didactic purposes. We
 encourage you to [install q](https://code.kx.com/q/learn/install/) and type the
 expressions below on your own.
 
-### Calculating the max of two numbers
+# Calculating the max of two numbers
 
 The q language allows us to calculate the max of two numbers by means of the
 operator `|`. We show how to use it in the following snippet, extracted from a
@@ -122,7 +129,7 @@ relation between numbers and types in [this
 section](https://code.kx.com/q/basics/datatypes/) from the official
 documentation.
 
-### Calculating the max price within a day
+# Calculating the max price within a day
 
 Instead of assuming a predefined input list to play with, we find it convenient
 to show how to generate a list of random prices. Once generated, we'll move on
@@ -130,7 +137,7 @@ to the actual calculation of the max value within it. Finally, we'll introduce a
 variation of the problem, where we'll calculate the max value as long as it
 doesn't exceed a given limit.
 
-#### Generating random prices for a working day
+## Generating random prices for a working day
 
 As mentioned before, we assume that the input includes a price update for every
 single second between the range that goes from 09:00 to 17:30. How many seconds
@@ -232,7 +239,7 @@ invest in, we will finally proceed to calculate its higher value.
 > We recommend the *Q Tips* book to find a more realistic generation of random
 > prices, which goes beyond the scope of this post.
 
-#### Finding the max value
+## Finding the max value
 
 As functional programmers, we would find the greatest value by *folding* the
 list. In q, the analogous for this function is the so-called `over` *iterator*
@@ -303,7 +310,7 @@ Finally, we must say that calculating the maximum value from a given list is so
 common, that q supplies `max` as an alias for `+/`, as in `max prices`. Scala
 does also supply the analogous alternative, as in `prices.max`.
 
-#### Finding the max value with an upper bound
+## Finding the max value with an upper bound
 
 Calculating the maximum and minimum prices is ok, but we could be interested in
 implementing more sophisticated indicators. For instance, calculating the higher
@@ -395,7 +402,7 @@ val res11: Float = 499.88913
 However, the q approach is radically different in the shadows, as the next post
 will show.
 
-### Calculating the max price within a whole year
+# Calculating the max price within a whole year
 
 Again, we find it interesting to generate the random prices from scratch. In
 fact, instead of simply using a longer list of prices, we'll produce a list of
@@ -403,7 +410,7 @@ prices associated to every working day, to keep data tidier. Once generated,
 we'll move on to the actual calculation of the max value within the brand new
 structure.
 
-#### Generating a whole year of random prices
+## Generating a whole year of random prices
 
 First of all, we'll use the techniques that we've been learning on the previous
 section to make the existing functions more reusable. For example, we adapt the
@@ -485,7 +492,7 @@ to place keys with values together, and `toMap`, to turn the list of pairs into
 an actual map. By using it, we end up with a collection where each working day
 has a list of prices associated.
 
-#### Finding the max value
+## Finding the max value
 
 Given the generated prices, we think that there are two main approaches to
 calculate the higher price: 
@@ -535,7 +542,7 @@ wanted to show the second approach since it's almost mandatory for a functional
 programming-related post to make [*yet another
 monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
-## Takeaways
+# Takeaways
 
 * Q enjoys the common traits of functional languages: lambdas, higher-order
   functions, etc. with some nice features like projection.

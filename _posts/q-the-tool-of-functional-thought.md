@@ -1,6 +1,14 @@
-# Q: The Tool of Functional Thought
+---
+layout: post
+title: "Q: The Tool of Functional Thought"
+author: Jesús López-González
+intro: "Preface"
+image: /img/momento-de-transicion.jpg
+intro_image_ratio: is-16by9
+toc: true
+---
 
-## About this series
+# About this series
 
 This series of posts describes our experience while learning
 [*q*](https://code.kx.com/q/learn/startingkdb/language/) and *kdb+* by Kx
@@ -12,7 +20,7 @@ programming, using Scala and Spark to guide the explanations. We hope it also
 works in the opposite direction, so q programmers can also benefit from this
 introduction, which will be divided into the following posts:
 
-1. Q as an (impure) functional language
+1. [Q as an (impure) functional language](q-as-an-impure-functional-language.md)
 2. Q as an array processing language
 3. Q as a query language for kdb+
 
@@ -24,7 +32,7 @@ weirdness, so we'll try to connect it to existing theory on the functional
 paradigm. Finally, the last post will introduce q and kdb+ as a query language
 and a column-oriented database, respectively, to make the data engineer happy.
 
-### Why q?
+## Why q?
 
 Each day, we set aside a time to experiment with new technologies, and we are
 especially interested on functional languages. A colleague from the Scala
