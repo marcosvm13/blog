@@ -555,6 +555,6 @@ monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
 Before concluding, we must warn you that this post is far from reflecting the
 real power of q. You should wait to our next post on array processing to see it!
-It takes a while to experiencee the Zen, but you'll get a really powerful *tool
+It takes a while to experience the Zen, but you'll get a really powerful *tool
 of thought* as a reward.
 
