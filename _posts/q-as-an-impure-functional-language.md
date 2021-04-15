@@ -1,51 +1,4 @@
-# Q For (Mortal) Functional Programmers
-
-## About this series
-
-This series of posts describes our experience while learning
-[*q*](https://code.kx.com/q/learn/startingkdb/language/) and *kdb+* by Kx
-Systems. Although q is also a functional programming language, it has many
-features that make it different from other conventional languages such as
-Haskell, OCaml, etc. Given this situation, we'll try to provide an overview of q
-basics, connecting the missing pieces to our previous knowledge on functional
-programming, using Scala and Spark to guide the explanations. We hope it also
-works in the opposite direction, so q programmers can also benefit
-from this introduction, which will be divided into the following posts:
-
-1. Q as an (impure) functional language
-2. Q as an array processing language
-3. Q as a query language for kdb+
-
-The first post introduces q as a functional language, showing the main
-q features that are already familiar to the conventional functional
-programmer which could be used from the very first day. The second
-post will put focus on q as an array processing language, which is
-probably the main source of q weirdness, so we'll try to connect it to
-existing theory on the functional paradigm. Finally, the last post
-will introduce q and kdb+ as a query language and a column-oriented
-database, respectively, to make the data engineer happy.
-
-### Why q?
-
-Each day, we set aside a time to experiment with new technologies, and
-we are especially interested on functional languages. A colleague from
-the Scala community pointed us towards q. The following items
-summarise the alleged language benefits which decided us to give it a
-go:
-
-- Q is fast, sooo fast
-- Q is a functional query language
-- Q is a well-founded language that relies on APL
-- Q is highly demanded in the financial industry
-- Q is quite a challenge
-
-After a few months of reading q material and coding, we can confirm that none of
-the previous items is a myth. Although we feel that we still have a long way to
-master q/kdb, we are confident that we have now a good perspective on how hard
-it is to learn this language. In fact, reflecting this experience is perhaps the
-major contribution of this series of posts. Having said so, we're ready to go
-now!
-
+# Q: The Tool of Functional Thought
 ## Q as an (impure) functional language
 
 Q was implemented by [Arthur
@@ -67,11 +20,10 @@ always win, right? :), this article focuses on the *functional* feature, where
 we functional programmers can benefit from, since we have walked this road
 before.
 
-Although there is an emerging interest on [taking q and kdb beyond
-financial
+Although there is an emerging interest on [taking q and kdb beyond financial
 services](https://www.efinancialcareers.co.uk/news/2017/05/kdbq-banking-alternatives),
-we won't be too original here and will use a trading indicator as an
-example. In this sense, we'll try to keep it very easy.
+we won't be so original here and will use a trading indicator as an example. In
+this sense, we'll try to keep it very easy.
 
 > Most of the q/kdb+ tutorials and code snippets revolve around trading
 > examples, so it is sometimes helpful to have an specialist nearby.
@@ -91,17 +43,15 @@ The first one is just a first contact with the language, where q operators and
 types basics are introduced. The second one serves us as an excuse to show the
 date api, lists, lambda expressions and *iterators* (which are essentially
 higher order functions over collections). Finally, the last section presents
-dictionaries and more iterators, where we briefly show an interesting connection
-with functors and monads.
+dictionaries and more iterators, where we briefly suggest connections with
+functors and monads.
 
-Throughout these posts, we will show q and scala snippets side by
-side. We want to remark that our intention isn't to provide a
-comparison of these languages, though, but rather support our
-explanations by means of snippets from a more conventional functional
-language such as Scala, for merely didactic purposes.
-
-%%JM SAY THIS IS A LITERATE POST - encourage readers to program %%
-
+Throughout these posts, we will show q and scala snippets side by side. We want
+to remark that our intention isn't to provide a comparison of these languages,
+though, but rather support our explanations by means of snippets from a more
+conventional functional language such as Scala, for merely didactic purposes. We
+encourage you to [install q](https://code.kx.com/q/learn/install/) and type the
+expressions below on your own.
 
 ### Calculating the max of two numbers
 
@@ -113,46 +63,24 @@ q)3|2
 3
 ```
 Scala also has a REPL as part of its ecosystem, where the default prompt is
-`scala> `. We could translate the very same logic into Scala using `Math.max`:
+`scala> `. We could translate the very same logic into Scala using the `max`
+method from `Integer`:
 ```scala
-scala> import Math.max
-scala> max(3, 2)
+scala> 3 max 2
 val res0: Int = 3
 ```
-%%JM > 3 max 2 ALSO WORKS, not sure if the implicit class example is useful here
 
-As can be seen, we need to import the `Math` module in order to get such
-functionality. This can be extrapolated to many other math operators, which are
-loaded by default in q, mainly because of its bias towards analytics.
-
-It would not be difficult to supply an infix alias for `Math.max` in Scala
-(although we adopt `||` instead of `|`, since the latter is already associated
-to the *bitwise or* operator):
-```scala
-scala> implicit class IntExt(x: Int) {
-     |   def ||(y: Int): Int = max(x, y)
-     | }
-
-scala> 3 || 2
-val res1: Int = 3
-```
-However, it is perhaps more interesting to follow the opposite path and move
-`|` to its prefix notation, using a familiar syntax for Haskellers, where we
-place the operator symbol in parentheses:
-```q
-q)(|)[3;2]
-3
-```
-As can be seen, the arguments are separated by semicolons and surrounded by
-square brackets. It's worth mentioning that Q supplies many flavours of
-syntactic sugar while invoking functions beyond these ones, but we just wanted
-to remark that the operator `|` could behave as any other function. This notion
-will become relevant later on.
-
-> Have you noticed the lack of space characters among them? Q is really
-> committed to shortness and invites the programmer to limit them. This subtle
-> difference has a considerable impact while reading q code, although
-> eventually, you get used to it.
+> We could move `|` to its prefix notation, using a familiar syntax for
+> Haskellers, where we place the operator symbol in parentheses:
+> ```q
+> q)(|)[3;2]
+> 3
+> ```
+> As can be seen, the arguments are separated by semicolons and surrounded by
+> square brackets. As we'll see later, q supplies many flavours of syntactic
+> sugar while invoking functions beyond these ones, but we just wanted to remark
+> that the operator `|` could behave as any other function. This notion will
+> become relevant later on.
 
 In the previous snippets, we've just produced an output and we've let the REPL
 to show it, but we could have assigned a name to the resulting value. The q
@@ -165,7 +93,7 @@ q)x
 Which we translate into Scala by means of a `var` instead of a`val`, since q
 variables can be reassigned:
 ```scala
-scala> var x: Int = max(3, 2)
+scala> var x: Int = 3 max 2
 scala> x
 val res2: Int = 3
 ```
@@ -187,13 +115,12 @@ q)type x
 -7h
 ```
 Where you hoping to find something more familiar? Welcome to q! The number 7
-indicates that the value of this type is a long; the negative
-symbol sugggests an atomic value, i.e. not a list of longs; and the final `h` just
-manifests that the value that `type` returns has *short* as type. You can find
-the complete relation between numbers and types in [this
+indicates that the value of this type is a long; the negative symbol sugggests
+an atomic value, i.e. not a list of longs; and the final `h` just manifests that
+the value that `type` returns has *short* as type. You can find the complete
+relation between numbers and types in [this
 section](https://code.kx.com/q/basics/datatypes/) from the official
 documentation.
-
 
 ### Calculating the max price within a day
 
@@ -212,6 +139,11 @@ are there in such interval?
 q)n:7h$17:30:00-09:00:00
 30600
 ```
+> Have you noticed the lack of space characters within the q expressions? Q is
+> really committed to shortness and encourages the programmer to limit them.
+> This subtle difference has a considerable impact while reading q code,
+> although eventually, you get used to it.
+
 We clumsily adapt the previous expression into Scala using the *duration*
 interface:
 ```scala
@@ -245,9 +177,7 @@ we are casting the subtraction result to its numeric form.
 > 4
 > ```
 > Notice that the second line rewrites `x` at the very beginning, remember, at
-> the rightmost expression. In particular, the subexpression `x:1` assigns `1`
-> to `x` and returns it as output, just to proceed with the rest of operations.
-> We show the Scala analogous to remark this aspect:
+> the rightmost expression. We show the Scala analogous to remark this aspect:
 > ```scala
 > scala> var x = 0
 > var x: Int = 0
@@ -258,7 +188,7 @@ we are casting the subtraction result to its numeric form.
 > Again, this way of interpreting code is yet another hurdle that makes q
 > difficult to read for newbies, but eventually, you get used to it. Before
 > moving on, we want to clarify that q programmers can change associativity by
-> using parenthesis, for instance: `(2\*3)+1`, although it's more idiomatic to
+> using parenthesis, for instance: `(2*3)+1`, although it's more idiomatic to
 > avoid them and reorder the code, if possible.
 
 Once we know the number of random prices that the intraday list will contain,
@@ -304,18 +234,14 @@ invest in, we will finally proceed to calculate its higher value.
 
 #### Finding the max value
 
-As functional programmers, we would find the greatest value in a list by using
-*fold* (which comes from the general notion of
-[*catamorphism*](https://bartoszmilewski.com/2013/06/10/understanding-f-algebras/)),
-a higher order function that collapses a data structure. In q, the analogous for
-this function is the so-called `over` *iterator* (`/`).
+As functional programmers, we would find the greatest value by *folding* the
+list. In q, the analogous for this function is the so-called `over` *iterator*
+(`/`).
 
-%%JM is foldRight (the catamorphism of List) the equivalent of '/' or is it foldLEFT (from the Foldable type class)?
-
-
-> The notion of *iterator* in Scala refers to a different concept, namely generators. Indeed, we
-> should understand q iterators as a catalogue of higher-order functions over
-> collections such as lists.
+> The notion of *iterator* in Scala refers to a different concept, namely
+> generators. Indeed, we should understand [q
+> iterators](https://code.kx.com/q/ref/iterators/) as a catalogue of
+> higher-order functions over collections such as lists.
 
 This operator takes the reducing function and the list itself as input
 arguments, so we could get the highest price by passing the `|` operator as
@@ -326,9 +252,8 @@ q)(|/)prices
 ```
 We can get the analogous behaviour in Scala by using the `reduce` method and
 `max` as reducer:
-%%JM should be the same `max` as before, maybe `_ max _`
 ```scala
-scala> prices.reduce(max)
+scala> prices.reduce(_ max _)
 val res5: Float = 999.99884
 ```
 Obviously, they don't lead to the very same output since each version produces
@@ -351,8 +276,8 @@ q)0|/prices
 999.9987
 ```
 which would produce `0` when prices correspond to an empty list. From the Scala
-viewpoint, we can use the pure `fold` method instead of `reduce`:
-%%JM the plain scala fold is foldLeft according to the API
+viewpoint, we can use the pure `fold` method instead of `reduce` (which is
+actually implemented as a `foldLeft`):
 ```scala
 scala> prices.fold(0f)(max)
 val res6: Float = 999.99884
@@ -370,7 +295,7 @@ val res6: Float = 999.99884
 > The same suggestivity applies to Scala, where we can pass the proper operation
 > as an argument to `reduce`:
 > ```scala
-> scala> prices.reduce(Math.min)
+> scala> prices.reduce(min)
 > val res7: Float = 0.02861023
 > ```
 
@@ -381,11 +306,11 @@ does also supply the analogous alternative, as in `prices.max`.
 #### Finding the max value with an upper bound
 
 Calculating the maximum and minimum prices is ok, but we could be interested in
-implementing more sophisticated operations. For instance, calculating the higher price that don't exceed a given limit. At
-this point, one may wonder if `over` is restricted to native predefined
-operators or if we could pass our own operator as argument in order to implement
-that logic. Q, being a functional language, provides support for lambda
-expressions, as we show next:
+implementing more sophisticated indicators. For instance, calculating the higher
+price that don't exceed a given limit. At this point, one may wonder if `over`
+is restricted to native predefined operators or if we could pass our own
+operator as argument in order to implement that logic. Q, being a functional
+language, provides support for lambda expressions, as we show next:
 ```q
 q)0{[x;y]$[y<500f;x|y;x]}/prices
 499.9798
@@ -397,17 +322,17 @@ val res8: Float = 499.98163
 ```
 As you can see, we replace `|` with the lambda expression that implements the
 desired logic: getting the max of `x` and `y` as long as `y` is lower than
-`500f`. The q lambda expression is surrounded by
-curly braces, where `[x;y]` correspond to the input parameters, using a
-consistent notation with regard to the argument passing style. The rest of the
-expression (`$[y<500f;x|y;x]`) acts as the body, where the `$` operator is
-therefore the analogous for an `if` statement.
+`500f`. The q lambda expression is surrounded by curly braces, where `[x;y]`
+correspond to the input parameters, using a consistent notation with regard to
+the argument passing style. The rest of the expression (`$[y<500f;x|y;x]`) acts
+as the body, where the `$` operator is therefore the analogous for an `if`
+statement.
 
 > So far, we've seen that the character `$` serves as the casting operator and
 > as the *if* statement. These kind of symbol overloading is very frequent and
 > turns out to be a major barrier to start reading q code from experienced
-> programmers.
-%%JM similarly to the overloading of _ in Scala?
+> programmers. I guess that the same barrier applies for Scala newbies trying to
+> understand the many intentions of a character such as `_`.
 
 It's worth mentioning that when the parameter block is omitted, q will
 understand names `x`, `y` and `z` as the first, second and third parameters,
@@ -422,20 +347,9 @@ q)lim:{$[y<z;x|y;x]}
 ```
 The Scala counterpart would be:
 ```scala
-scala> val lim: (Float, Float, Float) => Float = (x, y, z) => if (y < z) max(x, y) else x
+scala> val lim: (Float, Float, Float) => Float = (x, y, z) => if (y < z) x max y else x
 ```
-Or perhaps, more idiomatically:
-```scala
-scala> def lim(x: Float, y: Float, z: Float): Float = if (y < z) max(x, y) else x
-```
-%%JM I would only mention the first one
-
-> The difference between `val` and `def` is that the first of them evaluates
-> just once, while the second re-evaluates for each usage. In this sense, we
-> could determine that the q expression `n:{0}`, a lambda expression which takes
-> no arguments, would be equivalent to the Scala expression `def n = 0`.
-%%JM It's also equivalent to `val n = () => 0`. I would avoid the val/def discussion
-
+Unfortunately, we can exploit Scala placeholder syntax here.
 
 Once we have defined the new name to get the maximum value which is in turn
 lower than a given limit, we can modularise the previous logic:
@@ -443,26 +357,15 @@ lower than a given limit, we can modularise the previous logic:
 q)0 lim[;;500f]/prices	
 499.9798
 ```
-We can clumsily adapt this code into Scala, but it requires us to rewrite the
-order of `lim` parameters and separate them into different parameter blocks:
-```
-scala> def lim(z: Float)(x: Float, y: Float): Float = if (y < z) max(x, y) else x
-
-scala> prices.fold(0f)(lim(500f))
+We can adapt this code into Scala as follows:
+```scala
+scala> prices.fold(0f)(lim(_, _, 500f))
 val res10: Float = 499.88913
 ```
-%%JM Or else: prices.fold(0f)(lim(_, _, 500f)), without introducing another version of lim and
-more in-line with q code lim[;;500f]
-
-
-As you have probably guessed, what q achieves in `lim[;;500f]` is to fix the
-third argument to `500f` and return a function that still expects the first and
-second ones, as determined by the lack of arguments for such positions. Scala
-can't compete with such flexibility
-
-%%JM: this is not clear to me
-, since q enables this kind of *projection*
-on any parameter, so it has become one of my favourite q features.
+As you have probably guessed by the Scala definition, what q achieves in
+`lim[;;500f]` is to fix the third argument to `500f` and return a function that
+still expects the first and second ones, as determined by the lack of arguments
+for such positions. In q, this technique is known as *projection*.
 
 > Clearly, projection is somehow related to currification. In a way, q deploys
 > both the currified and non-currified versions of every function. In this
@@ -476,7 +379,6 @@ on any parameter, so it has become one of my favourite q features.
 > lim[;;3][;2][1]
 > lim[1;;3][2]
 > ```
-%%JM yes, this is nice
 
 Before moving on to the next section, we'd like to clarify that the *limit*
 logic could benefit from a different implementation. In fact, we think that the
@@ -490,15 +392,16 @@ The previous code could be adapted into Scala as follows:
 scala> prices.filter(_ < 500f).max
 val res11: Float = 499.88913
 ```
-However, the q approach is radically different, as the next post will show.
-
+However, the q approach is radically different in the shadows, as the next post
+will show.
 
 ### Calculating the max price within a whole year
 
 Again, we find it interesting to generate the random prices from scratch. In
-fact, instead of using a longer list of prices, we'll produce a list of prices
-associated to every working day, to keep data tidier. Once generated, we'll move
-on to the actual calculation of the max value within the brand new structure.
+fact, instead of simply using a longer list of prices, we'll produce a list of
+prices associated to every working day, to keep data tidier. Once generated,
+we'll move on to the actual calculation of the max value within the brand new
+structure.
 
 #### Generating a whole year of random prices
 
@@ -510,8 +413,9 @@ q)rnd_prices:{(7h$y-x)?z}
 ```
 As usual, we adapt the snippet into Scala:
 ```scala
-scala> def rnd_prices(x: Duration, y: Duration, z: Float): List[Float] =
-     |   List.fill((y-x).toSeconds)(nextFloat).map(_ * z)
+scala> val rnd_prices: (Duration, Duration, Float) => List[Float] = {
+     |   case (x, y, z) => List.fill((y-x).toSeconds)(nextFloat).map(_ * z)
+     | }
 ```
 As you can see, we've just parameterize the starting time, ending time and
 higher price as `x`, `y` and `z`, respectively. This function will be reused to
@@ -522,14 +426,13 @@ We do so by means of the next function:
 ```q
 q)working_days:{dates where((dates:x+til(y-x))mod 7)>1}
 ```
-This time we avoid showing the Scala counterpart, since it doesn't add value
-from a didactic perspective but rather the opposite.%%JM: you mean that it's much more complex in scala?
-Anyway, the previous
+This time we avoid showing the Scala counterpart, since it would be far more
+complex and doesn't add value from a didactic perspective. Anyway, the previous
 function just keeps working days, those whose modulo 7 is greater than 1. To
 understand why, we need to take into account that q dates start counting on
 2000.01.01, which happened to be Saturday. We supply the starting and ending
 dates that allow us to collect the working days from 2020 (such a wonderful
-year):
+year, huh?):
 ```q
 q)wds:working_days[2020.01.01;2021.01.01]
 ```
@@ -553,7 +456,6 @@ It's adapted into Scala as follows:
 ```scala
 scala> val prices: Map[Date, List[Float]] =
      |   wds.zip(wds.map(_ => rnd_prices(9.hours, 17.hours+30.minutes, 1000f))).toMap
-%%JM: seems better a single map: wds.map((_, rnd_prices(...))). Could it be done something similar en q? (since wds appears twice ...)
 
 val prices: Map[Date,List[Float]] = Map(2020.01.01 -> List(977.59784, 185.63521,
 586.2779, 221.09216, 775.3352, 645.992, 206.07281, 427.91003, 166.2563,
@@ -564,19 +466,23 @@ On the one hand, we remark the iterator `each`. It corresponds to the `map`
 invocation on the Scala snippet, that we associate to the `Functor` typeclass.
 In fact, they both allow us to apply a function over each element at the
 collection. The mapper ignores the existing value, since the objective here is
-to replace the date with the random prices, so we could have used the [derived
-`as`
-method](https://github.com/scalaz/scalaz/blob/ea81ca782a634d4cd93c56529c082567a207c9f6/core/src/main/scala/scalaz/syntax/FunctorSyntax.scala#L21)
-instead. We don't think there's an equivalent for `as` in q, given its
-simplicity to define constant functions.
-%%JM: and you could save this discussion on `as`  
+to replace the date with the random prices.
+
+> The Scala version could avoid the `zip` invocation and reuse `map` for putting
+> dates and lists together:
+> ```scala
+> scala> val prices: Map[Date, List[Float]] =
+>      |   wds.map((_, rnd_prices(9.hours, 17.hours+30.minutes, 1000f))).toMap
+> ```
+> However, we think that the original version has a better correspondence with
+> the q one.
 
 On the other hand, we must focus on the `!` operator as well, since it's
 introducing a major abstraction from q: *dictionaries*. Although the inner
 implementation details may be completely different, I find it fair to compare
 dictionaries with maps. The `!` operator is adapted as a combination of `zip`,
 to place keys with values together, and `toMap`, to turn the list of pairs into
-an actual map. By using it we end up with a collection where each workind day
+an actual map. By using it, we end up with a collection where each working day
 has a list of prices associated.
 
 #### Finding the max value
@@ -629,34 +535,19 @@ wanted to show the second approach since it's almost mandatory for a functional
 programming-related post to make [*yet another
 monad*](https://mvanier.livejournal.com/3917.html) reference, isn't it?
 
-## Conclusions
+## Takeaways
 
-%%JM Items?
+* Q enjoys the common traits of functional languages: lambdas, higher-order
+  functions, etc. with some nice features like projection.
+* Q is not for the purest minds, given that side effects are the norm in certain
+  situations, such as the generation of random numbers or the reassignment of
+  variables.
+* Although we acknowledge that q notation isn't for everyone, we find it very
+  beautiful and extremely concise (even when we let the insane lack of space
+  characters and operator overloading aside).
 
-Q is a functional programming language that supports lambda expressions,
-higher-order functions (iterators), etc. It even supply novel but natural
-features like projection, that takes currying to the next level. We could easily
-migrate our functional knowledge to start coding with such features from the
-very first day.
+Before concluding, we must warn you that this post is far from reflecting the
+real power of q. You should wait to our next post on array processing to see it!
+It takes a while to experiencee the Zen, but you'll get a really powerful *tool
+of thought* as a reward.
 
-Q is also impure, where side effects are the norm in certain situations, such as
-the generation of random numbers or the reassignment of variables. This could be
-an impediment for the purest minds, but I think it's fine for the average Scala
-programmer who's accustomed to this kind of mixture. Anyway, as we could
-experience in the last weeks, most of interfaces support immutability, but we
-lack the whole picture to evaluate its implications on performance.
-
-Finally, I must say that q is beautiful and really concise, even when we let the
-insane lack of space characters and overloading of operators aside (but I also
-acknowledge that it isn't for everyone). In fact, I find its notation very clean
-and consistent. It takes a while to experience the Zen, but you get a really
-powerful *tool of thought* as a reward. We invite you to read the next post on
-this series, where we'll keep delving into this aspect by showing q from the
-array processing perspective.
-
-
-%%JM: lessons from this post: q enjoys the common traits of functional
-  languages (lambdas, hofs, etc.) with some nice features for
-  currying, and, specially, a powerful and concise notation. But this
-  is not where q shines, wait to our next post on array processing! (
-  I don't know where to put the impure aspect).
