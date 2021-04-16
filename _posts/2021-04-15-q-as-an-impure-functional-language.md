@@ -111,7 +111,7 @@ avoiding mutable state as the one exhibited by Scala.
 > A remarkably interesting q feature is that variables can be introduced at any
 > point. For instance the expression `x:3|y:2` introduces `y` *on the fly* and
 > just returns its value to keep going. We'd need two different statements to do
-> that in Scala, as in `var y = 2; var x = 3 || y`.
+> that in Scala, as in `var y = 2; var x = 3 max y`.
 
 Another important aspect from the previous snippets are the variable types. We
 can see that the Scala version indicates that the type of `x` is `Int`, although
