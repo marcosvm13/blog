@@ -314,7 +314,7 @@ does also supply the analogous alternative, as in `prices.max`.
 
 Calculating the maximum and minimum prices is ok, but we could be interested in
 implementing more sophisticated indicators. For instance, calculating the higher
-price that don't exceed a given limit. At this point, one may wonder if `over`
+price that doesn't exceed a given limit. At this point, one may wonder if `over`
 is restricted to native predefined operators or if we could pass our own
 operator as argument in order to implement that logic. Q, being a functional
 language, provides support for lambda expressions, as we show next:
