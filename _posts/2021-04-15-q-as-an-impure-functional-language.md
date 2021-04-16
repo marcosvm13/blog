@@ -146,7 +146,7 @@ are there in such interval?
 q)n:7h$17:30:00-09:00:00
 30600
 ```
-> Have you noticed the lack of space characters within the q expressions? Q is
+> Have you noticed the lack of space characters within q expressions? Q is
 > really committed to shortness and encourages the programmer to limit them.
 > This subtle difference has a considerable impact while reading q code,
 > although eventually, you get used to it.
@@ -193,10 +193,10 @@ we are casting the subtraction result to its numeric form.
 > val res3: Int = 4
 > ```
 > Again, this way of interpreting code is yet another hurdle that makes q
-> difficult to read for newbies, but eventually, you get used to it. Before
-> moving on, we want to clarify that q programmers can change associativity by
-> using parenthesis, for instance: `(2*3)+1`, although it's more idiomatic to
-> avoid them and reorder the code, if possible.
+> difficult to read for newbies, but eventually, you get used to it (again
+> :smile:). Before moving on, we want to clarify that q programmers can change
+> associativity by using parenthesis, for instance: `(2*3)+1`, although it's
+> more idiomatic to avoid them and reorder the code, if possible.
 
 Once we know the number of random prices that the intraday list will contain,
 which we assigned to the variable `n`, it is time to generate them. To do so, we
@@ -220,9 +220,9 @@ zero to one thousand.
 > Indeed, we haven't seen references to seeds in our brief experience as q
 > programmers.
 
-A nice feature from both q and Scala is that most of times the output reflects
-the very same code that we need to build such value. For instance, we can
-generate a list of floats using the very same notation:
+A nice feature from both q and Scala is that most of the time the output
+reflects the very same code that we need to build such value. For instance, we
+can generate a list of floats using the very same notation:
 ```q
 q)231.8545 102.0847 974.3216
 231.8545 102.0847 974.3216
@@ -269,15 +269,15 @@ its own random numbers, but they are close enough!
 As a pure and total functional programmer you might be missing the part of the
 algebra that corresponds to the `Nil` (or empty list) case. In fact, `over`
 would return `()` when we pass an empty list as second argument. This value
-represents the empty list and I guess we could map it as a kind of Scala's `()`,
-which corresponds to the unique instance for the *Unit* type. So, to a certain
-extent, we could consider that `(+/)` returns either `()` or the greatest value,
-the dynamic poor man's type for `Either[Unit, Float]`, [isomorphic to the
-`Option`
+represents the empty list and I guess we could map it as a kind of Scala's
+`()`, which corresponds to the unique instance for the *Unit* type. So, to a
+certain extent, we could consider that `(+/)` returns either `()` or the
+greatest value, the dynamic poor man's type for `Either[Unit, Float]`,
+[isomorphic to the `Option`
 type](https://bartoszmilewski.com/2015/01/13/simple-algebraic-data-types/). The
 Scala version simply raises an exception when `reduce` is invoked from an empty
-list. To make things safer, `over` can take an additional argument to
-contemplate the `Nil` case as well, as we show in the following snippet:
+list. To make things safer, `over` can take an additional argument to take the
+`Nil` case into account as well, as we show in the following snippet:
 ```q
 q)0|/prices
 999.9987
@@ -290,24 +290,24 @@ scala> prices.fold(0f)(max)
 val res6: Float = 999.99884
 ```
 
-> One of the fundamental pilars of APL is the *suggestivity* of notation, where
-> Iverson emphasises the importance of inferring new behaviours from existing
-> expressions. In this sense, we could guess that by passing the operator that
-> calculates the minumum of two values as an argument for `over`, we should be
-> able to obtain the lowest price:
+> One of the fundamental pillars of APL is the *suggestivity* of notation,
+> where Iverson emphasises the importance of inferring new behaviours from
+> existing expressions. In this sense, we could guess that by passing the
+> operator `&` that calculates the minumum of two values as an argument for
+> `over`, we should be able to obtain the lowest price:
 > ```q
 > q)(&/)prices
 > 0.0008079223
 > ```
-> The same suggestivity applies to Scala, where we can pass the proper operation
-> as an argument to `reduce`:
+> The same suggestivity applies to Scala, where we can pass the min function as
+> an argument to `reduce`:
 > ```scala
-> scala> prices.reduce(min)
+> scala> prices.reduce(_ min _)
 > val res7: Float = 0.02861023
 > ```
 
 Finally, we must say that calculating the maximum value from a given list is so
-common, that q supplies `max` as an alias for `+/`, as in `max prices`. Scala
+common, that q supplies `max` as an alias for `|/`, as in `max prices`. Scala
 does also supply the analogous alternative, as in `prices.max`.
 
 ## Finding the max value with an upper bound
@@ -339,7 +339,7 @@ statement.
 > as the *if* statement. These kind of symbol overloading is very frequent and
 > turns out to be a major barrier to start reading q code from experienced
 > programmers. I guess that the same barrier applies for Scala newbies trying to
-> understand the many intentions of a character such as `_`.
+> understand the many uses of the underscore symbol (`_`).
 
 It's worth mentioning that when the parameter block is omitted, q will
 understand names `x`, `y` and `z` as the first, second and third parameters,
@@ -374,12 +374,11 @@ As you have probably guessed by the Scala definition, what q achieves in
 still expects the first and second ones, as determined by the lack of arguments
 for such positions. In q, this technique is known as *projection*.
 
-> Clearly, projection is somehow related to currification. In a way, q deploys
-> both the currified and non-currified versions of every function. In this
-> sense, `lim` can be invoked both as `lim[1;2;3]` and `lim[1][2][3]`. If we
-> combine this currying notion with projection, the flexibility of function
-> invocacion becomes astonishing. To illustrate it, we show further alternatives
-> for the very same invocation:
+> Q deploys both the currified and non-currified versions of every function. In
+> this sense, `lim` can be invoked both as `lim[1;2;3]` and `lim[1][2][3]`. If
+> we combine this currying notion with projection, the flexibility of function
+> invocacion becomes astonishing. To illustrate it, we show further
+> alternatives for the very same invocation:
 > ```q
 > lim[1][2;3]
 > lim[;2;][1][3]
@@ -470,10 +469,10 @@ val prices: Map[Date,List[Float]] = Map(2020.01.01 -> List(977.59784, 185.63521,
 472.32468, 383.4009, 920.29846, 211.65651, 132.54398, 514.35223, 135....
 ```
 On the one hand, we remark the iterator `each`. It corresponds to the `map`
-invocation on the Scala snippet, that we associate to the `Functor` typeclass.
-In fact, they both allow us to apply a function over each element at the
-collection. The mapper ignores the existing value, since the objective here is
-to replace the date with the random prices.
+invocation on the Scala snippet (that we functional programmers associate to
+functors). In fact, they both allow us to apply a function over each element at
+the collection. The mapper ignores the existing value, since the objective here
+is to replace the date with the random prices.
 
 > The Scala version could avoid the `zip` invocation and reuse `map` for putting
 > dates and lists together:
