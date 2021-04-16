@@ -18,6 +18,7 @@ Systems. According to [the wikipedia](https://en.wikipedia.org/wiki/Kdb%2B),
 > institutions in mind... At the core of kdb+ is the built-in programming
 > language, q, a concise, expressive query array language, and dialect of the
 > language APL"*
+
 Although q is also a functional programming language, it has many features that
 make it different from other conventional languages such as Haskell, OCaml,
 etc. Given this situation, we'll try to provide an overview of q basics,
