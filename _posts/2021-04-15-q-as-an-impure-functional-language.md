@@ -324,7 +324,7 @@ q)0{[x;y]$[y<500f;x|y;x]}/prices
 ```
 We rely on the Scala adaptation to explain what is going on:
 ```scala
-scala> prices.fold(0f)((x, y) => if (y < 500f) max(x, y) else x)
+scala> prices.fold(0f)((x, y) => if (y < 500f) x max y else x)
 val res8: Float = 499.98163
 ```
 As you can see, we replace `|` with the lambda expression that implements the
