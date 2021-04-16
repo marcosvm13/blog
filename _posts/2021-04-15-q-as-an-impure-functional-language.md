@@ -424,7 +424,7 @@ scala> val rnd_prices: (Duration, Duration, Float) => List[Float] = {
      |   case (x, y, z) => List.fill((y-x).toSeconds)(nextFloat).map(_ * z)
      | }
 ```
-As you can see, we've just parameterize the starting time, ending time and
+As you can see, we've just parameterized the starting time, ending time and
 higher price as `x`, `y` and `z`, respectively. This function will be reused to
 generate different random prices for each working day.
 
