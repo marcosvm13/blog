@@ -214,11 +214,13 @@ val prices: Seq[Float] = List(618.7332, 216.10922, 481.55737, 257.13562, 95.020.
 The previous snippets generate `n` float numbers in the range that goes from
 zero to one thousand.
 
-> Note that the generation of random numbers by means of `?` is quite simple but
-> impure, since this operation is not referentially transparent. We avoid
-> introducing seeds in the Scala version to keep the comparison more direct.
-> Indeed, we haven't seen references to seeds in our brief experience as q
-> programmers.
+> Note that the generation of random numbers by means of `?` is quite easy but
+> impure, since this operation isn't referentially transparent. In fact, there
+> is a [global seed](https://code.kx.com/q/basics/syscmds/#s-random-seed) which
+> is mutated when random values are demanded. We avoid introducing [the pure
+> approach embracing
+> seeds](https://livebook.manning.com/book/functional-programming-in-scala/chapter-6/)
+> in Scala, to keep the comparison more direct.
 
 A nice feature from both q and Scala is that most of the time the output
 reflects the very same code that we need to build such value. For instance, we
