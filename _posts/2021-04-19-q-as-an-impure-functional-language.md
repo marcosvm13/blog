@@ -214,7 +214,7 @@ val prices: Seq[Float] = List(618.7332, 216.10922, 481.55737, 257.13562, 95.020.
 The previous snippets generate `n` float numbers in the range that goes from
 zero to one thousand.
 
-> Note that the generation of random numbers by means of ? is quite easy but
+> Note that the generation of random numbers by means of `?` is quite easy but
 > impure, since this operation isn't referentially transparent. In fact, there
 > is a [global seed](https://code.kx.com/q/basics/syscmds/#s-random-seed) which
 > is mutated when random values are demanded. We avoid introducing the [pure
