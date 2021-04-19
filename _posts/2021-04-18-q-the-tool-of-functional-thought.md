@@ -27,7 +27,7 @@ programming, using Scala and Spark to guide the explanations. We hope it also
 works in the opposite direction, so q programmers can also benefit from this
 introduction, which will be divided into the following posts:
 
-1. [Q as an (impure) functional language](2021-04-19-q-as-an-impure-functional-language.md)
+1. [Q as an (impure) functional language](https://www.hablapps.com/blog/2021/04/19/q-as-an-impure-functional-language.html)
 2. Q as an array processing language
 3. Q as a query language for kdb+
 
@@ -57,5 +57,5 @@ of the previous items is a myth. Although we feel that we still have a long way
 to master q/kdb, we are confident that we have now a good perspective on how
 hard it is to learn this language. In fact, reflecting this experience is
 perhaps the major contribution of this series of posts. Having said so, [we're
-ready to go now!](2021-04-19-q-as-an-impure-functional-language.md)
+ready to go now!](https://www.hablapps.com/blog/2021/04/19/q-as-an-impure-functional-language.html)
 
