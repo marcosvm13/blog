@@ -1,7 +1,7 @@
 remote_theme: chrisrhymes/mere-blog-theme
 title: Habla computing Blog
 tagline: Purely Functional
-url: "https://www.hablapps.com/blog"
+url: "https://www.hablapps.com"
 
 paginate: 6
 paginate_path: "/page:num"
