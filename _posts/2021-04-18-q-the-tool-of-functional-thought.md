@@ -59,3 +59,5 @@ hard it is to learn this language. In fact, reflecting this experience is
 perhaps the major contribution of this series of posts. Having said so, [we're
 ready to go now!](https://www.hablapps.com/blog/2021/04/19/q-as-an-impure-functional-language.html)
 
+*Post Picture: Momento de Transición, Salvador Dalí (1934)*
+

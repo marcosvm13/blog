@@ -559,3 +559,4 @@ real power of q. You should wait to our next post on array processing to see it!
 It takes a while to experience the Zen, but you'll get a really powerful *tool
 of thought* as a reward.
 
+*Post Picture: Trilogía del desierto. Espejismo, Salvador Dalí (1946)*
