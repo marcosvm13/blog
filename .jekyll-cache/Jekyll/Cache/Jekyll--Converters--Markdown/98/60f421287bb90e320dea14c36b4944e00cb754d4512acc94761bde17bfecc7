@@ -1,0 +1,271 @@
+I"��<p>In the <a href="http://blog.hablapps.com/2016/01/22/from-hello-world-to-hello-monad-part-i/">first part</a> of this series, we set forth the essence of functional programming, namely, <em>being declarative</em>. This was illustrated with the ubiquitous “Hello, world!” example, a ridiculously simple program which, nonetheless, allowed us to introduce the major concepts involved in purely functional programming: declarative functions, languages, and interpreters. It’s time now to show that this approach actually scales up for larger and more complex programs.</p>
+
+<p>In the following paragraphs, you’ll find a series of impure IO programs that represent purification challenges. Compare to the simple “Hello, world!” program, these new programs feature additional IO instructions, and an increasingly complex control flow structure. These extra levels of complexity will force us to enrich the simple <code class="language-plaintext highlighter-rouge">IOProgram</code> DSL and interpreter that we created to purify the simple “Hello, world!” program. For easy of reference, we reproduce that initial purification bellow:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">HelloWorld</span><span class="o">{</span>
+  <span class="cm">/* Impure program */</span>
+  <span class="k">def</span> <span class="nf">helloWorld</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+    <span class="nf">println</span><span class="o">(</span><span class="s">"Hello, world!"</span><span class="o">)</span>
+
+  <span class="cm">/* Functional solution */</span>
+  <span class="k">object</span> <span class="nc">Fun</span> <span class="o">{</span>
+    <span class="c1">// Language</span>
+    <span class="k">type</span> <span class="kt">IOProgram</span> <span class="o">=</span> <span class="nc">Print</span>
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">Print</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+
+    <span class="c1">// Pure function</span>
+    <span class="k">def</span> <span class="nf">pureHello</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOProgram</span> <span class="o">=</span>
+      <span class="nc">Print</span><span class="o">(</span><span class="s">"Hello, world!"</span><span class="o">)</span>
+
+    <span class="c1">// Interpreter</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="o">(</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+      <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Print</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+      <span class="o">}</span>
+
+    <span class="c1">// Impure program (modularised)</span>
+    <span class="k">def</span> <span class="nf">hello</span><span class="o">()</span> <span class="k">=</span> <span class="nf">run</span><span class="o">(</span><span class="nf">pureHello</span><span class="o">())</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="say-what">Say what?</h2>
+<p>Our first challenge consists in purifying the following impure program:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">sayWhat</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+  <span class="n">readLine</span>
+</code></pre></div></div>
+
+<p>Similarly to the “Hello, world!” program, the “sayWhat” program consists of a single IO instruction. In this case, when the program is run it will immediately block until we type something in the console. Then, it will return the string typed, rather than <code class="language-plaintext highlighter-rouge">Unit</code>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nv">SayWhat</span><span class="o">.</span><span class="py">sayWhat</span>
+<span class="o">(</span><span class="k">type</span> <span class="err">"</span><span class="kt">something</span><span class="err">"</span><span class="o">)</span>
+<span class="n">res0</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"something"</span>
+</code></pre></div></div>
+
+<p>In order to purify any program we have to return pure values that represent a description of the logic we want to accomplish. In order to describe this logic, we use the IOProgram DSL, but the current version of this DSL does only offer a <code class="language-plaintext highlighter-rouge">Write</code> instruction, so we have to extend it with a new <code class="language-plaintext highlighter-rouge">Read</code> command:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+
+<span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">object</span> <span class="nc">Read</span> <span class="k">extends</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>There are several things going on here:</p>
+
+<ul>
+  <li>We chose to use an ADT (Algebraic Data Type) to represent our instructions. We created an <em>effect Language</em> to perform IO operations, composed by two instructions, one to read from and the other to write to the console. And our programs consist of either one of these instructions.</li>
+  <li>The new <code class="language-plaintext highlighter-rouge">Read</code> instruction is a <code class="language-plaintext highlighter-rouge">case object</code> because it is a singleton instance; there can only exist one and only one instance of <code class="language-plaintext highlighter-rouge">Read</code> as it has no arguments.</li>
+  <li>Another thing to point out is that we parameterized our <code class="language-plaintext highlighter-rouge">IOEffect</code> and <code class="language-plaintext highlighter-rouge">IOProgram</code> ADTs. We did that because we need to store the return type of our instructions somewhere in order to be able to implement the interpreter. So in this case we use a <em>phantom type</em> to carry that information over. Thus, the <code class="language-plaintext highlighter-rouge">IOEffect</code> algebraic data type is what is known as a Generalised Algebraic Data type (GADT).</li>
+</ul>
+
+<p>We got it. Now we can express the impure “sayWhat” program in a pure fashion as follows:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">pureSayWhat</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Read</span>
+</code></pre></div></div>
+
+<p>As simple as that. But things become more complicated when we try to update our interpreter:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="o">(</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">)</span><span class="k">:</span> <span class="kt">???</span> <span class="o">=</span> <span class="o">...</span>
+</code></pre></div></div>
+
+<p>Now our programs are parameterized so we need to change the signature a little bit; remember that the return type is stored in the program type parameter. We can use good old pattern matching to know which instruction we are dealing with (Scala’s support for pattern matching GADTs suffices in this case):</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+  <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Read</span> <span class="k">=&gt;</span> <span class="n">readLine</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>The only thing left to do is reimplementing in a modular fashion our equivalent impure function. I’ll leave the complete example below:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">SayWhat</span> <span class="o">{</span>
+  <span class="cm">/* Impure program */</span>
+  <span class="k">def</span> <span class="nf">sayWhat</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">readLine</span>
+
+  <span class="cm">/* Functional solution */</span>
+  <span class="k">object</span> <span class="nc">Fun</span> <span class="o">{</span>
+    <span class="c1">// Language</span>
+    <span class="k">type</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+
+    <span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+    <span class="nc">case</span> <span class="k">class</span> <span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+    <span class="k">case</span> <span class="k">object</span> <span class="nc">Read</span> <span class="k">extends</span> <span class="nc">IOEffect</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+
+    <span class="c1">// Pure Program</span>
+    <span class="k">def</span> <span class="nf">pureSayWhat</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Read</span>
+
+    <span class="c1">// Interpreter</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+      <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+        <span class="k">case</span> <span class="nc">Read</span> <span class="k">=&gt;</span> <span class="n">readLine</span>
+      <span class="o">}</span>
+
+    <span class="c1">// Composition</span>
+    <span class="k">def</span> <span class="nf">sayWhat</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">run</span><span class="o">(</span><span class="n">pureSayWhat</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="say-what-reloaded">Say What? (reloaded)</h2>
+<p>We’ll start now building programs with more than one instruction. In this case we are going to print something to the console and then read the user’s input.</p>
+
+<h3 id="impure-program">Impure program</h3>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">helloSayWhat</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="nf">println</span><span class="o">(</span><span class="s">"Hello, say something:"</span><span class="o">)</span>
+  <span class="n">readLine</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>As you can see, this is a common <em>imperative</em> program which can be read out aloud as follows: “first, do this; next, do this”.</p>
+
+<h3 id="pure-function-and-language">Pure function and language</h3>
+<p>So far, our program definition has been just a type alias of a single instruction, but now we want our programs to be able to represent two-instructions programs as well. It turns out our program definition must be also an ADT:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">e1</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span> <span class="n">e2</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+
+<span class="k">def</span> <span class="nf">pureHelloSayWhat</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">Sequence</span><span class="o">(</span>
+    <span class="nc">Single</span><span class="o">(</span><span class="nc">Write</span><span class="o">(</span><span class="s">"Hello, say something:"</span><span class="o">)),</span>
+    <span class="nc">Single</span><span class="o">(</span><span class="nc">Read</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p>As you can see, our programs can now be made up of just a <code class="language-plaintext highlighter-rouge">Single</code> instruction or a <code class="language-plaintext highlighter-rouge">Sequence</code> of two programs.</p>
+
+<h3 id="interpreter">Interpreter</h3>
+<p>We must now change the interpreter accordingly. In particular, we need two interpreters, one for programs and one for effects:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">run</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+  <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Single</span><span class="o">(</span><span class="n">e</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">runEffect</span><span class="o">(</span><span class="n">e</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Sequence</span><span class="o">(</span><span class="n">p1</span><span class="o">,</span> <span class="n">p2</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="nf">runProgram</span><span class="o">(</span><span class="n">p1</span><span class="o">)</span> <span class="o">;</span> <span class="nf">runProgram</span><span class="o">(</span><span class="n">p2</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">runEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">effect</span><span class="k">:</span> <span class="kt">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+  <span class="n">effect</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Read</span> <span class="k">=&gt;</span> <span class="n">readLine</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="composition">Composition</h3>
+<p>The only thing left is to rewrite the impure program in a modular fashion:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">sayWhat</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">run</span><span class="o">(</span><span class="n">pureHelloSayWhat</span><span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="echo-echo">Echo, echo!</h2>
+<p>In our next program we’ll complicate the control flow a little bit.</p>
+
+<h3 id="impure-program-1">Impure program</h3>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">echo</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="nv">read</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">readLine</span>
+  <span class="nf">println</span><span class="o">(</span><span class="n">read</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Note that the <code class="language-plaintext highlighter-rouge">println</code> instruction is writing the result of the <code class="language-plaintext highlighter-rouge">read</code> operation. This is a behaviour we can’t describe with our program representation yet. The problem is that the <code class="language-plaintext highlighter-rouge">Sequence</code> case doesn’t allow us to use the result of the first program. We thus need somehow to represent context-dependent programs, i.e. programs that depend on the results of previous ones. Let’s fix that.</p>
+
+<h3 id="pure-function-and-language-1">Pure function and language</h3>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">e1</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span>
+  <span class="n">e2</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+
+<span class="k">def</span> <span class="nf">pureEcho</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">Sequence</span><span class="o">(</span>
+    <span class="nc">Single</span><span class="o">(</span><span class="nc">Read</span><span class="o">),</span> <span class="n">read</span> <span class="k">=&gt;</span>
+    <span class="nc">Single</span><span class="o">(</span><span class="nc">Write</span><span class="o">(</span><span class="n">read</span><span class="o">))</span> <span class="o">)</span>
+</code></pre></div></div>
+
+<p>As simple as that, the new version of <code class="language-plaintext highlighter-rouge">Sequence</code> carries as its second parameter a program that is allowed to depend on a value of type <code class="language-plaintext highlighter-rouge">A</code>, i.e. the type of values returned when the first program is interpreted. Of course, the intention is that the interpreter will apply this function to that precise value, as will be shown in the next section. By the way, does the signature of the new version of <code class="language-plaintext highlighter-rouge">Sequence</code> ring a bell?</p>
+
+<h3 id="interpreter-1">Interpreter</h3>
+<p>As commented previously, the new version of the interpreter will simply need to modify the way in which sequenced programs are executed:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">runProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+  <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Single</span><span class="o">(</span><span class="n">e</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">runEffect</span><span class="o">(</span><span class="n">e</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Sequence</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">next</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="nv">res</span> <span class="k">=</span> <span class="nf">runProgram</span><span class="o">(</span><span class="n">p</span><span class="o">)</span>
+      <span class="nf">runProgram</span><span class="o">(</span><span class="nf">next</span><span class="o">(</span><span class="n">res</span><span class="o">))</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="composition-1">Composition</h3>
+<p>The last thing to do is to reimplement the impure function in a modular way by applying the interpreter to the result of the pure function.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">echo</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="nf">runProgram</span><span class="o">(</span><span class="n">pureEcho</span><span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="on-pure-values">On pure values</h2>
+<p>There are still some impure IO programs we can’t represent with our current <code class="language-plaintext highlighter-rouge">IOProgram</code> ADT. In particular, think of imperative programs structured as follows: <em>“Do this program; then, do this other program, possible taking into account the result of the last program; etc.; finally, return this value, possible taking into account the results of the last steps.”</em>. It’s the last step which can’t be represented. For instance, let’s consider the following program.</p>
+
+<h3 id="impure-program-2">Impure program</h3>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">echo</span><span class="o">()</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="nv">read</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">readLine</span>
+  <span class="nf">println</span><span class="o">(</span><span class="n">read</span><span class="o">)</span>
+  <span class="n">read</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>This program is similar to the last one, but this time we return the <em>String</em> read, i.e., a pure value. So let’s add this new functionality to our ADT.</p>
+
+<h3 id="pure-function-and-language-2">Pure function and language</h3>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">IOEffect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">e1</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span>
+  <span class="n">e2</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Value</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+
+<span class="k">def</span> <span class="nf">pureEcho</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">Sequence</span><span class="o">(</span>
+    <span class="nc">Single</span><span class="o">(</span><span class="nc">Read</span><span class="o">),</span> <span class="n">read</span> <span class="k">=&gt;</span>
+      <span class="nc">Sequence</span><span class="o">(</span>
+        <span class="nc">Write</span><span class="o">(</span><span class="n">read</span><span class="o">),</span> <span class="k">_</span> <span class="k">=&gt;</span>
+          <span class="nc">Value</span><span class="o">(</span><span class="n">read</span><span class="o">)))</span>
+</code></pre></div></div>
+
+<p>This is the final form of our ADT, whereby a program can be one of three:</p>
+
+<ul>
+  <li>Single: A single instruction.</li>
+  <li><code class="language-plaintext highlighter-rouge">Sequence</code>: A sequence of context-dependent programs.</li>
+  <li><code class="language-plaintext highlighter-rouge">Value</code>: A pure value (e.g. a <code class="language-plaintext highlighter-rouge">String</code>, <code class="language-plaintext highlighter-rouge">Int</code>, <code class="language-plaintext highlighter-rouge">MyFancyClass</code>, etc.)</li>
+</ul>
+
+<h3 id="interpreter-2">Interpreter</h3>
+<p>In order to update the interpreter, we just have to deal with our new type of IO programs.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">runProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span>
+  <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Single</span><span class="o">(</span><span class="n">e</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">runEffect</span><span class="o">(</span><span class="n">e</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Sequence</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">next</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="nv">res</span> <span class="k">=</span> <span class="nf">runProgram</span><span class="o">(</span><span class="n">p</span><span class="o">)</span>
+      <span class="nf">runProgram</span><span class="o">(</span><span class="nf">next</span><span class="o">(</span><span class="n">res</span><span class="o">))</span>
+    <span class="k">case</span> <span class="nc">Value</span><span class="o">(</span><span class="n">a</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">a</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>As you can see, this interpretation is fairly easy: a program <code class="language-plaintext highlighter-rouge">Value(a)</code> just means “returns a”, which is what our interpreter does.</p>
+
+<h3 id="composition-2">Composition</h3>
+<p>Last, we compose interpreter and pure function as usual to obtain a modular version of the original impure program:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">echo</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">runProgram</span><span class="o">(</span><span class="n">pureEcho</span><span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>This post aimed at showing that no matter how complex you impure programs are, you can always design a DSL to represent those programs in a purely declarative way. In our case, the DSL for building IO programs we ended up with is pretty expressive. In fact, we can represent any kind of imperative control flow with it. Try it!</p>
+
+<p>There are, however, two major flaws we have still to deal with. First, we have to admit that the readability of programs written in the final <code class="language-plaintext highlighter-rouge">IOProgram</code> DSL is … poor, to say the least. Second, there is a lot of boilerplate involved in the design of the <code class="language-plaintext highlighter-rouge">IOProgram</code> type. Indeed, no matter the type of DSL we are dealing with (based on IO instructions, File system operations, Web service calls, etc.), if we need imperative features, we will need to copy &amp; paste the same <code class="language-plaintext highlighter-rouge">Sequence</code> and <code class="language-plaintext highlighter-rouge">Value</code> cases. We leave the solution to these problems for the next and last post of this series!</p>
+
+<p><strong>Edit:</strong> All code from this post can be found <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/hello-monads/partII.scala" target="_blank">here</a>.</p>
+
+:ET

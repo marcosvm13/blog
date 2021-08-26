@@ -1,0 +1,496 @@
+I"��<h2 id="repositorio">Repositorio</h2>
+<p>Si prefieres leer este post en formato notebook, lo tienes disponible en <a href="https://github.com/alfonsorr/pattern-matching-post">github</a>.</p>
+
+<p>Si quieres comentar este post, hacer alguna pregunta o sugerencia, puedes usar nuestro <a href="https://github.com/hablapps/blog/discussions/3">foro del post</a></p>
+
+<h2 id="que-es-el-pattern-matching">¿Que es el pattern matching?</h2>
+
+<p>Una estructura de control, pensada para comprobar si un elemento cumple ciertas condiciones. Si no la conocías antes es similar en sintaxis a un <code class="language-plaintext highlighter-rouge">switch</code>, pero nos permite mayor precisión.
+Para usarlo solo necesitamos poner a continuación del elemento sobre el que queremos aplicarlo la palabra reservada <code class="language-plaintext highlighter-rouge">match</code> e indicar cada uno de los casos que nos interesan.</p>
+
+<p>Comencemos con uno ejemplo sencillo:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"hola"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"???"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“hola”</span><br />
+<span style="color:cyan">res3_1</span>: <span style="color:green">String</span> = <span style="color:green">“saludos”</span></p>
+
+<p>Vamos a describir que está ocurriendo aquí: tenemos nuestro valor asignado y empezamos el matcheado. En este caso, queremos comprobar si el valor a procesar es igual al string “hola”. En caso de ser correcto, se ejecutará el codigo de su parte derecha, si no, pasará al siguiente caso y repetirá lo misma comprobación hasta que uno coincida. Podéis ver que el último caso, se representa solo con <code class="language-plaintext highlighter-rouge">_</code>, esta es la forma en scala de indicar “cualquier otro caso”. De esta forma, si ninguno de los anteriores ha sido satisfactorio, sabemos que siempre ejecutará la parte derecha de este código.</p>
+
+<p>Esta es la principal diferencia respecto a <code class="language-plaintext highlighter-rouge">switch</code>. El patter matching únicamente ejecutará el primer trozo de código que satisfaga la condición, por lo que el orden que indiquemos importa.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"hola"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"???"</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p><span style="color:red">Compilador</span></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmd4.sc:3: patterns after a variable pattern cannot match (SLS 8.1.1)  
+    case _ =&gt; "???"  
+            ^cmd4.sc:4: unreachable code due to variable pattern on line 3  
+    case "hola" =&gt; "saludos"  
+                    ^cmd4.sc:5: unreachable code due to variable pattern on line 3  
+    case "adios" =&gt; "hasta pronto"  
+                    ^cmd4.sc:4: unreachable code  
+    case "hola" =&gt; "saludos"  
+                    ^
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“hola”</span><br />
+<span style="color:cyan">res4_1</span>: <span style="color:green">String</span> = <span style="color:green">”???”</span></p>
+
+<p>En este ejemplo pusimos en primer caso el comodín <code class="language-plaintext highlighter-rouge">_</code>, por lo que cualquier valor al ser comparado ejecutará el código de la derecha. El resto de casos son inaccesibles, lo que hará que nos muestre un error de compilación <code class="language-plaintext highlighter-rouge">patterns after a variable pattern cannot match</code> que nos indica que tenemos código inalcanzable. Todos los casos que hay tras el <code class="language-plaintext highlighter-rouge">case _</code> se podrían borrar. Esto nos da una pista de que nuestro pattern matching podría estar mal o que podemos prescindir de casos inalcanzables.</p>
+
+<h2 id="pero-esto-es-solo-la-punta-del-iceberg">Pero esto es solo la punta del iceberg.</h2>
+
+<p>Como hemos visto, pattern matching no solo podemos hacer condiciones de igualdad, si no que podemos hacer una variada cantidad de acciones.</p>
+<h3 id="comparar-con-múltiples-casos">Comparar con múltiples casos.</h3>
+
+<p>En caso de tener múltiples valores que pueden satisfacer un mismo caso, podemos representarlo separandolos con <code class="language-plaintext highlighter-rouge">|</code>.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample1</span> <span class="k">=</span> <span class="s">"hola"</span>
+<span class="n">stringExample1</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="o">|</span> <span class="s">"holi"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"???"</span>
+<span class="o">}</span>
+
+<span class="k">val</span> <span class="nv">stringExample2</span> <span class="k">=</span> <span class="s">"holi"</span>
+<span class="n">stringExample2</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="o">|</span> <span class="s">"holi"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"???"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample1</span>: <span style="color:green">String</span> = <span style="color:green">“hola”</span><br />
+<span style="color:cyan">res5_1</span>: <span style="color:green">String</span> = <span style="color:green">“saludos”</span><br />
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">“holi”</span><br />
+<span style="color:cyan">res5_3</span>: <span style="color:green">String</span> = <span style="color:green">“saludos”</span></p>
+
+<h2 id="asignación-a-un-valor">Asignación a un valor</h2>
+
+<p>En caso de cumplir la condición, muchas veces necesitamos recoger el valor extraído para poder procesarlo.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"ya estoy"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">x</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"el valor $x no está contemplado"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“ya estoy”</span><br />
+<span style="color:cyan">res6_1</span>: <span style="color:green">String</span> = <span style="color:green">“el valor ya estoy no est\u00e1 contemplado”</span></p>
+
+<p>Podemos ver, que hemos cambiado nuestro comodín <code class="language-plaintext highlighter-rouge">_</code> por <code class="language-plaintext highlighter-rouge">x</code>, lo que permite que se pueda usar en la parte derecha y podemos garantizar que si llegamos a este caso nuestro valor nunca contendrá los valores <code class="language-plaintext highlighter-rouge">"hola"</code> y <code class="language-plaintext highlighter-rouge">"adios</code>”. Realmente el comodín no indica “en cualquier otro caso”, es una asignación igual que con <code class="language-plaintext highlighter-rouge">x</code>. La diferencia es que <code class="language-plaintext highlighter-rouge">_</code> no puede ser llamada desde la parte derecha.</p>
+
+<p>Aquí quiero hacer otro inciso, y es la forma en la que puedes nombrar al valor donde vamos a asignar el elemento sobre el que hacemos el matching, ya que scala tiene unas reglas.</p>
+
+<p>Pongamos el siguiente ejemplo, en el que asignamos el valor a un nombre ya existente.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">x</span> <span class="k">=</span> <span class="s">"soy x"</span>
+
+<span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"ya estoy"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">x</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"el valor $x no está contemplado"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“ya estoy”</span><br />
+<span style="color:cyan">res7_2</span>: <span style="color:green">String</span> = <span style="color:green">“el valor ya estoy no est\u00e1 contemplado”</span></p>
+
+<p>En este caso, el valor <code class="language-plaintext highlighter-rouge">x</code> de dentro del <code class="language-plaintext highlighter-rouge">match</code> impedirá en el contexto de la derecha que se pueda acceder al valor <code class="language-plaintext highlighter-rouge">x</code> externo. Esto se llama ocultamiento de valor o “variable shadowing”, y puede llevar a confusión en algunos casos. Desgraciadamente, el compilador de scala, NO nos dará una advertencia en caso de que ocurra esto.</p>
+
+<p>¿Y si yo quisiera comparar un caso con el contenido de un valor que tengo definido fuera del <code class="language-plaintext highlighter-rouge">match</code>? En el pattern matching se puede, pero siguiendo unas reglas, ya que, como hemos visto, un valor con el que nos gustaría comparar puede convertirse en una nueva asignación. Entonces ¿cómo podría crear un caso si es igual a mi valor externo <code class="language-plaintext highlighter-rouge">x</code>? Indicando que este nombre de valor no es para asignarlo, si no compararlo, rodeando el valor con comillas <code class="language-plaintext highlighter-rouge">`x`</code>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">x</span> <span class="k">=</span> <span class="s">"soy x"</span>
+
+<span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"soy x"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">`x`</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"es el valor que tenía en x"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">res8_2</span>: <span style="color:green">String</span> = <span style="color:green">“es el valor que ten\u00eda en x”</span></p>
+
+<p>Y si no te fías de que esto sea así, pongamos un ejemplo que no coincida.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">x</span> <span class="k">=</span> <span class="s">"soy x"</span>
+
+<span class="k">val</span> <span class="nv">stringExample2</span> <span class="k">=</span> <span class="s">"no soy x"</span>
+<span class="n">stringExample2</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">`x`</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"es el valor que tenía en x"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">x</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">“no soy x”</span><br />
+<span style="color:cyan">res9_2</span>: <span style="color:green">String</span> = <span style="color:green">“ninguno de los anteriores”</span></p>
+
+<p>Otra forma más sencilla es seguir <a href="https://docs.scala-lang.org/style/naming-conventions.html#constants-values-variable-and-methods">la guia de estilo de scala</a>. En ella se indica que los valores constantes definidos a nivel de clase han de empezar con mayúscula, lo que reconoce que no es un valor a asignar.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">X</span> <span class="k">=</span> <span class="s">"soy x"</span>
+
+<span class="k">val</span> <span class="nv">stringExample</span> <span class="k">=</span> <span class="s">"soy x"</span>
+<span class="n">stringExample</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">X</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"es el valor que tenía en x"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">stringExample</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">res10_2</span>: <span style="color:green">String</span> = <span style="color:green">“es el valor que ten\u00eda en x”</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">X</span> <span class="k">=</span> <span class="s">"soy x"</span>
+
+<span class="k">val</span> <span class="nv">stringExample2</span> <span class="k">=</span> <span class="s">"no soy x"</span>
+<span class="n">stringExample2</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">X</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"es el valor que tenía en x"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">X</span>: <span style="color:green">String</span> = <span style="color:green">“soy x”</span><br />
+<span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">“no soy x”</span><br />
+<span style="color:cyan">res11_2</span>: <span style="color:green">String</span> = <span style="color:green">“ninguno de los anteriores”</span></p>
+
+<h3 id="refinar-la-condición">Refinar la condición.</h3>
+
+<p>Ahora que sabemos asignar el valor dentro de un caso podemos llegar a otra de las ventajas del pattern matching como es el poder refinar la condición sin tener que ser siempre por igualdad, como hemos hecho hasta el momento. Pongamos el ejemplo donde quisieramos tratar los strings que comiencen por <code class="language-plaintext highlighter-rouge">h</code> de manera distinta, excepto el caso que tenemos ya, comparando con la palabra <code class="language-plaintext highlighter-rouge">"hola"</code>. Con los conocimientos que tenemos actualmente, nuestro código quedaría algo tal que así:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample2</span> <span class="k">=</span> <span class="s">"habana"</span>
+<span class="n">stringExample2</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">x</span> <span class="k">=&gt;</span> <span class="nf">if</span> <span class="o">(</span><span class="nv">x</span><span class="o">.</span><span class="py">head</span> <span class="o">==</span> <span class="sc">'h'</span><span class="o">)</span> <span class="s">"comienza por h"</span> <span class="k">else</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">“habana”</span><br />
+<span style="color:cyan">res12_1</span>: <span style="color:green">String</span> = <span style="color:green">“comienza por h”</span></p>
+
+<p>Pero la utilidad del pattern matching es la de aplanar todos los posibles casos y no empezar a anidar casos más complejos, por lo que podemos hacer uso de la asignación del valor y hacer filtrado de casos de la siguiente manera:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">stringExample2</span> <span class="k">=</span> <span class="s">"habana"</span>
+<span class="n">stringExample2</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"saludos"</span>
+    <span class="k">case</span> <span class="s">"adios"</span> <span class="k">=&gt;</span> <span class="s">"hasta pronto"</span>
+    <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">head</span> <span class="o">==</span> <span class="sc">'h'</span> <span class="k">=&gt;</span> <span class="s">"comienza por h"</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno de los anteriores"</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">stringExample2</span>: <span style="color:green">String</span> = <span style="color:green">“habana”</span><br />
+<span style="color:cyan">res13_1</span>: <span style="color:green">String</span> = <span style="color:green">“comienza por h”</span></p>
+
+<p>De esta manera, vemos claramente los 4 posibles casos estructurados con su condición primero, y no tenemos que rebuscar lógica escondida a lo largo de todo el código. Lo único a tener en cuenta es que este <code class="language-plaintext highlighter-rouge">if</code> no necesita paréntesis en la condición, a diferencia de la estructura de control en scala.</p>
+
+<h3 id="comprobación-del-tipo-del-elemento-matcheado">Comprobación del tipo del elemento matcheado.</h3>
+
+<p>Hasta ahora, ¿todo bien? Comencemos a trabajar con más tipos, además de nuestro querido <code class="language-plaintext highlighter-rouge">String</code>. ¿Cómo podríamos sacar casos distintos si es string, si es Integer, y un último para el resto? En principio sería algo tal que así:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matchfun</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">Any</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+ <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">isInstanceOf</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=&gt;</span>
+       <span class="k">val</span> <span class="nv">xString</span> <span class="k">=</span> <span class="nv">x</span><span class="o">.</span><span class="py">asInstanceOf</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+       <span class="n">s</span><span class="s">"tengo el string $xString"</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">isInstanceOf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=&gt;</span>
+       <span class="k">val</span> <span class="nv">xInt</span> <span class="k">=</span> <span class="nv">x</span><span class="o">.</span><span class="py">asInstanceOf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>
+       <span class="n">s</span><span class="s">"tengo el integer $xInt"</span>
+     <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"es otro tipo"</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">matchfun</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">matchfun</span><span class="o">(</span><span class="s">"hola"</span><span class="o">)</span>
+<span class="nf">matchfun</span><span class="o">(</span><span class="mi">42</span><span class="o">)</span>
+<span class="nf">matchfun</span><span class="o">(</span><span class="mf">12.4</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res15_0</span>: <span style="color:green">String</span> = <span style="color:green">“tengo el string hola”</span><br />
+<span style="color:cyan">res15_1</span>: <span style="color:green">String</span> = <span style="color:green">“tengo el integer 42”</span><br />
+<span style="color:cyan">res15_2</span>: <span style="color:green">String</span> = <span style="color:green">“es otro tipo”</span></p>
+
+<p>Esta forma genera mucho código repetitivo, por lo que la sintaxis del pattern matching nos da una forma más concisa de describirlo. Esta nos sirve no solo para saber si es de un tipo, también hará automáticamente el cambio de tipo para que trabajemos en nuestro contexto de la derecha.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matchfun2</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">Any</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+ <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+     <span class="k">case</span> <span class="n">x</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=&gt;</span> <span class="n">s</span><span class="s">"tengo el string $x"</span>
+     <span class="k">case</span> <span class="n">x</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=&gt;</span> <span class="n">s</span><span class="s">"tengo el integer $x"</span>
+     <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"es otro tipo"</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">matchfun2</span><span class="o">(</span><span class="s">"hola"</span><span class="o">)</span>
+<span class="nf">matchfun2</span><span class="o">(</span><span class="mi">42</span><span class="o">)</span>
+<span class="nf">matchfun2</span><span class="o">(</span><span class="mf">12.4</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res17_0</span>: <span style="color:green">String</span> = <span style="color:green">“tengo el string hola”</span><br />
+<span style="color:cyan">res17_1</span>: <span style="color:green">String</span> = <span style="color:green">“tengo el integer 42”</span><br />
+<span style="color:cyan">res17_2</span>: <span style="color:green">String</span> = <span style="color:green">“es otro tipo”</span></p>
+
+<p>Esta forma es mucho más concisa y nos evita mancharnos las manos con funciones como <code class="language-plaintext highlighter-rouge">asInstanceOf</code>.</p>
+
+<h4 id="cuidado-con-las-comprobaciones-de-algunas-clases">Cuidado con las comprobaciones de algunas clases</h4>
+
+<p>Una cosa que tenemos que tener en cuenta es que estas comprobaciones se hacen en tiempo de ejecución. La JVM tiene una limitación y es los tipos paramétricos no existen durante la ejecución. En otras palabras, que si quisieramos comparar y saber si es de tipo <code class="language-plaintext highlighter-rouge">List[String]</code> o <code class="language-plaintext highlighter-rouge">List[Int]</code> no podríamos fácilmente, ya que la información sobre qué tipo de elemento contiene se pierde durante la ejecución:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">matchfun2</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Any</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+ <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+     <span class="k">case</span> <span class="n">x</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"tengo una lista de string de longitud ${x.size}"</span>
+     <span class="k">case</span> <span class="n">x</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"tengo una lista de integer de longitud ${x.size}"</span>
+     <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"es otro tipo de lista"</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+<p><span style="color:red">Compilador</span></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmd18.sc:3: non-variable type argument String in type pattern List[String] (the underlying of List[String]) is unchecked since it is eliminated by erasure  
+        case x: List[String] =&gt; s"tengo una lista de string de longitud ${x.size}"  
+                ^cmd18.sc:4: non-variable type argument Int in type pattern List[Int] (the underlying of List[Int]) is unchecked since it is eliminated by erasure  
+        case x: List[Int] =&gt; s"tengo una lista de integer de longitud ${x.size}"  
+                ^cmd18.sc:4: unreachable code  
+        case x: List[Int] =&gt; s"tengo una lista de integer de longitud ${x.size}"  
+                              ^
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">matchfun2</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">matchfun2</span><span class="o">(</span><span class="nc">List</span><span class="o">(</span><span class="s">"hola"</span><span class="o">,</span> <span class="s">"adios"</span><span class="o">))</span>
+<span class="nf">matchfun2</span><span class="o">(</span><span class="nc">List</span><span class="o">(</span><span class="mi">42</span><span class="o">))</span>
+<span class="nf">matchfun2</span><span class="o">(</span><span class="nc">List</span><span class="o">(</span><span class="mf">4.2f</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res19_0</span>: <span style="color:green">String</span> = <span style="color:green">“tengo una lista de string de longitud 2”</span><br />
+<span style="color:cyan">res19_1</span>: <span style="color:green">String</span> = <span style="color:green">“tengo una lista de string de longitud 1”</span><br />
+<span style="color:cyan">res19_2</span>: <span style="color:green">String</span> = <span style="color:green">“tengo una lista de string de longitud 1”</span></p>
+
+<p>Como puedes comprobar, el pattern matching no puede ver más allá de que se trata de una lista y el tipo contenido nunca lo tiene en cuenta, por lo que siempre entrará en el primer caso. Se podría comprobar qué tipo de elemento contiene en el primer elemento, pero siempre tendremos el problema en listas vacías, ya que nos resultará imposible poder comprobarlo. Eso si, como todo posible punto de error, el compilador nos informará para que lo tengamos en cuenta con el siguiente warning <code class="language-plaintext highlighter-rouge">List[String] is unchecked since it is eliminated by erasure</code>, o traducido, “List[String] no está chequeado porque ha sido borrado”. Esto ocurre porque el compilador lo traducirá a <code class="language-plaintext highlighter-rouge">case x: List =&gt; ...</code> borrando el tipo de la lista. Como os podréis imaginar esto no ocurre solo con listas, si no con todos los tipos paramétricos.</p>
+
+<h3 id="adts-en-pattern-matching">ADT’s en pattern matching</h3>
+
+<p>Ya hemos visto que scala permite comprobar el tipo del elemento para poder realizar una acción para cada tipo. Es por esto que quiero pararme a comentar una particularidad de la programación funcional, que por supuesto se aplica en scala, y es el uso de los Tipos Algebráicos de Datos, Algebraic Data Types en inglés o ADT para que sea más corto. Esto es una representación de los datos que se basa en el producto y suma de tipos, por ejemplo un producto de String e integer sería la siguiente <code class="language-plaintext highlighter-rouge">case class</code></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">case</span> <span class="k">class</span> <span class="nc">Usuario</span><span class="o">(</span><span class="n">nombre</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">edad</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">class</span> <span style="color:cyan">Usuario</span></p>
+
+<p>Y una  suma de tipos se puede representar de múltiples maneras, pero la más común es el uso de <code class="language-plaintext highlighter-rouge">sealed trait</code> por ejemplo.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">Trabajador</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Currito</span><span class="o">(</span><span class="n">nombre</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Trabajador</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Jefe</span><span class="o">(</span><span class="n">nombre</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">subordinados</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Trabajador</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">Trabajador</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span><br />
+defined <span style="color:green">class</span> <span style="color:cyan">Currito</span><br />
+defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span></p>
+
+<p>En este vemos una representación de lo que sería un trabajador: o es alguien con subordinados a su cargo, o es un currante sin nadie a su cargo. Al ser un <code class="language-plaintext highlighter-rouge">sealed trait</code> solo permite estas dos posibilidiades de tipo de trabajador y no se puede extender en ningún otro lado. Esta forma de representación de datos es muy usada en scala, incluso en elementos que nos da el lenguaje, como sería Option, que tiene dos posibles elementos: Some, que indica que contiene un elemento, o None, que no contiene ninguno.</p>
+
+<p>Dada la particularidad de esta suma de tipos, el pattern matching suele ser una herramienta muy común y útil para poder actuar según el tipo de dato que podamos encontrarnos.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">quienEs</span><span class="o">(</span><span class="n">t</span><span class="k">:</span> <span class="kt">Trabajador</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+<span class="n">t</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="n">j</span><span class="k">:</span> <span class="kt">Jefe</span> <span class="o">=&gt;</span> <span class="n">s</span><span class="s">"${j.nombre} es jefe de ${j.subordinados.size} empleados"</span>
+    <span class="k">case</span> <span class="n">c</span><span class="k">:</span> <span class="kt">Currito</span> <span class="o">=&gt;</span> <span class="n">s</span><span class="s">"${c.nombre} es un gran trabajador"</span>
+<span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">tengoDato</span><span class="o">(</span><span class="n">o</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+<span class="n">o</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="n">s</span><span class="k">:</span> <span class="kt">Some</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"tenemos el valor ${s.get}"</span>
+    <span class="k">case</span> <span class="nc">None</span> <span class="k">=&gt;</span> <span class="s">"no tenemos valor"</span> <span class="c1">// en este caso, no comparamos por tipo, si no contra el objeto único que representa un Option vacío</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">quienEs</span><br />
+defined <span style="color:green">function</span> <span style="color:cyan">tengoDato</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">quienEs</span><span class="o">(</span><span class="nc">Jefe</span><span class="o">(</span><span class="s">"JM"</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Currito</span><span class="o">(</span><span class="s">"Ar"</span><span class="o">),</span> <span class="nc">Currito</span><span class="o">(</span><span class="s">"J"</span><span class="o">))))</span>
+<span class="nf">quienEs</span><span class="o">(</span><span class="nc">Currito</span><span class="o">(</span><span class="s">"Ar"</span><span class="o">))</span>
+
+<span class="nf">tengoDato</span><span class="o">(</span><span class="nc">Some</span><span class="o">(</span><span class="mi">23</span><span class="o">))</span>
+<span class="nf">tengoDato</span><span class="o">(</span><span class="nc">None</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res23_0</span>: <span style="color:green">String</span> = <span style="color:green">“JM es jefe de 2 empleados”</span><br />
+<span style="color:cyan">res23_1</span>: <span style="color:green">String</span> = <span style="color:green">“Ar es un gran trabajador”</span><br />
+<span style="color:cyan">res23_2</span>: <span style="color:green">String</span> = <span style="color:green">“tenemos el valor 23”</span><br />
+<span style="color:cyan">res23_3</span>: <span style="color:green">String</span> = <span style="color:green">“no tenemos valor”</span></p>
+
+<h3 id="extractores">Extractores</h3>
+
+<p>Pero no nos quedemos solo con las limitaciones, porque al fin llega uno de los elementos más potentes del pattern matching (y mi favorito), los extractores. Pongamos que ya somos mayorcitos y no trabajamos solo con tipos simples como String, Int, etc, si no que ya tenemos estructuras más complejas, por ejemplo una tupla. En esta tupla nos gustaría hacer varios casos, segun el contenido de esta. Con nuestro conocimiento actual, podríamos hacer algo tal que así:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">tuplaMatch</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">(</span><span class="kt">String</span><span class="o">,</span> <span class="kt">Int</span><span class="o">))</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+ <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">_1</span> <span class="o">==</span> <span class="s">"hola"</span> <span class="o">&amp;</span> <span class="nv">x</span><span class="o">.</span><span class="py">_2</span>  <span class="o">==</span> <span class="mi">10</span> <span class="k">=&gt;</span> <span class="s">"hola con valor igual que 10"</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">_1</span> <span class="o">==</span> <span class="s">"hola"</span> <span class="o">&amp;</span> <span class="nv">x</span><span class="o">.</span><span class="py">_2</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="k">=&gt;</span> <span class="s">"hola con valor mayor que 10"</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="nv">x</span><span class="o">.</span><span class="py">_1</span> <span class="o">==</span> <span class="s">"hola"</span> <span class="k">=&gt;</span> <span class="s">"hola con valor menor a 10"</span>
+     <span class="k">case</span> <span class="n">x</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"la palabra es ${x._1} con valor ${x._2}"</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">10</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">2</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"adios"</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res25_0</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor igual que 10”</span><br />
+<span style="color:cyan">res25_1</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor mayor que 10”</span><br />
+<span style="color:cyan">res25_2</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor menor a 10”</span><br />
+<span style="color:cyan">res25_3</span>: <span style="color:green">String</span> = <span style="color:green">“la palabra es adios con valor 42”</span></p>
+
+<p>El código es correcto, pero hasta el momento la principal ventaja del pattern matching es una descripción muy gráfica de la lógica en la comprobación. Aquí es donde entra el uso de los extractores, con los que podemos comprobar o asignar los elementos internos de una manera mucho más parecida a la representación de la construcción de la clase.</p>
+
+<p>Por ejemplo, para crear una tupla la forma en la que lo hacemos es poniendo los elementos necesarios entre paréntesis y separados por una coma. En este caso a ser una tupla de dos elementos que se podría representar tal que así:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">tupla</span><span class="k">:</span> <span class="o">(</span><span class="kt">String</span><span class="o">,</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">(</span><span class="s">"texto"</span><span class="o">,</span> <span class="mi">1</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">“texto”</span>, <span style="color:green">1</span>)</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">tuplaMatch2</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">(</span><span class="kt">String</span><span class="o">,</span> <span class="kt">Int</span><span class="o">))</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+ <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+     <span class="nf">case</span> <span class="o">(</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">10</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="s">"hola con valor igual que 10"</span> <span class="c1">// hacemos uso de comparación</span>
+     <span class="nf">case</span> <span class="o">(</span><span class="s">"hola"</span><span class="o">,</span> <span class="n">x2</span><span class="o">)</span> <span class="k">if</span> <span class="n">x2</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="k">=&gt;</span> <span class="s">"hola con valor mayor que 10"</span> <span class="c1">// hacemos uso de comparación y de asignación de un elemento interno</span>
+     <span class="nf">case</span> <span class="o">(</span><span class="s">"hola"</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="s">"hola con valor menor a 10"</span>
+     <span class="nf">case</span> <span class="o">(</span><span class="n">x1</span><span class="o">,</span> <span class="n">x2</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"la palabra es ${x1} con valor ${x2}"</span> <span class="c1">// asignamos ambos elementos de la tupla</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">tuplaMatch2</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">10</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">2</span><span class="o">))</span>
+<span class="nf">tuplaMatch</span><span class="o">((</span><span class="s">"adios"</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res28_0</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor igual que 10”</span><br />
+<span style="color:cyan">res28_1</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor mayor que 10”</span><br />
+<span style="color:cyan">res28_2</span>: <span style="color:green">String</span> = <span style="color:green">“hola con valor menor a 10”</span><br />
+<span style="color:cyan">res28_3</span>: <span style="color:green">String</span> = <span style="color:green">“la palabra es adios con valor 42”</span></p>
+
+<p>Hay que tener en cuenta que el uso de extractores no es solo para pattern matching, también se pueden  usar en las asignaciones</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">tupla</span><span class="k">:</span> <span class="o">(</span><span class="kt">String</span><span class="o">,</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">(</span><span class="s">"texto"</span><span class="o">,</span> <span class="mi">1</span><span class="o">)</span>
+<span class="nf">val</span> <span class="o">(</span><span class="n">primero</span><span class="o">,</span> <span class="n">segundo</span><span class="o">)</span> <span class="k">=</span> <span class="n">tupla</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">tupla</span>: (<span style="color:green">String</span>, <span style="color:green">Int</span>) = (<span style="color:green">“texto”</span>, <span style="color:green">1</span>)
+<span style="color:cyan">primero</span>: <span style="color:green">String</span> = <span style="color:green">“texto”</span><br />
+<span style="color:cyan">segundo</span>: <span style="color:green">Int</span> = <span style="color:green">1</span></p>
+
+<p>Los extractores no solo permiten comparar por igualdad, o asignar los elementos internos, también permiten comprobar el tipo de los elementos internos.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">tuplaAnyMatch</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="o">(</span><span class="kt">Any</span><span class="o">,</span> <span class="kt">Any</span><span class="o">))</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+  <span class="n">x</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="nf">case</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">y</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"dos strings primero: $x segundo: $y"</span>
+      <span class="nf">case</span> <span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"solo el primero es string: $x"</span>
+      <span class="nf">case</span> <span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">x</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">s</span><span class="s">"solo el segundo es string: $x"</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="s">"ninguno es string"</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">tuplaAnyMatch</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">tuplaAnyMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="s">"adios"</span><span class="o">))</span>
+<span class="nf">tuplaAnyMatch</span><span class="o">((</span><span class="s">"hola"</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+<span class="nf">tuplaAnyMatch</span><span class="o">((</span><span class="mi">1</span><span class="o">,</span> <span class="s">"adios"</span><span class="o">))</span>
+<span class="nf">tuplaAnyMatch</span><span class="o">((</span><span class="mi">1</span><span class="o">,</span> <span class="mi">42</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p><span style="color:cyan">res31_0</span>: <span style="color:green">String</span> = <span style="color:green">“dos strings primero: hola segundo: adios”</span><br />
+<span style="color:cyan">res31_1</span>: <span style="color:green">String</span> = <span style="color:green">“solo el primero es string: hola”</span><br />
+<span style="color:cyan">res31_2</span>: <span style="color:green">String</span> = <span style="color:green">“solo el segundo es string: adios”</span><br />
+<span style="color:cyan">res31_3</span>: <span style="color:green">String</span> = <span style="color:green">“ninguno es string”</span></p>
+
+<p>Como habrás visto, los extractores son una herramienta muy potente que permite simplificar nuestro código. Esto es tan común, que cuando trabajamos con <code class="language-plaintext highlighter-rouge">case classes</code> (elemento fundamental para crear ADT’s) scala nos crea extractores que siguen la misma estructura de los constructores.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">Trabajador</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Currito</span><span class="o">(</span><span class="n">nombre</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Trabajador</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Jefe</span><span class="o">(</span><span class="n">nombre</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">subordinados</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Trabajador</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">Trabajador</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">trait</span> <span style="color:cyan">Trabajador</span><br />
+defined <span style="color:green">class</span> <span style="color:cyan">Currito</span><br />
+defined <span style="color:green">class</span> <span style="color:cyan">Jefe</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dibujaJerarquia</span><span class="o">(</span><span class="n">t</span><span class="k">:</span><span class="kt">Trabajador</span><span class="o">,</span> <span class="n">nivel</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="o">)</span><span class="k">:</span><span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="nv">blancos</span> <span class="k">=</span> <span class="s">"  "</span> <span class="o">*</span> <span class="n">nivel</span>
+    <span class="n">t</span> <span class="k">match</span><span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Currito</span><span class="o">(</span><span class="n">n</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">s</span><span class="s">"${blancos}- $n 🧑‍🏭"</span><span class="o">)</span>
+        <span class="k">case</span> <span class="nc">Jefe</span><span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="n">l</span><span class="o">)</span> <span class="k">=&gt;</span>
+          <span class="nf">println</span><span class="o">(</span><span class="n">s</span><span class="s">"${blancos}- $n 😎"</span><span class="o">)</span>
+          <span class="nv">l</span><span class="o">.</span><span class="py">foreach</span><span class="o">(</span><span class="nf">dibujaJerarquia</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">nivel</span> <span class="o">+</span> <span class="mi">1</span><span class="o">))</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>defined <span style="color:green">function</span> <span style="color:cyan">dibujaJerarquia</span></p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">empresa</span> <span class="k">=</span> <span class="nc">Jefe</span><span class="o">(</span><span class="s">"A"</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span>
+         <span class="nc">Jefe</span><span class="o">(</span><span class="s">"B"</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Currito</span><span class="o">(</span><span class="s">"C"</span><span class="o">),</span> <span class="nc">Currito</span><span class="o">(</span><span class="s">"D"</span><span class="o">))),</span>
+         <span class="nc">Jefe</span><span class="o">(</span><span class="s">"E"</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Currito</span><span class="o">(</span><span class="s">"F"</span><span class="o">),</span> <span class="nc">Currito</span><span class="o">(</span><span class="s">"G"</span><span class="o">))),</span>
+         <span class="nc">Currito</span><span class="o">(</span><span class="s">"H"</span><span class="o">)</span>
+      <span class="o">)</span>
+    <span class="o">)</span>
+
+<span class="nf">dibujaJerarquia</span><span class="o">(</span><span class="n">empresa</span><span class="o">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    - A 😎
+      - B 😎
+        - C 🧑‍🏭
+        - D 🧑‍🏭
+      - E 😎
+        - F 🧑‍🏭
+        - G 🧑‍🏭
+      - H 🧑‍🏭
+</code></pre></div></div>
+
+<p><span style="color:cyan">empresa</span>: <span style="color:green">Jefe</span> = <span style="color:yellow">Jefe</span>(
+<span style="color:green">“A”</span>,
+<span style="color:yellow">List</span>(
+<span style="color:yellow">Jefe</span>(<span style="color:green">“B”</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">“C”</span>), <span style="color:yellow">Currito</span>(<span style="color:green">“D”</span>))),
+<span style="color:yellow">Jefe</span>(<span style="color:green">“E”</span>, <span style="color:yellow">List</span>(<span style="color:yellow">Currito</span>(<span style="color:green">“F”</span>), <span style="color:yellow">Currito</span>(<span style="color:green">“G”</span>))),
+<span style="color:yellow">Currito</span>(<span style="color:green">“H”</span>)
+    )
+)</p>
+
+<h2 id="resumen-final">Resumen final</h2>
+<p>Como habrás visto, el pattern matching es una herramienta que permite simplificar códigos muy complejos de una manera estructurada. No es algo que sea exclusivo de scala, ni siquiera es el primero en tenerlo (otros lenguajes ya han introducido herramientas similares) pero podrás ver que siempre va de la mano con el paradigma funcional. Una tendencia que cada vez vemos en más lenguajes.
+En el siguiente post, podrás ver elementos avanzados para poder crear tus propios extractores,  como mejorar los posibles errores que puedan surgirte y más.</p>
+:ET

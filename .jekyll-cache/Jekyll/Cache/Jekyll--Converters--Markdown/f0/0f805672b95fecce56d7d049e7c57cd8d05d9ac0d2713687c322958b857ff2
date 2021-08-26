@@ -1,0 +1,353 @@
+I"#�<p>In this post we will solve a little programming problem, mainly with the excuse of talking about dependent types. As usual, Scala will be our programming language of choice. However, this time we will also use <a href="https://agda.readthedocs.io/en/latest/index.html">Agda</a>, a programming language which boasts full-fledged support for dependent types. The ultimate goal of this post is comparing both implementations and sharing our experiences with dependently typed programming.</p>
+
+<p>You can find all the code in this post in the following <a href="https://github.com/hablapps/shapeaware">Github repository</a>.</p>
+
+<p>Let’s start with …</p>
+
+<h2 id="our-little-problem">Our little problem</h2>
+
+<p>Let’s consider the following type of (non-empty) binary trees, implemented in Scala as a common algebraic data type:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Leaf</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span> <span class="k">:</span> <span class="kt">A</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Node</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">left</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span> <span class="n">root</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">right</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>We want to implement two functions that allow us to get and update the leaves of a given tree. As a first attempt (there will be several attempts more before we reach the solution, be patient!), we may come about with the following signatures:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Leaves</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">get</code> function bears no problem: there may be one or several leaves in the input tree, and the resulting list can cope with that. The <code class="language-plaintext highlighter-rouge">update</code> function, however, while essentially being what we want, poses some problems. This method returns a function which updates the leaves of the tree given a list of new values for those nodes. Ideally, we would expect to receive a list with exactly as many values as leaves are there in the tree. But given this signature, this may not happen at all: we may receive less values or more. In the former case, we are forced to make a choice: either to return the original tree or throwing an exception (abandoning purity). In the latter, it would be fair to return the exceeding values, besides the updated tree. In sum, the following signature seems to be more compliant with the problem at hand:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Leaves</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Option</span><span class="o">[(</span><span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>, <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])]</span> <span class="k">=</span> <span class="o">???</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Essentially, the <code class="language-plaintext highlighter-rouge">update</code> method now returns a stateful computation, i.e. a value of the famous <a href="https://typelevel.org/cats/datatypes/state.html"><code class="language-plaintext highlighter-rouge">StateT</code></a> monad. This computation is run by giving an initial list of values, and will finish with a value <code class="language-plaintext highlighter-rouge">None</code> (meaning that it couldn’t complete the computation) or <code class="language-plaintext highlighter-rouge">Some(l, t)</code>, i.e. the updated tree <code class="language-plaintext highlighter-rouge">t</code> and the list of exceeding values <code class="language-plaintext highlighter-rouge">l</code> (possibly, empty). We won’t show the implementation of these methods, but you can find it in the <a href="https://github.com/hablapps/shapeaware/blob/master/src/test/scala/code.scala#L26">repository</a> of this post.</p>
+
+<p>Ok, this is nice, but we are stubborn and keep insisting on finding a way to prevent the user to pass a wrong number of values to the <code class="language-plaintext highlighter-rouge">update</code> method. I mean, we want to program the signature in such a way that the compiler throws an error if the programmer tries to call our function with less or more values than needed. Is it that possible?</p>
+
+<h2 id="solving-the-problem-with-dependent-types">Solving the problem with dependent types</h2>
+
+<p>A possible signature that solves our problem is the following one:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">Vec</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">n_leaves</span><span class="o">(</span><span class="kt">tree</span><span class="o">)]</span> <span class="k">=&gt;</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>where <code class="language-plaintext highlighter-rouge">n_leaves: Tree[A] =&gt; Integer</code> is a function that returns the number of leaves of the specified tree, and the <code class="language-plaintext highlighter-rouge">Vec</code> type represents lists of a fixed size. This signature gives the Scala compiler the required information to grant execution of the following call:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nf">update</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)))(</span><span class="nc">Vec</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">1</span><span class="o">))</span>
+<span class="n">res11</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p>and block the following one instead, with a nice compiler error:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nf">update</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)))(</span><span class="nc">Vec</span><span class="o">(</span><span class="mi">3</span><span class="o">))</span>
+<span class="k">:</span><span class="err">18</span><span class="kt">:</span> <span class="kt">error:</span> <span class="k">type</span> <span class="kt">mismatch</span><span class="o">;</span>
+<span class="n">found</span> <span class="k">:</span> <span class="kt">Vec</span><span class="o">[</span><span class="kt">Int</span>, <span class="err">1</span><span class="o">]</span>
+<span class="n">required</span><span class="k">:</span> <span class="kt">Vec</span><span class="o">[</span><span class="kt">Int</span>, <span class="err">2</span><span class="o">]</span>
+<span class="nf">update</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)))(</span><span class="nc">Vec</span><span class="o">(</span><span class="mi">3</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p>… wouldn’t this be beautiful?</p>
+
+<p>Alas, the above signature is not legal Scala 2.12. The problem is in the <code class="language-plaintext highlighter-rouge">Vec[? , ? : Nat]</code> type constructor. As we said, it holds two parameters. There is no problem with the first one: type constructors in Scala do indeed receive types as arguments. Another way of saying this is that types in Scala can be parameterised with respect to types. And yet another way is saying that types in Scala can be made <em>dependent</em> on types. But the second parameter of the <code class="language-plaintext highlighter-rouge">Vec</code> constructor is not a type, it’s a <em>value</em>! And we can’t parameterise types in Scala with respect to values, only to types.</p>
+
+<p>A type whose definition refers to values is called a <em>dependent type</em>. Indeed, the type <code class="language-plaintext highlighter-rouge">List[A]</code> in Scala also <em>depends</em> on something, to wit the type <code class="language-plaintext highlighter-rouge">A</code>. So, in a sense, we may rightfully call it a dependent type as well. However, the “dependent” qualifier is conventionally reserved for types that are parameterised with respect to values.</p>
+
+<p>Can’t we solve our problem in Scala, then? Yes, we will see that we can indeed solve this problem in Scala, albeit in a different way. But before delving into the Scala solution, let’s see how we can solve this problem in a language with full-fledged dependent types, in line with the solution sketched at the beginning of this section.</p>
+
+<h2 id="the-solution-in-agda">The solution in Agda</h2>
+
+<p>First, we must define the tree data type:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>module Trees where
+data Tree (A : Set) : Set where
+leaf : A -&gt; Tree A
+node : Tree A -&gt; A -&gt; Tree A -&gt; Tree A
+</code></pre></div></div>
+
+<p>This a common algebraic data type definition, with constructors <code class="language-plaintext highlighter-rouge">leaf</code> and <code class="language-plaintext highlighter-rouge">node</code>. The definition is parameterised with respect to <code class="language-plaintext highlighter-rouge">A</code>, which is declared to be a regular type, i.e. <code class="language-plaintext highlighter-rouge">Set</code>. The resulting type <code class="language-plaintext highlighter-rouge">Tree A</code> is also a regular type (i.e. not a type constructor, which would be declared as <code class="language-plaintext highlighter-rouge">Set -&gt; Set</code>). Next, we have to define the following function:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>open import Data.Nat
+
+
+n_leaves : {A : Set} -&gt; Tree A -&gt; ℕ
+n_leaves (leaf _) = 1
+n_leaves (node l _ r) = n_leaves l + n_leaves r
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">n_leaves</code> function returns the number of leaves held by a given tree (as a natural number ℕ declared in the <code class="language-plaintext highlighter-rouge">Data.Nat</code> module). The implementation is based on pattern matching, using the same underscore symbol that we use in Scala whenever we are not interested in some value.</p>
+
+<p>Let’s implement now the promised <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> functions, which will be part of a module named <code class="language-plaintext highlighter-rouge">Leaves</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>module Leaves where
+
+
+open import Data.Vec
+open Trees
+
+
+get : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s) = ?
+update : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s) -&gt; Tree A = ?
+</code></pre></div></div>
+
+<p>As you can see, we can now use the <code class="language-plaintext highlighter-rouge">n_leaves s</code> value in a type definition! Indeed, the <code class="language-plaintext highlighter-rouge">Vec (A : Set) (n : ℕ)</code> type is a truly dependent type. It represents lists of values of a fixed size <code class="language-plaintext highlighter-rouge">n</code>. Moreover, the size does not need to be a constant such as 1, 2, 3, etc. It can be the result of a function, as this example shows. The implications of this are huge, as we will soon realise.</p>
+
+<p>Let’s expand the definition of the <code class="language-plaintext highlighter-rouge">get</code> function:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>get : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s)
+get (leaf x) = x ∷ []
+get (node l _ r) = get l ++ get r
+</code></pre></div></div>
+
+<p>If the tree is a leaf, we just return its value in a vector of length one. Otherwise, we collect recursively the leaves of the left and right subtrees and return their concatenation. What would happen if we implemented the first clause in the pattern matching as <code class="language-plaintext highlighter-rouge">get (leaf x) = []</code> (i.e. if we attempted to return the empty vector for a leaf tree)? The compiler would complain with the following error:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0 != 1 of type .Agda.Builtin.Nat.Nat
+when checking that the expression [] has type
+Vec .A (n_leaves (leaf x))
+</code></pre></div></div>
+
+<p>This error says that 0, i.e. the length of the empty vector <code class="language-plaintext highlighter-rouge">[]</code>, does not equal 1, i.e. the number of leaves of the input tree <code class="language-plaintext highlighter-rouge">leaf x</code>. All this while attempting to check that the proposed output <code class="language-plaintext highlighter-rouge">[]</code>, whose type is <code class="language-plaintext highlighter-rouge">Vec A 0</code>, has the required type <code class="language-plaintext highlighter-rouge">Vec .A (n_leaves (leaf x))</code>, i.e. <code class="language-plaintext highlighter-rouge">Vec A 1</code>. Similarly, in the second clause, the compiler will care itself to check that <code class="language-plaintext highlighter-rouge">n_leaves l + n_leaves r</code>, which is the resulting length of the vector concatenation <code class="language-plaintext highlighter-rouge">get l :: get r</code>, equals the value <code class="language-plaintext highlighter-rouge">n_leaves (node l _ r)</code>, which according to the definition of the <code class="language-plaintext highlighter-rouge">n_leaves</code> function is indeed the case. In sum, we can’t cheat the compiler and return a vector with a number of values different to the number of leaves in the input tree. This property is hardwired in the signature of the function, thanks to the expressiveness of the Agda type system. And to be able to guarantee that, Agda needs to be able to perform computations on values at compile time.</p>
+
+<p>The implementation of the <code class="language-plaintext highlighter-rouge">update</code> function is similarly beautiful:</p>
+
+<pre><code class="language-agda">update : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s) -&gt; Tree A
+update (leaf _) (x ∷ []) = leaf x
+update (node l x r) v = node updatedL x updatedR
+  where
+    updatedL = update l (take (n_leaves l) v)
+    updatedR = update r (drop (n_leaves l) v)
+</code></pre>
+
+<p>Note that in the first clause of the pattern matching, we were able to deconstruct the input vector into the shape <code class="language-plaintext highlighter-rouge">x ∷ []</code>, without the compiler complaining about missing clauses for the <code class="language-plaintext highlighter-rouge">leaf</code> constructor. This is because Agda knows (by evaluating the <code class="language-plaintext highlighter-rouge">n_leaves</code> function) that any possible leaf tree has a number of leaves equals to one. In the second clause, the input vector has type <code class="language-plaintext highlighter-rouge">v : Vec A (n_leaves (node l x r))</code>, which Agda knows to be <code class="language-plaintext highlighter-rouge">v : Vec A (n_leaves l + n_leaves r)</code> by partially evaluating the <code class="language-plaintext highlighter-rouge">n_leaves</code> function. This is what makes the subsequent calls to update the left and right subtrees typesafe. Indeed, to update the left subtree <code class="language-plaintext highlighter-rouge">l</code> we need a vector with a number of elements equal to its number of leaves <code class="language-plaintext highlighter-rouge">n_leaves l</code>. This vector has to be a subvector of the input vector <code class="language-plaintext highlighter-rouge">v</code>, which Agda knows to have length <code class="language-plaintext highlighter-rouge">n_leaves l + n_leaves r</code> as we mentioned before. So, the expression <code class="language-plaintext highlighter-rouge">take (n_leaves l) v</code> will compile without problems. Similarly, Agda knows that the length of the <code class="language-plaintext highlighter-rouge">drop (n_leaves l) v</code> vector will be <code class="language-plaintext highlighter-rouge">n_leaves r</code> (by checking the definition of the concatenation function <code class="language-plaintext highlighter-rouge">++</code>), which is precisely what the <code class="language-plaintext highlighter-rouge">update r</code> function needs.</p>
+
+<p>Let’s exercise these definitions in the following module:</p>
+
+<pre><code class="language-agda">module TestLeaves where
+
+open import Data.Nat
+open import Data.Vec
+open Trees
+open LeavesAdHoc
+
+
+t1 : Tree ℕ
+t1 = node (node (leaf 1) 2 (leaf 3)) 4 (leaf 5)
+
+
+l1 : Vec ℕ 3
+l1 = Leaves.get t1
+
+
+t2 : Tree ℕ
+t2 = Leaves.update t1 (5 ∷ 3 ∷ 1 ∷ [])
+
+
+// CHECK
+
+
+open import Relation.Binary.PropositionalEquality
+
+
+eq1 : l1 ≡ (1 ∷ 3 ∷ 5 ∷ [])
+eq1 = refl
+
+
+eq2 : t2 ≡ (node (node (leaf 5) 2 (leaf 3)) 4 (leaf 1))
+eq2 = refl
+
+
+-- WON'T COMPILE
+
+
+{- Error: 3 != 4 of type ℕ
+when checking that the expression get t1 has type Vec ℕ 4
+
+
+l2 : Vec ℕ 4
+l2 = Leaves.get t1
+-}
+
+
+{- Error: 0 != 2 of type ℕ
+when checking that the expression [] has type Vec ℕ 2
+
+
+t3 : Tree ℕ
+t3 = Leaves.update t1 (5 ∷ [])
+-}
+</code></pre>
+
+<p>The <code class="language-plaintext highlighter-rouge">l1</code> variable represents the leaves of the sample tree <code class="language-plaintext highlighter-rouge">t1</code>, namely values 1, 3 and 5. Accordingly, the type of the variable is <code class="language-plaintext highlighter-rouge">Vec ℕ 3</code>. The variable <code class="language-plaintext highlighter-rouge">t2</code> is the result of updating the tree with a new collection of leaves. In both cases, we make reference to the functions <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> declared in the module <code class="language-plaintext highlighter-rouge">Leaves</code>.</p>
+
+<p>The next lines <em>prove</em> that the values of these variables are the expected ones, making use of the equality type constructor <code class="language-plaintext highlighter-rouge">_≡_</code> and its <code class="language-plaintext highlighter-rouge">refl</code> constructor (note that <code class="language-plaintext highlighter-rouge">_≡_</code> is parameterised with respect two values, so it’s a dependent type). The proof is plain <code class="language-plaintext highlighter-rouge">refl</code>exivity, i.e. <code class="language-plaintext highlighter-rouge">x ≡ x</code>, since <code class="language-plaintext highlighter-rouge">l1</code> and <code class="language-plaintext highlighter-rouge">t2</code> actually evaluate to the same values.</p>
+
+<p>Note that the fact that this code compiles is enough to show that the tests pass. We don’t need to run anything! On the other hand, Agda allows us to test that our functions work as expected by implementing much more complex proofs for more expressive properties. We will leave that for another post.</p>
+
+<p>Let’s come back to Scala.</p>
+
+<h2 id="the-solution-in-scala">The solution in Scala</h2>
+
+<p>We can’t make computations on values in Scala at compile time, but we can do it on types! And this suffices to solve our problem, albeit in a different form to Agda. We will reconcile both approaches in the next section.</p>
+
+<p>Type-level computation in Scala proceeds through the implicits mechanism. But before we can exploit implicits, we first need to re-implement our <code class="language-plaintext highlighter-rouge">Tree</code> data type so that we don’t loose the <em>shapes</em> of trees:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Leaf</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">value</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Node</span><span class="o">[</span><span class="kt">L</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>, <span class="kt">A</span>, <span class="kt">R</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span> <span class="n">left</span><span class="k">:</span> <span class="kt">L</span><span class="o">,</span> <span class="n">root</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">right</span><span class="k">:</span> <span class="kt">R</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>This new implementation differs with the previous one in the types of the recursive arguments of the <code class="language-plaintext highlighter-rouge">Node</code> constructor. Now, they are generic parameters <code class="language-plaintext highlighter-rouge">L</code> and <code class="language-plaintext highlighter-rouge">R</code>, declared to be subtypes of <code class="language-plaintext highlighter-rouge">Tree[A]</code>, i.e. either leaves or nodes. Essentially, this allows us to preserve the exact type of the tree; what we will call its <em>shape</em>. In essence, this is the same trick commonly used to implement heterogeneous lists in Scala (see, e.g. their <a href="https://github.com/milessabin/shapeless/blob/master/core/src/main/scala/shapeless/hlists.scala#L30">implementation</a> in the shapeless framework). For instance, let’s compare both implementations in the REPL, with the old implementation of the <code class="language-plaintext highlighter-rouge">Tree</code> data type located in the <code class="language-plaintext highlighter-rouge">P</code> module, and the new one in the current scope:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="nv">p_tree</span> <span class="k">=</span> <span class="nv">P</span><span class="o">.</span><span class="py">Node</span><span class="o">(</span><span class="nv">P</span><span class="o">.</span><span class="py">Node</span><span class="o">(</span><span class="nv">P</span><span class="o">.</span><span class="py">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nv">P</span><span class="o">.</span><span class="py">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)),</span> <span class="mi">4</span><span class="o">,</span> <span class="nv">P</span><span class="o">.</span><span class="py">Leaf</span><span class="o">(</span><span class="mi">5</span><span class="o">))</span>
+<span class="n">p_tree</span><span class="k">:</span> <span class="kt">P.Node</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="o">...</span>
+
+
+<span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="nv">tree</span> <span class="k">=</span> <span class="nc">Node</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)),</span> <span class="mi">4</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">5</span><span class="o">))</span>
+<span class="n">tree</span><span class="k">:</span> <span class="kt">Node</span><span class="o">[</span><span class="kt">Node</span><span class="o">[</span><span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span> <span class="k">=</span> <span class="o">...</span>
+</code></pre></div></div>
+
+<p>As we can see, the type of <code class="language-plaintext highlighter-rouge">p_tree</code> is simply <code class="language-plaintext highlighter-rouge">Node[Int]</code>, whereas the type of <code class="language-plaintext highlighter-rouge">tree</code> is much more informative: we don’t only know that it is a node tree; we know that it holds exactly five elements, three of which are leaves. Its shape has not been lost.</p>
+
+<p>We can apply the same trick to the <code class="language-plaintext highlighter-rouge">List</code> type, in order to preserve information about the shape of list instances (essentially, how many values it stores). This is the resulting definition:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Nil</span><span class="o">[</span><span class="kt">A</span><span class="o">]()</span> <span class="k">extends</span> <span class="nc">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Cons</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">T</span> <span class="k">&lt;:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="n">head</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">tail</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>Let’s see now how can we exploit these shape-aware, algebraic data types, to support shape-dependent, type-level computations … and finally solve our little problem. Recall the original signatures for the <code class="language-plaintext highlighter-rouge">get/update</code> functions, which built upon the common, non-shape aware definitions of the <code class="language-plaintext highlighter-rouge">Tree</code> and <code class="language-plaintext highlighter-rouge">List</code> data types:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Leaves</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="k">:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Now we can explain their limitations in a more precise way. For instance, let’s consider the resulting function of <code class="language-plaintext highlighter-rouge">update</code>. The input of this function is declared to be any <code class="language-plaintext highlighter-rouge">List[A]</code>, not lists of a particular <em>shape</em>. That’s relevant to our problem because we want the compiler to be able to block invocations for trees of an undesired shape, i.e. length. But how can we represent the shape of an algebraic data type in the Scala type system? The answer is <em>subtyping</em>, i.e. we can declare the result of that function to be some <code class="language-plaintext highlighter-rouge">L &lt;: List[A]</code>, instead of a plain <code class="language-plaintext highlighter-rouge">List[A]</code>. There is a one-to-one correspondence between the subtypes of the algebraic data type <code class="language-plaintext highlighter-rouge">List[A]</code> and its possible shapes.</p>
+
+<p>Similarly, the input trees of <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> are declared to be any <code class="language-plaintext highlighter-rouge">Tree[A]</code>, instead of trees of a particular shape <code class="language-plaintext highlighter-rouge">T &lt;: Tree[A]</code>. This is bad, because in that way we won’t be able to determine which is the exact list shape that must be returned for a given tree. Ok, but how can we determine the shape of list corresponding to a given shape of tree? The answer is using <em>type-level functions</em> which operates on input/output types that represent shapes.</p>
+
+<p>These shape-dependent functions are declared as traits and defined through the implicits mechanism. For instance, the declaration of the type-level function between trees and lists is as follows:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">LeavesShape</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]]{</span>
+  <span class="k">type</span> <span class="kt">Out</span> <span class="k">&lt;:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">def</span> <span class="nf">get</span><span class="o">(</span><span class="n">t</span><span class="k">:</span> <span class="kt">In</span><span class="o">)</span><span class="k">:</span> <span class="kt">Out</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">t</span><span class="k">:</span> <span class="kt">In</span><span class="o">)</span><span class="k">:</span> <span class="kt">Out</span> <span class="o">=&gt;</span> <span class="nc">In</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">LeavesShape</code> trait is parameterised with respect to any <em>shape</em> of tree. Its instance for a particular shape will give us the list shape that we can use to store the current leaves of the tree, or the new values required for those leaves. Moreover, for that particular shape of tree we also obtain its corresponding get and update implementations.</p>
+
+<p>Concerning the implementation of the shape-dependent function <code class="language-plaintext highlighter-rouge">LeavesShape</code>, i.e. how do we compute the shape of list corresponding to a given shape of tree, we proceed through implicits defined in its companion object. The following signatures (not for the faint of heart …) suffice:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">LeavesShape</span><span class="o">{</span>
+  <span class="k">type</span> <span class="kt">Output</span><span class="o">[</span><span class="kt">T</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>, <span class="k">_</span><span class="kt">Out</span><span class="o">]</span> <span class="k">=</span> <span class="nc">LeavesShape</span><span class="o">[</span><span class="kt">T</span><span class="o">]{</span> <span class="k">type</span> <span class="kt">Out</span> <span class="o">=</span> <span class="nc">_Out</span> <span class="o">}</span>
+
+  <span class="k">implicit</span> <span class="k">def</span> <span class="nf">leafCase</span><span class="k">:</span> <span class="kt">Output</span><span class="o">[</span><span class="kt">Leaf</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>, <span class="kt">Cons</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">Nil</span><span class="o">[</span><span class="kt">A</span><span class="o">]]]</span> <span class="k">=</span> <span class="o">???</span>
+
+  <span class="k">implicit</span> <span class="k">def</span> <span class="nf">nodeCase</span><span class="o">[</span>
+    <span class="kt">L</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>,
+    <span class="kt">R</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>,
+    <span class="kt">LOut</span> <span class="k">&lt;:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>,
+    <span class="kt">ROut</span> <span class="k">&lt;:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="k">implicit</span>
+    <span class="nc">ShapeL</span><span class="k">:</span> <span class="kt">Output</span><span class="o">[</span><span class="kt">L</span>, <span class="kt">LOut</span><span class="o">],</span>
+    <span class="nc">ShapeR</span><span class="k">:</span> <span class="kt">Output</span><span class="o">[</span><span class="kt">R</span>, <span class="kt">ROut</span><span class="o">],</span>
+    <span class="nc">Conc</span><span class="k">:</span> <span class="kt">Concatenate</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">LOut</span>, <span class="kt">ROut</span><span class="o">]</span>
+  <span class="o">)</span><span class="k">:</span> <span class="kt">Output</span><span class="o">[</span><span class="kt">Node</span><span class="o">[</span><span class="kt">L</span>, <span class="kt">A</span>, <span class="kt">R</span><span class="o">]</span>, <span class="kt">Conc.Out</span><span class="o">]</span> <span class="k">=</span> <span class="o">???</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>We omit the implementations of the <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> functions to focus on the list shape computation, which is shown through the type alias <code class="language-plaintext highlighter-rouge">Output</code>. The first case is easy: the shape of list which we need to hold the leaves of a tree of type <code class="language-plaintext highlighter-rouge">Leaf[A]</code> is the one that allows us to store a single element of type <code class="language-plaintext highlighter-rouge">A</code>, i.e. <code class="language-plaintext highlighter-rouge">Cons[A, Nil[A]]</code>. For arbitrary node trees, the situation is in appearance more complicated, though conceptually simple. Given a tree of shape <code class="language-plaintext highlighter-rouge">Node[L, A, R]</code>, we first need to know the list shapes for the left and right subtrees <code class="language-plaintext highlighter-rouge">L</code> and <code class="language-plaintext highlighter-rouge">R</code>. The implicit arguments <code class="language-plaintext highlighter-rouge">ShapeL</code> and <code class="language-plaintext highlighter-rouge">ShapeR</code> provide us with the <code class="language-plaintext highlighter-rouge">LOut</code> and <code class="language-plaintext highlighter-rouge">ROut</code> shapes. The resulting list shape will be precisely their concatenation, which we achieve through an auxiliary type-level function <code class="language-plaintext highlighter-rouge">Concatenate</code> (not shown for brevity, but implemented in a similar way). The shape concatenation will be accessible through the <code class="language-plaintext highlighter-rouge">Out</code> type member variable of that function. The <code class="language-plaintext highlighter-rouge">Conc.Out</code> type is an example of path-dependent type, a truly dependent type since it depends on the value <code class="language-plaintext highlighter-rouge">Conc</code> obtained through the implicits mechanism.</p>
+
+<p>We are about to finish. The only thing that is needed is some way to call the <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> member functions of the <code class="language-plaintext highlighter-rouge">LeavesShape</code> type-level function, for a given tree value. We achieve that with two auxiliary definitions, located in a definitive <code class="language-plaintext highlighter-rouge">Leaves</code> module (where the type-level function and its companion object are also implemented):</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Leaves</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="n">t</span> <span class="k">:</span> <span class="kt">In</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">S</span><span class="k">:</span> <span class="kt">LeavesShape</span><span class="o">[</span><span class="kt">In</span><span class="o">])</span><span class="k">:</span> <span class="kt">S.Out</span> <span class="o">=</span> <span class="nv">S</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="n">t</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="n">t</span> <span class="k">:</span> <span class="kt">In</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">S</span><span class="k">:</span> <span class="kt">LeavesShape</span><span class="o">[</span><span class="kt">In</span><span class="o">])</span><span class="k">:</span> <span class="kt">S.Out</span> <span class="o">=&gt;</span> <span class="nc">In</span> <span class="k">=</span> <span class="nv">S</span><span class="o">.</span><span class="py">update</span><span class="o">(</span><span class="n">t</span><span class="o">)</span>
+
+
+  <span class="k">trait</span> <span class="nc">LeavesShape</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]]{</span> <span class="o">...</span> <span class="o">}</span> <span class="k">object</span> <span class="nc">LeavesShape</span><span class="o">{</span> <span class="o">...</span> <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The auxiliary functions <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> are the typesafe counterparts of the original signatures. The first difference that we may emphasise is that the type of input trees is not a plain, uninformative <code class="language-plaintext highlighter-rouge">Tree[A]</code>, but a particular shape of tree <code class="language-plaintext highlighter-rouge">In</code>. The compiler can then use this shape as input to the type-level function <code class="language-plaintext highlighter-rouge">LeavesShape</code>, to compute the shape of the resulting list <code class="language-plaintext highlighter-rouge">S.Out</code>. The output of these functions is thus declared as a path-dependent type. Last, note that the implementation of these functions is wholly delegated to the corresponding implementations of the inferred type-level function. Let’s see how this works in the following REPL session:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="nv">tree</span> <span class="k">=</span> <span class="nc">Node</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)),</span> <span class="mi">4</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">5</span><span class="o">))</span>
+<span class="n">tree</span><span class="k">:</span> <span class="kt">Node</span><span class="o">[</span><span class="kt">Node</span><span class="o">[</span><span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span> <span class="k">=</span> <span class="o">...</span>
+
+
+<span class="n">scala</span><span class="o">&gt;</span> <span class="nf">get</span><span class="o">(</span><span class="n">tree</span><span class="o">)</span>
+<span class="n">res2</span><span class="k">:</span> <span class="kt">Cons</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">Cons</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">Cons</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]]]</span> <span class="k">=</span> <span class="nc">Cons</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="nc">Cons</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span><span class="nc">Cons</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span><span class="nc">Nil</span><span class="o">())))</span>
+
+
+<span class="n">scala</span><span class="o">&gt;</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="o">).</span><span class="py">apply</span><span class="o">(</span><span class="nc">Cons</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="nc">Cons</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="nc">Cons</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]()))))</span>
+<span class="n">res1</span><span class="k">:</span> <span class="kt">Node</span><span class="o">[</span><span class="kt">Node</span><span class="o">[</span><span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span>, <span class="kt">Int</span>, <span class="kt">Leaf</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span> <span class="k">=</span>
+<span class="nc">Node</span><span class="o">(</span><span class="nc">Node</span><span class="o">(</span><span class="nc">Leaf</span><span class="o">(</span><span class="mi">5</span><span class="o">),</span> <span class="mi">2</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">3</span><span class="o">)),</span> <span class="mi">4</span><span class="o">,</span> <span class="nc">Leaf</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+
+
+<span class="n">scala</span><span class="o">&gt;</span> <span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="o">).</span><span class="py">apply</span><span class="o">(</span><span class="nc">Cons</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]()))</span>
+<span class="k">:</span><span class="err">22</span><span class="kt">:</span> <span class="kt">error:</span> <span class="k">type</span> <span class="kt">mismatch</span><span class="o">;</span>
+<span class="n">found</span> <span class="k">:</span> <span class="kt">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>
+<span class="n">required</span><span class="k">:</span> <span class="kt">Cons</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">Cons</span><span class="o">[</span><span class="kt">Int</span>, <span class="kt">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]]</span>
+<span class="nf">update</span><span class="o">(</span><span class="n">tree</span><span class="o">).</span><span class="py">apply</span><span class="o">(</span><span class="nc">Cons</span><span class="o">(</span><span class="mi">5</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">[</span><span class="kt">Int</span><span class="o">]())</span>
+<span class="o">^</span>
+</code></pre></div></div>
+
+<p>As expected, when we pass lists of the right shape, everything works. On the contrary, as shown in the last example, if we pass a list of the wrong size, the compiler will complain. In particular, the error message tells us that it found a list of type <code class="language-plaintext highlighter-rouge">Nil[Int]</code> where it expected a list of size two. This is because <code class="language-plaintext highlighter-rouge">update(tree)</code> returns a list of shape three, and we only pass a list of size one. This is exactly the same behaviour that we got with the Agda implementation.</p>
+
+<h2 id="reconciling-scala-and-agda">Reconciling Scala and Agda</h2>
+
+<p>The Scala and Agda implementations seem very different. In Scala, we exploit the expressiveness of its type system to preserve the shape of algebraic data type values, and perform type-level, shape-dependent computations at compile time. In Agda, we exploit its capability to declare full-fledged dependent types, and perform value-level computations at compile time.</p>
+
+<p>Nonetheless, let’s recall the signatures of both implementations and try to reconcile their differences:</p>
+
+<pre><code class="language-agda">-- AGDA VERSION
+
+
+module Leaves where
+open import Data.Vec
+open Trees
+
+
+get : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s) = ?
+update : {A : Set} -&gt; (s : Tree A) -&gt; Vec A (n_leaves s) -&gt; Tree A = ?
+</code></pre>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// SCALA VERSION</span>
+
+
+<span class="k">class</span> <span class="nc">Leaves</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="n">t</span> <span class="k">:</span> <span class="kt">In</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">S</span><span class="k">:</span> <span class="kt">LeavesShape</span><span class="o">[</span><span class="kt">In</span><span class="o">])</span><span class="k">:</span> <span class="kt">S.Out</span> <span class="o">=</span> <span class="nv">S</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="n">t</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">update</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]](</span><span class="n">t</span> <span class="k">:</span> <span class="kt">In</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">S</span><span class="k">:</span> <span class="kt">LeavesShape</span><span class="o">[</span><span class="kt">In</span><span class="o">])</span><span class="k">:</span> <span class="kt">S.Out</span> <span class="o">=&gt;</span> <span class="nc">In</span> <span class="k">=</span> <span class="nv">S</span><span class="o">.</span><span class="py">update</span><span class="o">(</span><span class="n">t</span><span class="o">)</span>
+
+
+  <span class="k">trait</span> <span class="nc">LeavesShape</span><span class="o">[</span><span class="kt">In</span> <span class="k">&lt;:</span> <span class="kt">Tree</span><span class="o">[</span><span class="kt">A</span><span class="o">]]{</span>
+    <span class="k">type</span> <span class="kt">Out</span> <span class="k">&lt;:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">def</span> <span class="nf">get</span><span class="o">(</span><span class="n">t</span><span class="k">:</span> <span class="kt">In</span><span class="o">)</span><span class="k">:</span> <span class="kt">Out</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="o">(</span><span class="n">t</span><span class="k">:</span> <span class="kt">In</span><span class="o">)</span><span class="k">:</span> <span class="kt">Out</span> <span class="o">=&gt;</span> <span class="nc">In</span>
+  <span class="o">}</span>
+
+
+  <span class="k">object</span> <span class="nc">LeavesShape</span><span class="o">{</span> <span class="o">...</span> <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>In a sense, the Scala signature is simpler: there is no need to use a different type <code class="language-plaintext highlighter-rouge">Vec (A : Set) n : Nat</code>. The very same algebraic data type <code class="language-plaintext highlighter-rouge">List[A]</code> (albeit implemented in a shape-aware fashion), and subtyping suffice for representing shapes. In Agda, the new vector type is introduced precisely to represent the shapes of lists, which are in one to one correspondence with the natural numbers.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">#length</code> function is then used to compute the required shape for a given tree. In Scala, there is no particular need for that, since the shape is computed along the implementation of the <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">update</code> functions in the type-level function <code class="language-plaintext highlighter-rouge">LeavesShape</code>.</p>
+
+<p>The downside of the Scala implementation is, evidently, its verbosity and the amount of techniques and tricks involved: path-dependent types, traits, subtyping, implicits, auxiliary functions, … This is a <a href="https://github.com/lampepfl/dotty/pull/3844">recognised problem</a> which is being tackled for the future Scala 3.0 version.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We may have mimicked the Agda implementation style in Scala. In the <code class="language-plaintext highlighter-rouge">shapeless</code> framework, for instance, we have available the <code class="language-plaintext highlighter-rouge">Sized</code> and <code class="language-plaintext highlighter-rouge">Nat</code> types to represent lists of a fixed size (see the implementation <a href="https://github.com/hablapps/shapeaware/blob/master/src/test/scala/code.scala#L207">here</a>), and we may even use <a href="https://docs.scala-lang.org/sips/42.type.html">literal types</a> to overcome the limitation of using values in type declarations. Alternatively, we proposed an implementation fully based on shape-aware algebraic data types. This version is in our opinion more idiomatic to solve our particular problem in Scala. It also allows us to grasp the idiosyncrasy of Scala with respect to competing approaches like the one proposed in Agda. In this regard, we found the notion of <a href="http://www.cs.nott.ac.uk/~psztxa/publ/fossacs03.pdf"><em>shape</em></a> to be extremely useful.</p>
+
+<p>In next posts we will likely go on exploring Agda in one of its most characteristic applications: certified programming. For instance, we may generalise the example shown in this post and talk about <em>traversals</em> (a kind of optic, like lenses) and its laws. One of these laws, applied to our example, tells us that if you update the leaves of the tree with its current leaf values, you will obtain the same tree. Using Agda, we can state that law and <em>prove</em> that our implementation satisfies it. No need to enumerate test cases, or empirically test the given property (e.g., as in Scalacheck). Till the next post!</p>
+
+:ET

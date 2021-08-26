@@ -1,0 +1,205 @@
+I"�}<p>In the series of posts about the essence of functional programming, we’ve already seen how we can build purely declarative programs <a href="http://blog.hablapps.com/2017/05/30/from-hello-world-to-hello-monad-part-iiiiii/" target="_blank" rel="noopener">using GADTs</a>. This is a picture of what we got (using more standard cats/scalaz data types):</p>
+
+<p><img src="/assets/2017/06/free-flow-version2.png" alt="free-flow-version" width="883" height="527" class="alignnone size-full wp-image-1848" /></p>
+
+<p>This program above has several advantages over an impure one, given that it completely separates the business logic (the WHAT) from the interpretation (the HOW). This gives us full room of possibilities, since we can change the whole deployment infrastructure without having to change the logic in any way. In other words, business logic changes affect only business logic code and infrastructure changes affect only interpreters (provided that neither of these changes affect the DSL, of course). Some changes of interpretation could be, for instance, running the program using <code class="language-plaintext highlighter-rouge">Future</code>s in an asynchronous way, or running it as a pure state transformation for testing purposes using <code class="language-plaintext highlighter-rouge">State</code>.</p>
+
+<p>Now, you might be wondering, is OOP capable of achieving this level of <strong><em>declarativeness</em></strong>? In this post, we will see that we can indeed do purely functional programming in a purely object-oriented style. However, in order to do so, the conventional techniques that we normally employ when doing OOP (plain abstract interfaces) won’t suffice. What we actually need are more powerful techniques for building <strong><em>Functional APIs</em></strong>, namely <em><strong>type classes</strong></em>!</p>
+
+<h3 id="the-issues-of-conventional-oop">The issues of conventional OOP</h3>
+<p>In OOP, the most common way to achieve declarativeness is by using plain abstract interfaces, of course. In a similar way to the GADT approach, we can acknowledge four parts of this design pattern:</p>
+
+<ul>
+  <li>Interface/API</li>
+  <li>Method/Program over that interface</li>
+  <li>Concrete instances</li>
+  <li>Composition</li>
+</ul>
+
+<p>Here there is a very illustrative diagram of this approach:</p>
+
+<p><img src="/assets/2017/06/oop-interface-design-pattern2.png" alt="oop-interface-design-pattern" width="883" height="478" class="alignnone size-full wp-image-1851" /></p>
+
+<p>However, this is just one step towards declarativeness; it separates a little bit WHAT and HOW, since <code class="language-plaintext highlighter-rouge">IO</code> is an abstract interface, but we still have a very limited range of possible HOWs. This is quite easy to prove just by giving a couple of interpretations we <strong>can not</strong> implement. These are, for instance, asynchronous and pure state transformations. In the former case, we can’t simply implement the <code class="language-plaintext highlighter-rouge">IO</code> signature in an asynchronous way, since this signature forces us to return <em>plain</em> values, i.e. a value of type <code class="language-plaintext highlighter-rouge">String</code> in the <code class="language-plaintext highlighter-rouge">read</code> case, and a value of type <code class="language-plaintext highlighter-rouge">Unit</code> in the  <code class="language-plaintext highlighter-rouge">write</code> case. If we attempt to implement this API in an asynchronous way, we will eventually get a <code class="language-plaintext highlighter-rouge">Future[String]</code> value, and we will have to convert this promise to a plain <code class="language-plaintext highlighter-rouge">String</code> by blocking the thread and waiting for the asynchronous computation to complete, thus rendering the interpretation absolutely synchronous.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">asyncInstance</span> <span class="k">extends</span> <span class="nc">IO</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="nv">Await</span><span class="o">.</span><span class="py">result</span><span class="o">(</span><span class="cm">/* My future computation */</span><span class="o">,</span> <span class="mi">2</span> <span class="n">seconds</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="cm">/* Idem */</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Similarly, an state-based interpretation won’t be possible. In sum, if we want an asynchronous or a pure state transformer behaviour for our programs, we would have to change the original interface to reflect those changes and come up with two new APIs:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">IO</span> <span class="o">{</span> <span class="c1">// Async</span>
+  <span class="k">def</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="o">()</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">IO</span> <span class="o">{</span> <span class="c1">// Pure state transformations</span>
+  <span class="k">def</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">IOState</span> <span class="o">=&gt;</span> <span class="o">(</span><span class="nc">IOState</span><span class="o">,</span> <span class="nc">Unit</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOState</span> <span class="o">=&gt;</span> <span class="o">(</span><span class="nc">IOState</span><span class="o">,</span> <span class="nc">String</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>This is clearly not desirable, since these changes in API will force us to rewrite all of our business logic that rests upon the original <code class="language-plaintext highlighter-rouge">IO</code> API. Let’s go ahead and start improving our OOP interfaces towards true declarativeness. As we’ve seen in this pattern, we can distinguish between the abstract world (interface and interface-dependent method) and the concrete world (interface instance and composition).</p>
+
+<h2 id="abstract-world-towards-functional-apis">Abstract world: towards Functional APIs</h2>
+<p>We may notice that there are not many differences among the three interfaces we’ve shown so far. In fact, the only differences are related to the return type <em>embelishment</em> in each case:</p>
+
+<p><img class="alignnone size-full wp-image-1601" src="/assets/2017/06/find-7-differences.png" alt="find-7-differences" width="826" height="414" /></p>
+
+<p>We can factor out these differences and generalize a common solution for all of them; we just need to write our interface in such a way that the instructions (methods) don’t return a plain value, but a value wrapped in a generic type constructor, the so-called <em>embelishment;</em> from now on we will also call those embelishments <strong><em>programs</em></strong>, as they can be considered computations that will eventually return a result value (once the asynchronous computation completes, or when we enact the state transformation).</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="c1">// Console</span>
+<span class="k">type</span> <span class="kt">Id</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="n">A</span>
+<span class="k">type</span> <span class="kt">SynchIO</span> <span class="o">=</span> <span class="nc">IO</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span>
+
+<span class="c1">// Async</span>
+<span class="k">type</span> <span class="kt">AsyncIO</span> <span class="o">=</span> <span class="nc">IO</span><span class="o">[</span><span class="kt">Future</span><span class="o">]</span>
+
+<span class="c1">// Pure state transformations</span>
+<span class="k">type</span> <span class="kt">State</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOState</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">IOState</span><span class="o">,</span> <span class="n">A</span><span class="o">)</span>
+<span class="k">type</span> <span class="kt">StateIO</span> <span class="o">=</span> <span class="nc">IO</span><span class="o">[</span><span class="kt">State</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>Wow! our new <em>interface</em> is a <em>generic</em> interface, and, more specifically, a <strong><em>type class</em></strong> that solves our declarativeness problem: we can now create interpreters (instances) for both asynchronous and state transformers computations, and for any other program you may think of.</p>
+
+<p>We call this type of class-based APIs <strong><em>functional APIs</em></strong>, due to their ability to totally decouple business logic from interpretation. With our traditional interfaces we still had our business logic contaminated with HOW concepts, specifically with the limitation of running always in <code class="language-plaintext highlighter-rouge">Id[_]</code>. Now, we are truly free.</p>
+
+<h2 id="abstract-world-programs">Abstract world: programs</h2>
+<p>Ain’t it easy? Let’s see what we have so far. We have a type class that models IO languages. Those languages consists on two instructions <em>read</em> and <em>write</em> that returns plain abstract programs. What can we do with this type class already?</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">hello</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nv">IO</span><span class="o">.</span><span class="py">write</span><span class="o">(</span><span class="s">"Hello, world!"</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="nf">sayWhat</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nv">IO</span><span class="o">.</span><span class="py">read</span>
+</code></pre></div></div>
+
+<p>Not very impressive, we don’t have any problem to build simple programs, what about composition?</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">helloSayWhat</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+  <span class="nv">IO</span><span class="o">.</span><span class="py">write</span><span class="o">(</span><span class="s">"Hello, say something:"</span><span class="o">)</span>
+  <span class="nv">IO</span><span class="o">.</span><span class="py">read</span><span class="o">()</span>
+<span class="o">}</span> <span class="c1">// This doesn't work as expected</span>
+</code></pre></div></div>
+
+<p>Houston, we have a problem! The program above just reads the input but it’s not writing anything, the first instruction is just a pure statement in the middle of our program, hence it’s doing nothing. We are missing some mechanism to combine our programs in an imperative way. Luckily for us, that’s exactly what monads do, in fact monads are just another <strong><em>Functional API</em></strong>: :)</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">Monad</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">flatMap</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">pa</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">A</span><span class="o">])(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">P</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">pure</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Well, you won’t believe it but we can already <em>define</em> every single program we had in our previous post. Emphasis in the word <em>define</em>, as we can just do that: <em>define *or </em>declare* in a pure way all of our programs; but we’re still in the <em>abstract world</em>, in our safe space, where everything is wonderful, modular and comfy.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">helloSayWhat</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="n">M</span><span class="k">:</span> <span class="kt">Monad</span><span class="o">[</span><span class="kt">P</span><span class="o">],</span> <span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nv">M</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="nv">IO</span><span class="o">.</span><span class="py">write</span><span class="o">(</span><span class="s">"Hello, say something:"</span><span class="o">)){</span> <span class="k">_</span> <span class="k">=&gt;</span>
+    <span class="nv">IO</span><span class="o">.</span><span class="py">read</span>
+  <span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">echo</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="n">M</span><span class="k">:</span> <span class="kt">Monad</span><span class="o">[</span><span class="kt">P</span><span class="o">],</span> <span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nv">M</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="nv">IO</span><span class="o">.</span><span class="py">read</span><span class="o">){</span> <span class="n">msg</span> <span class="k">=&gt;</span>
+    <span class="nv">IO</span><span class="o">.</span><span class="py">write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+  <span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">echo2</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]](</span><span class="n">M</span><span class="k">:</span> <span class="kt">Monad</span><span class="o">[</span><span class="kt">P</span><span class="o">],</span> <span class="nc">IO</span><span class="k">:</span> <span class="kt">IO</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nv">M</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="nv">IO</span><span class="o">.</span><span class="py">read</span><span class="o">){</span> <span class="n">msg</span> <span class="k">=&gt;</span>
+    <span class="nv">M</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="nv">IO</span><span class="o">.</span><span class="py">write</span><span class="o">(</span><span class="n">msg</span><span class="o">)){</span> <span class="k">_</span> <span class="k">=&gt;</span>
+      <span class="nv">M</span><span class="o">.</span><span class="py">pure</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>Ok, the previous code is pretty modular but isn’t very sweet. But with a little help from our friends (namely, context bounds, for-comprehensions, helper methods and infix operators), we can get closer to the syntactic niceties of the non-declarative implementation:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">helloSayWhat</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">IO</span><span class="o">]</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nf">write</span><span class="o">(</span><span class="s">"Hello, say something:"</span><span class="o">)</span> <span class="o">&gt;&gt;</span>
+  <span class="n">read</span>
+
+<span class="k">def</span> <span class="nf">echo</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">IO</span><span class="o">]</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+  <span class="n">read</span> <span class="o">&gt;&gt;=</span> <span class="n">write</span><span class="o">[</span><span class="kt">P</span><span class="o">]</span>
+
+<span class="k">def</span> <span class="nf">echo2</span><span class="o">[</span><span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">IO</span><span class="o">]</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="k">for</span> <span class="o">{</span>
+  <span class="n">msg</span> <span class="k">&lt;-</span> <span class="n">read</span>
+  <span class="k">_</span> <span class="k">&lt;-</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+<span class="o">}</span> <span class="k">yield</span> <span class="n">msg</span>
+</code></pre></div></div>
+
+<p>You can get the details of this transformation in the accompanying <a href="https://gist.github.com/javierfs89/fab1b32943ecdced54a6e887f3241935">gist</a> of this post.</p>
+
+<h2 id="concrete-world-instances-and-composition">Concrete world: instances and composition</h2>
+<p>As we said, these are just pure program definitions, free of interpretation. Time to go to real world! Luckily for us, interpreters of these programs are just instances of our type class. Moreover, our <em>console</em> interpreter will look almost the same as in the OOP version, we just need to specify the type of our programs to be <code class="language-plaintext highlighter-rouge">Id[_]</code> (in the OOP approach this was set implicitly):</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Remember, `Id[A]` is just the same as `A`</span>
+<span class="k">implicit</span> <span class="k">object</span> <span class="nc">ioTerminal</span> <span class="k">extends</span> <span class="nc">IO</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">print</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">=</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="o">()</span> <span class="k">=</span> <span class="n">readLine</span>
+<span class="o">}</span>
+
+<span class="k">implicit</span> <span class="k">object</span> <span class="nc">idMonad</span> <span class="k">extends</span> <span class="nc">Monad</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">flatMap</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">pa</span><span class="k">:</span> <span class="kt">Id</span><span class="o">[</span><span class="kt">A</span><span class="o">])(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">Id</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span><span class="k">:</span> <span class="kt">Id</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span> <span class="k">=</span> <span class="nf">f</span><span class="o">(</span><span class="n">pa</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">pure</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">Id</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="n">a</span>
+<span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">helloConsole</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">hello</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">ioTerminal</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="nf">sayWhatConsole</span><span class="o">()</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">sayWhat</span><span class="o">(</span><span class="n">ioTerminal</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="nf">helloSayWhatConsole</span><span class="o">()</span> <span class="k">=</span> <span class="nf">helloSayWhat</span><span class="o">(</span><span class="n">idMonad</span><span class="o">,</span> <span class="n">ioTerminal</span><span class="o">)</span>
+
+<span class="k">def</span> <span class="nf">echoConsole</span><span class="o">()</span> <span class="k">=</span> <span class="n">echo</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span>
+
+<span class="k">def</span> <span class="nf">echo2Console</span><span class="o">()</span> <span class="k">=</span> <span class="n">echo2</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>So now, we can start talking about the type class design pattern. In the same way we did with the plan abstract interface design pattern, here it is the diagram of this methodology:</p>
+
+<p><img src="/assets/2017/06/tagless-flow-version2.png" alt="tagless-flow-version" width="883" height="478" class="alignnone size-full wp-image-1873" /></p>
+
+<h2 id="conventional-oop-vs-fp-oo-style-vs-fp-gadt-style">Conventional OOP vs. FP (OO Style) vs. FP (GADT style)</h2>
+<p>Fine, we’ve seen two ways of defining pure, declarative programs (GADTs and Functional APIs), and another one that unsuccessfully aims to do so (plain OOP abstract interfaces), what are the differences? which one is better? Well, let’s answer the first question for now using the following table:</p>
+
+<p><img src="/assets/2017/06/comparison3.png" alt="comparison" width="959" height="278" class="alignnone size-full wp-image-1798" /></p>
+
+<p>As you can see, the GADT style for doing functional programming (FP) favours data types (<code class="language-plaintext highlighter-rouge">IOEffect</code> and <code class="language-plaintext highlighter-rouge">Free</code>), whereas FP in a OO style favours APIs (<code class="language-plaintext highlighter-rouge">IO</code> and <code class="language-plaintext highlighter-rouge">Monad</code>); declarative functions in the GADT style return programs written in our DSL (<code class="language-plaintext highlighter-rouge">IOProgram</code>), whereas declarative functions in FP (OO Style) are ad-hoc polymorphic functions; concerning interpretations, natural transformations used in the GADT style correspond simply to instances of APIs in OO-based FP; last, running our programs in the GADT style using a given interpreter, just means plain old dependency injection in FP OO. As for the conventional OOP approach, you can just see how it can be considered an instance of FP OO for the <code class="language-plaintext highlighter-rouge">Id</code> interpretation.</p>
+
+<p>About the question of which alternative is better, GADTs or Functional APIs, there’s not an easy answer, but we can give some tips:</p>
+
+<h3 id="pros-functional-apis">Pros Functional APIs:</h3>
+
+<ul>
+  <li><strong>Cleaner:</strong> This approach implies much less boilerplate.</li>
+  <li><strong>Simpler:</strong> It’s easier to perform and it should be pretty familiar to any OOP programmer (no need to talk about GADTs or natural transformations).</li>
+  <li><strong>Performance:</strong> We don’t have to create lots of intermediate objects like the ADT version does.</li>
+  <li><strong>Flexible:</strong> We can go from Functional APIs to GADTs at any time, just giving an instance of the type class for the ADT-based program (e.g., <code class="language-plaintext highlighter-rouge">object toADT extends IO[IOProgram]]</code>).</li>
+</ul>
+
+<h3 id="pros-gadts">Pros GADTs:</h3>
+
+<ul>
+  <li><strong>More control:</strong> In general, ADTs allows for more control over our programs, due to the fact that we have the program represented as a value that we can inspect, modify, refactor, etc.</li>
+  <li><strong>Reification: </strong>if you need somehow to pass around your programs, or read programs from a file, then you need to represent programs as values, and for that purpose ADTs come in very handy.</li>
+  <li><strong>Modular interpreters: </strong>Arguably, we can write interpreters in a more modular fashion when working with GADTs, as, for instance, with the <code class="language-plaintext highlighter-rouge">&lt;a href="https://github.com/atnos-org/eff"&gt;Eff&lt;/a&gt;</code> monad.</li>
+</ul>
+
+<h2 id="conclusion--next-steps">Conclusion &amp; next steps</h2>
+<p>We have seen how we can do purely functional programming in an object-oriented fashion using so-called functional APIs, i.e. using type classes instead of plain abstract interfaces. This little change allowed us to widen the type of interpretations that our OO APIs can handle, and write programs in a purely declarative fashion. And, significantly, all of this was achieved while working in the realm of object-oriented programming! So, this style of doing FP, which is also known as MTL, tagless final and related to object-algebras, is more closely aligned with OO programmers, and don’t require knowledge of alien abstractions to the OO world such as GADTs and natural transformations. But we just scratched the surface, as this is a very large subject to tackle in one post. Some of the topics we may see in the future are:</p>
+
+<ul>
+  <li><strong>Modular interpreters:</strong> How to seamlessly compose interpreters using Functional APIs is another large issue which is currently under investigation. A recent library that aims at this goal is <a href="http://kailuowang.com/mainecoon/">mainecoon</a>.</li>
+  <li><strong>Church encodings: </strong>In the GADT approach, declarative functions return <em>programs</em> that will eventually be interpreted, but with Functional APIs, we don’t see any such program value. In our next posts, we will see how the Church encoding allows us to reconcile this two different ways of doing FP.</li>
+</ul>
+
+<p>Last, let us recommend you this presentation where we talk about the issues of this post! <a href="https://skillsmatter.com/meetups/9203-london-scala-march-meetup">All roads lead … to lambda world</a>. Also, you can find the code of this post <a href="https://gist.github.com/javierfs89/fab1b32943ecdced54a6e887f3241935">here</a>.</p>
+
+<p>See ya!</p>
+
+:ET

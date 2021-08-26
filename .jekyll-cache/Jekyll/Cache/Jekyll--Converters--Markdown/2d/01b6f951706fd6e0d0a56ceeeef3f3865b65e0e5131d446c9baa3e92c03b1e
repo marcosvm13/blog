@@ -1,0 +1,75 @@
+I"�-<p>During these months, we have tried to explain Speech using different strategies and metaphors, with varying results. For instance, we have defined Speech as</p>
+
+<p><strong><em>“A process-oriented programming language”</em></strong></p>
+
+<p>or as</p>
+
+<p><strong><em>“A DSL for programming the business logic of social applications”</em></strong></p>
+
+<p>These definitions are precise and correct, but not very effective. In fact, the common reaction from the audience to these definitions is “WAT” ;)</p>
+
+<p><em><span style="line-height:1.5;">Juan: </span></em><span style="line-height:1.5;">In this post, I will try to shed some light on these definitions with the help of … THE SPEECH CONSOLE!</span></p>
+
+<p><em>You: wat</em></p>
+
+<p><i>
+</i>Well, let’s try it.</p>
+
+<h2 id="what-is-the-speech-console"><em>What is the Speech Console?</em></h2>
+<p>Think of chat clients, such as IRC clients, instant messengers, etc. These tools allow people to communicate about any topic, almost in real-time. The Speech console can be thought of a chat client, in the sense that its purpose is essentially to allow users to communicate and engage in conversation. And, consequently, you can similarly think of the speech virtual machine as a kind of chat server which enables and mediates these communications. In fact, if we launch the Speech server with the minimum configuration possible, what we obtain is something similar to a chat server. The following program, which you can find in the <em><a href="http://www.speechlang.org/documentation.php?s=GetStarted">Getting started</a> </em>section of the speechlang.org site, precisely do that:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">Main</span> <span class="k">extends</span> <span class="nc">App</span><span class="o">{</span>
+  <span class="k">object</span> <span class="nc">Test</span> <span class="k">extends</span> <span class="nv">org</span><span class="o">.</span><span class="py">hablapps</span><span class="o">.</span><span class="py">speech</span><span class="o">.</span><span class="py">web</span><span class="o">.</span><span class="py">PlainSystem</span>
+  <span class="nv">Test</span><span class="o">.</span><span class="py">launch</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Running this program will make the Speech server available at the localhost:8111 default address. Then, you can point the browser to the URL localhost:8111/console to get access to the Speech console. The following video illustrates this process and a sample session with two users.</p>
+
+<p>[youtube=http://www.youtube.com/watch?feature=player_embedded&amp;v=zrE0ufY7y78]</p>
+
+<h2 id="the-speech-server-as-a-structured-communication-infrastructure"><em>The Speech Server as a structured communication infrastructure</em></h2>
+<p>But the Speech Virtual Machine is much more than a simple chat server, of course. Even with its minimal configuration, the Speech server allows users to structure their communications around a hierarchy of interaction contexts (akin to <em>chat rooms</em>), and their activity in terms of a hierarchy of roles played within those interactions. Thus, besides saying arbitrary things, the previous video showed how users can <em>set up</em> new interaction contexts, <em>join</em> and <em>assign</em> other users to them, say things within those contexts, and, eventually, <em>leave</em> and <em>close</em> the interactions.</p>
+
+<p>The <em>set up</em>, <em>close</em>,<em> join</em>,<em> leave</em>, etc., message types are standard declarations provided by Speech that allow users to modify the interaction space. Within the Speech console, you can get help on these commands by typing “help say”. But, besides saying things, users can also see what is happening (e.g. which interactions are taking place? which roles do I play?, etc.). Typing “help see” will give you explanations on how to observe the particular way in which interactions are structured within the Speech server at a given moment.</p>
+
+<h2 id="speech-as-a-language-for-programming-a-communication-infrastructure"><em>Speech as a language for programming a communication infrastructure</em></h2>
+<p>But the major difference between the Speech server and a simple communication infrastructure is not its ability to hold structured conversations, but the fact that <em>it can be programmed</em>. To understand in which sense the Speech server can be programmed, note that the previous minimum configuration represents a state of anarchy: people can say what they want, and structure their conversations the way they like; moreover, there are no rules: someone may set up a new interaction, and this interaction could be closed immediately by any other one.</p>
+
+<p>Now, think of the way people communicate in a given context. First, the shape of interactions and roles that people play, as well as the types of things they say, are commonly constrained to certain types. And the things that they can say, see and do depend on the kind of role they play, as well as on the specific circumstances in which they attempt to do it. So, people’s interactions are commonly shaped and ruled … at least to some extent, and a Speech program precisely encodes this rules so that they can be interpreted at runtime by the Speech virtual machine.</p>
+
+<h2 id="simulating-twitter-interaction-through-the-speech-console"><em>Simulating Twitter interaction through the Speech console</em></h2>
+<p><span style="line-height:1.5;">For instance, which are the constraints imposed by twitter on user interaction? which norms are enforced? </span><span style="line-height:1.5;">Basically, interactions within the Twitter </span><em style="color:#444444;line-height:1.5;">community*<span style="line-height:1.5;"> are shaped around member </span><em style="color:#444444;line-height:1.5;">accounts*<span style="line-height:1.5;"> and </span><em style="color:#444444;line-height:1.5;">lists*<span style="line-height:1.5;">; interacting users can only be </span><em style="color:#444444;line-height:1.5;">guests*<span style="line-height:1.5;"> or registered </span><em style="color:#444444;line-height:1.5;">tweeters*<span style="line-height:1.5;">, who can be </span><em style="color:#444444;line-height:1.5;">followers *<span style="line-height:1.5;">of other tweeters and be </span><em style="color:#444444;line-height:1.5;">listed*<span style="line-height:1.5;">; concerning the things they say, guests can only </span><em style="color:#444444;line-height:1.5;">set up new accounts*<span style="line-height:1.5;">, whereas tweeters can only </span><em style="color:#444444;line-height:1.5;">tweet*<span style="line-height:1.5;"> messages whose lengths are constrained to 140 chars, </span><em style="color:#444444;line-height:1.5;">re-tweet *<span style="line-height:1.5;">others’ messages, join other tweeter accounts as followers (i.e. </span><em style="color:#444444;line-height:1.5;">follow*<span style="line-height:1.5;"> other users), etc.</span><em style="color:#444444;line-height:1.5;"> *<span style="line-height:1.5;">Concerning norms, tweeters can only follow other users if they are not blocked by them; tweets issued within some account are automatically notified to their followers; etc. These and other norms and rules are part of the specification of Twitter as a communication network, and these norms and types of interactions, roles and message types, can easily be </span><a style="line-height:1.5;" href="https://github.com/hablapps/app-twitter">programmed in Speech</a><span style="line-height:1.5;">.</span></em></em></em></em></em></em></em></em></em></em></em></em></p>
+
+<p>Let’s suppose that the <em>org.hablapps.twitter.Program</em>  trait<em> </em>implements these types and norms; then, you can tell the Speech server that it must manage user interaction according to the structure and rules of twitter, with a simple mixin composition:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">org.hablapps.</span><span class="o">{</span> <span class="n">speech</span><span class="o">,</span> <span class="n">twitter</span> <span class="o">}</span>
+<span class="k">object</span> <span class="nc">TwitterWeb</span> <span class="k">extends</span> <span class="nc">App</span> <span class="o">{</span>
+  <span class="k">object</span> <span class="nc">System</span> <span class="k">extends</span> <span class="nv">speech</span><span class="o">.</span><span class="py">web</span><span class="o">.</span><span class="py">PlainSystem</span> <span class="k">with</span> <span class="nv">twitter</span><span class="o">.</span><span class="py">Program</span> <span class="o">{</span>
+  <span class="nv">System</span><span class="o">.</span><span class="py">launch</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Once you execute this program, you can launch the Speech console and test different twitter scenarios. The following video shows the following one:</p>
+
+<ul>
+  <li>First, a new twitter community is created (named “habla”)</li>
+  <li>Then, a guest user enters the community and decides to register himself as a Twitter user (@serrano)</li>
+  <li>Another twitter account is created for tweeter @morena; this time the account is private</li>
+  <li>@morena follows @serrano, so that she receives whatever serrano tweets within his account</li>
+  <li>@serrano attempts to follow @morena, but her account is private, so the “following” declaration is kept pending for approval</li>
+  <li>@morena allows @serrano to follow her</li>
+  <li>Eventually, @morena decides to unfollow @serrano and she also fires his follower role within her account</li>
+</ul>
+
+<p>[youtube=http://youtu.be/r9cOrUxtTW4]</p>
+
+<p><em style="color:#000000;font-size:1.8em;line-height:1.5em;">In sum …*</em></p>
+
+<p>In the light of all this, what can we say about the purpose and proposition value of Speech? First, the Speech console shows that Speech is only suitable for programming software which aim at managing user interaction. More specifically, Speech allows programmers to implement the structure and rules that govern the interactions of users within the application domain, i.e. the joint activities (or processes) carried out by people within a given social context. Thus, we can think of Speech as a (social) <strong>process-oriented programming language</strong>. Moreover, Speech is not a general purpose language but a domain specific language: in fact, Speech is a language that allows us to program a structured communication infrastructure, not a general purpose machine. Last, since the business logic of social applications largely deal with the kind of interaction requirements addressed by Speech, it can be described as a <strong>DSL for programming the business logic of social applications. </strong></p>
+
+<p>Why should we program social applications in Speech? First, because programmers don’t have to start from scratch but from a programmable communication infrastructure (i.e. less code needed); and, second, because the Scala embedding of Speech allows us to implement the structure and rules of interactions in a very concise and understandable way. We strive to achieving minimum levels of accidental complexity, so that functional requirements can be implemented in the most direct way possible. In next posts, we will tell you about new improvements in the Speech embedding.</p>
+
+<p>Have a great holidays!</p>
+
+:ET

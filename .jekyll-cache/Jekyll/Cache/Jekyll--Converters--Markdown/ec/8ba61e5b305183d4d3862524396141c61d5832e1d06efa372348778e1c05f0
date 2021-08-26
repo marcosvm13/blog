@@ -1,0 +1,181 @@
+I"�u<p>Immutability is one of the hallmarks of functional design, and writing idiomatic programs in Scala highly relies on manipulating immutable objects. Now, if we don’t have mutable fields (aka <em>vars</em>) … how can we update objects in a convenient way? Scala provides so-called <em>case classes</em> which have a <em>copy</em> method with the required functionality. And we can also use <em>lenses</em>, a higher-level abstraction that you can find in popular Scala libraries such as <a href="https://github.com/scalaz/scalaz">scalaz</a> and <a href="https://github.com/milessabin/shapeless">shapeless</a> (you can find a macro-based implementation in the <a href="https://github.com/retronym/macrocosm">macrocosm</a> project as well). Nevertheless, all these implementations build some way or another upon case classes as the basic updating mechanism.</p>
+
+<p>Now, sometimes writing case classes for your specification traits is cumbersome, since it involves a lot of boilerplate. And this problem is specially exacerbated in the presence of inheritance hierarchies, where traits get also polluted with getters and setters. Wouldn’t it be nice if we found some way of automatically deriving case classes and eliminating all this boilerplate? Well, this is a question for macros, and *<a href="http://docs.scala-lang.org/overviews/macros/typemacros.html">type macros</a>, *in particular. But type macros are still a pre-release feature of Scala. So, what can be done with <a href="http://docs.scala-lang.org/overviews/macros/overview.html"><em>def macros</em></a> alone? We have developed a library that exploits def macros in combination with reflective calls to eliminate the need of writing implementation classes. And it allows the programmer to update immutable objects in generic contexts with a minimum overhead. This library is called <a href="https://github.com/hablapps/updatable"><strong>org.hablapps.updatable</strong></a> and you can find it on GitHub. Before explaining its functionality, though, let’s illustrate the problem with a simple example, and let’s solve it using case classes.</p>
+
+<h3 id="the-problem-"><strong><em>The problem …</em></strong></h3>
+<p>We will illustrate the kind of updating problem we have to deal with by considering a design problem in the implementation of Speech itself. Among other things, our DSL offers to programmers an abstract layer which implements generic types and state transformations that can be reused across any kind of social domain. For instance, the layer includes <em>interaction contexts *and *agent roles</em>, and the <em>play</em> transformation which adds a new agent role within some context. We want to implement interaction contexts and agent roles as immutable objects and be able to reuse the *play *transformation as-is, across any application domain. For instance, think of Twitter: there you find accounts, followers, tweeters, and many other concepts. We can think of accounts as the contexts where tweeters interact with their followers; and following someone would involve *playing *a new follower role within their account. As another example, think of courses as contexts of interaction for student and teacher agents, and some student enrolling some course: this action can also be implemented with the help of the *play *action.</p>
+
+<h3 id="-solved-using-case-classes"><em><strong>… Solved using case classes</strong></em></h3>
+<p>Our design problem can be understood as a particular example of the<em><a href="http://www.scala-lang.org/sites/default/files/odersky/ScalableComponent.pdf"> family polymorphism</a> </em>problem, which can be easily solved in Scala using abstract types and the *cake **pattern. *Accordingly, the Speech abstraction layer can be understood as a family of types which vary together covariantly in each application layer. In particular, our implementation will be structured in three basic layers:</p>
+
+<ul>
+  <li>An abstract layer (the <em>S**peech</em> layer) which provides generic implementations of interactions contexts, agents, and generic transformations, in terms of traits and generic methods.</li>
+  <li>An application layer which provides specific implementations of domain-dependent concepts in terms of traits that extends the corresponding generic traits.</li>
+  <li>Another application layer which provides the implementation of domain-dependent traits, in terms of case classes.</li>
+</ul>
+
+<p>The following snippet represents an implementation sketch of the first layer:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">Speech</span> <span class="o">{</span>
+  <span class="k">trait</span> <span class="nc">Interaction</span><span class="o">[</span><span class="kt">This</span> <span class="k">&lt;:</span> <span class="kt">Interaction</span><span class="o">[</span><span class="kt">This</span><span class="o">]]</span> <span class="o">{</span> <span class="n">self</span><span class="k">:</span> <span class="kt">This</span> <span class="o">=&gt;</span>
+    <span class="k">type</span> <span class="kt">Member</span> <span class="k">&lt;:</span> <span class="kt">Agent</span><span class="o">[</span><span class="kt">Member</span><span class="o">]</span>
+    <span class="k">def</span> <span class="nf">member</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Member</span><span class="o">]</span>
+    <span class="k">def</span> <span class="nf">member_=</span><span class="o">(</span><span class="n">agent</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Member</span><span class="o">])</span><span class="k">:</span> <span class="kt">This</span>
+  <span class="o">}</span>
+
+  <span class="k">trait</span> <span class="nc">Agent</span><span class="o">[</span><span class="kt">This</span> <span class="k">&lt;:</span> <span class="kt">Agent</span><span class="o">[</span><span class="kt">This</span><span class="o">]]</span> <span class="o">{</span> <span class="n">self</span><span class="k">:</span> <span class="kt">This</span> <span class="o">=&gt;</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="nf">play</span><span class="o">[</span><span class="kt">I</span> <span class="k">&lt;:</span> <span class="kt">Interaction</span><span class="o">[</span><span class="kt">I</span><span class="o">]](</span><span class="n">i</span><span class="k">:</span> <span class="kt">I</span><span class="o">)(</span><span class="n">a</span><span class="k">:</span> <span class="kt">i.Member</span><span class="o">)</span><span class="k">:</span> <span class="kt">I</span> <span class="o">=</span>
+    <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="k">=</span> <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="o">+</span> <span class="n">a</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Here, the Speech layer just implements two traits for the <em>Interaction *and *Agent *types, as well as the *play *transformation. Note that the *play *method must work for any type of interaction and agent, and we don’t want to forget the exact type of interaction once we call the method. Hence, the method is parameterized with respect to some interaction type </em>I<em>. Now, the agent to be played within that context must be compatible with the interaction type, i.e. we can play *followers *within Twitter accounts, but not </em>students. * To account for this constraint, we declare an abstract type <em>Member *in the *Interaction *trait and exploit dependent types in the *play *signature. How do we add the new member agent? We need a setter, of course. And this setter must also return the specific type of the interaction **(again, to avoid type information loss). For that purpose, the trait is parameterized with the *This *parameter, following the standard <a href="http://www.scala-lang.org/node/6649#comment-27573">solution</a> to this problem. Last, note the updated sentence in the *play *method: it’s as if *member *was a </em>var*. But it’s not, it’s simply that we named the getter and setter according to the *var *convention.</p>
+
+<p>How do we reuse this abstract layer? The following snippet uses the Twitter domain to illustrate reuse of the Speech layer.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">Twitter</span> <span class="k">extends</span> <span class="nc">Speech</span> <span class="o">{</span>
+
+  <span class="k">trait</span> <span class="nc">Account</span> <span class="k">extends</span> <span class="nc">Interaction</span><span class="o">[</span><span class="kt">Account</span><span class="o">]</span> <span class="o">{</span>
+    <span class="k">type</span> <span class="kt">Member</span> <span class="o">=</span> <span class="nc">Follower</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="nf">Account</span><span class="o">(</span><span class="n">members</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Follower</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">())</span><span class="k">:</span> <span class="kt">Account</span>
+
+  <span class="k">trait</span> <span class="nc">Follower</span> <span class="k">extends</span> <span class="nc">Agent</span><span class="o">[</span><span class="kt">Follower</span><span class="o">]</span> <span class="o">{</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="nf">Follower</span><span class="o">()</span><span class="k">:</span> <span class="kt">Follower</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The Twitter layer simply extends the Speech traits and sets the abstract members to the desired values. Of course, a real implementation will include additional <em>domain-dependent</em> attributes, methods, etc., to the <em>Account </em>and <em>Follower</em> traits (think of the Speech <em>member</em> attribute as a kind of <em>standard</em> attribute). Note that we also included factory methods for the <em>Account</em> and <em>Follower</em> types. In a real implementation, it is more than likely that we will need them. And we don’t want to commit to any specific implementation class, so we declare them abstract. The next portion of the cake will provide the implementations of the Twitter types - using case classes:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">trait</span> <span class="nc">TwitterImpl</span> <span class="o">{</span> <span class="n">self</span><span class="k">:</span> <span class="kt">Twitter</span> <span class="o">=&gt;</span>
+
+    <span class="k">private</span> <span class="k">case</span> <span class="k">class</span> <span class="nc">AccountClass</span><span class="o">(</span><span class="n">member</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Follower</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">Account</span> <span class="o">{</span>
+      <span class="k">def</span> <span class="nf">member_=</span><span class="o">(</span><span class="n">agent</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Follower</span><span class="o">])</span> <span class="k">=</span> <span class="nf">copy</span><span class="o">(</span><span class="n">member</span> <span class="k">=</span> <span class="n">agent</span><span class="o">)</span>
+    <span class="o">}</span>
+
+    <span class="k">def</span> <span class="nf">Account</span><span class="o">(</span><span class="n">members</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Follower</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">())</span><span class="k">:</span> <span class="kt">Account</span> <span class="o">=</span> <span class="nc">AccountClass</span><span class="o">(</span><span class="n">members</span><span class="o">)</span>
+
+    <span class="k">private</span> <span class="k">case</span> <span class="k">class</span> <span class="nc">FollowerClass</span><span class="o">()</span> <span class="k">extends</span> <span class="nc">Follower</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="k">def</span> <span class="nf">Follower</span><span class="o">()</span><span class="k">:</span> <span class="kt">Follower</span> <span class="o">=</span> <span class="nc">FollowerClass</span><span class="o">()</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>Now, this is the “ugliest” part: we had to provide case classes for all the application traits, and the getters/setters for all of their attributes (standard and non-standard). In this simple example, we just have the “member” attribute, but we may have dozens in a real implementation. This implementation layer must also provide implementations for factory methods, which happen to be the only way to create new entities (note the <em>private</em> declaration of case classes).</p>
+
+<p>The following snippet exercises the above implementation:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">object</span> <span class="nc">s</span> <span class="k">extends</span> <span class="nc">Twitter</span> <span class="k">with</span> <span class="nc">TwitterImpl</span>
+  <span class="k">import</span> <span class="nn">s._</span>
+
+  <span class="nf">val</span> <span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">f1</span><span class="o">,</span> <span class="n">f2</span><span class="o">)</span> <span class="k">=</span> <span class="o">(</span><span class="nc">Account</span><span class="o">(),</span> <span class="nc">Follower</span><span class="o">(),</span> <span class="nc">Follower</span><span class="o">())</span>
+
+  <span class="c1">// test _=</span>
+  <span class="nf">assert</span><span class="o">((</span><span class="nv">a</span><span class="o">.</span><span class="py">member</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">()).</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">())</span>
+  <span class="nf">assert</span><span class="o">((</span><span class="nv">a</span><span class="o">.</span><span class="py">member</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">(</span><span class="n">f1</span><span class="o">,</span> <span class="n">f2</span><span class="o">)).</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">(</span><span class="n">f1</span><span class="o">,</span> <span class="n">f2</span><span class="o">))</span>
+
+  <span class="c1">// test play</span>
+  <span class="k">val</span> <span class="nv">a1</span> <span class="k">=</span> <span class="nf">play</span><span class="o">(</span><span class="n">a</span><span class="o">)(</span><span class="n">f1</span><span class="o">)</span>
+  <span class="nf">assert</span><span class="o">(</span><span class="nv">a1</span><span class="o">.</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">(</span><span class="n">f1</span><span class="o">))</span>
+</code></pre></div></div>
+
+<h2 id="-solved-using-the-orghablappsupdatable-package"> <em>… <strong>Solved using the </strong></em>org.hablapps.updatable<em><strong> package</strong></em></h2>
+<p>The major structural change to the above implementation is that we don’t need the <em>case</em> <em>class</em> layer. Thus, we may qualify the following implementation as <em>trait-oriented</em>. Let’s see how the Speech and Twitter layers are modified:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">Speech</span> <span class="o">{</span>
+  <span class="k">trait</span> <span class="nc">Interaction</span> <span class="o">{</span>
+    <span class="k">type</span> <span class="kt">Member</span> <span class="k">&lt;:</span> <span class="kt">Agent</span>
+    <span class="k">val</span> <span class="nv">member</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">Member</span><span class="o">]</span>
+  <span class="o">}</span>
+
+  <span class="k">implicit</span> <span class="k">val</span> <span class="nv">Interaction</span> <span class="k">=</span> <span class="n">weakBuilder</span><span class="o">[</span><span class="kt">Interaction</span><span class="o">]</span>
+
+  <span class="k">trait</span> <span class="nc">Agent</span> <span class="o">{</span>
+  <span class="o">}</span>
+
+  <span class="k">implicit</span> <span class="k">val</span> <span class="nv">Agent</span> <span class="k">=</span> <span class="n">weakBuilder</span><span class="o">[</span><span class="kt">Agent</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="nf">play</span><span class="o">[</span><span class="kt">I</span> <span class="k">&lt;:</span> <span class="kt">Interaction:</span> <span class="kt">Builder</span><span class="o">](</span><span class="n">i</span><span class="k">:</span> <span class="kt">I</span><span class="o">)(</span><span class="n">a</span><span class="k">:</span> <span class="kt">i.Member</span><span class="o">)</span><span class="k">:</span> <span class="kt">I</span> <span class="o">=</span>
+    <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="o">:=</span> <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="o">+</span> <span class="n">a</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The first noticeable change is that … we don’t need getters and setters! We just declared our attributes using <em>val</em>s. And the implementation of the <em>play *method has not been excessively complicated: we just substituted the “=” operator for the new operator “:=”, and included through its signature evidence that the type parameter *I</em> has an implementation of the <em>Builder</em> type class. Instances of this type class can be understood as factories that allow programmers to instantiate and update objects of the specified type in a very convenient way. In particular, the Builder type class enables an implicit macro conversion which gives access to the “:=” operator. All this in a type-safe way.  In a sense, builders play the same role as case classes played in the previous implementation. But there is a crucial difference: builders are created automatically through the *builder *macro, as shown in the following snippet of the second layer:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">trait</span> <span class="nc">Twitter</span> <span class="k">extends</span> <span class="nc">Speech</span> <span class="o">{</span>
+    <span class="k">trait</span> <span class="nc">Account</span> <span class="k">extends</span> <span class="nc">Interaction</span> <span class="o">{</span>
+      <span class="k">type</span> <span class="kt">Member</span> <span class="o">=</span> <span class="nc">Follower</span>
+    <span class="o">}</span>
+
+    <span class="k">implicit</span> <span class="k">val</span> <span class="nv">Account</span> <span class="k">=</span> <span class="n">builder</span><span class="o">[</span><span class="kt">Account</span><span class="o">]</span>
+
+    <span class="k">trait</span> <span class="nc">Follower</span> <span class="k">extends</span> <span class="nc">Agent</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="k">implicit</span> <span class="k">val</span> <span class="nv">Follower</span> <span class="k">=</span> <span class="n">builder</span><span class="o">[</span><span class="kt">Follower</span><span class="o">]</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>The only difference in this layer with respect to the case class implementation is that no method factories are needed, since builders play that role. Now, if you come back to the previous snippet you will also notice <em>weakBuilder</em> invocations for types <em>Interaction *and *Agent</em>. Certainly, we don’t need strict builders for these types, since they are “abstract”. However, builders also provide attribute reifications, and we certainly want an unique reification for the *member *attribute. The *weakBuilder *macro generates the corresponding reifications. The following snippet shows how to access reified attributes, and mimic the functionality included in the case class implementation.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">s</span> <span class="k">extends</span> <span class="nc">Twitter</span>
+<span class="k">import</span> <span class="nn">s._</span>
+
+<span class="c1">// test reifications</span>
+<span class="nf">assert</span><span class="o">(</span><span class="nv">Account</span><span class="o">.</span><span class="py">attributes</span> <span class="o">==</span> <span class="nc">List</span><span class="o">(</span><span class="nv">Account</span><span class="o">.</span><span class="py">_member</span><span class="o">))</span>
+
+<span class="c1">// create instances</span>
+<span class="nf">val</span> <span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">f1</span><span class="o">,</span> <span class="n">f2</span><span class="o">)</span> <span class="k">=</span> <span class="o">(</span><span class="nc">Account</span><span class="o">(),</span> <span class="nc">Follower</span><span class="o">(),</span> <span class="nc">Follower</span><span class="o">())</span>
+
+<span class="c1">// test _=</span>
+<span class="nf">assert</span><span class="o">(</span><span class="nv">a</span><span class="o">.</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">())</span>
+<span class="nf">assert</span><span class="o">(((</span><span class="nv">a</span><span class="o">.</span><span class="py">member</span> <span class="o">+=</span> <span class="n">f2</span><span class="o">).</span><span class="py">member</span> <span class="o">-=</span> <span class="n">f2</span><span class="o">).</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">())</span>
+
+<span class="c1">// test play</span>
+<span class="k">val</span> <span class="nv">a1</span> <span class="k">=</span> <span class="nf">play</span><span class="o">(</span><span class="n">a</span><span class="o">)(</span><span class="n">f1</span><span class="o">)</span>
+<span class="nf">assert</span><span class="o">(</span><span class="nv">a1</span><span class="o">.</span><span class="py">member</span> <span class="o">==</span> <span class="nc">Set</span><span class="o">(</span><span class="n">f1</span><span class="o">))</span>
+
+<span class="nf">println</span><span class="o">(</span><span class="s">"ok!"</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p>Note that the factory method provided by the <em>Account</em> builder include default parameters as well. These default parameters are defined through the <em>Default</em> type class. The companion object of this type class comes equipped with default values for common Scala types, but you can also provide default values for your own specific types. As you can see, the default value defined for types *Set[_] *is the empty set.</p>
+
+<p>Concerning the rest of the snippet, we also illustrated the use of the ‘+=’ and ‘-=’ operators. Basically, these operators allow the programmer to specify updates of multivalued attributes specifying only just the element to be added or removed to the collection. To be able to use these operators, the<em> </em>type constructor of the attribute type must implement the <em>Modifi<strong>able *type class. Currently, the updatable package offers modifiable instances for </strong></em>Option <em>and **any kind of *Traversable.</em></p>
+
+<h2 id="-but-be-careful-with-non-final-attributes">… <strong><em>But be careful with non-“final” attributes</em></strong></h2>
+<p>Let’s suppose that we changed slightly the signature of the <em>play</em> method:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">playAll</span><span class="o">[</span><span class="kt">I</span> <span class="k">&lt;:</span> <span class="kt">Interaction:</span> <span class="kt">Builder</span><span class="o">](</span><span class="n">i</span><span class="k">:</span> <span class="kt">I</span><span class="o">)(</span><span class="n">ags</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">i.Member</span><span class="o">])</span><span class="k">:</span> <span class="kt">I</span> <span class="o">=</span>
+  <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="o">:=</span> <span class="n">ags</span>
+</code></pre></div></div>
+
+<p>Is this type-safe? Certainly not, since the actual type <em>I </em>may have refined the <em>member *attribute to a proper *Set *subtype. For instance, actual type </em>I <em>may have overridden the </em>member <em>declaration to a *ListSet,</em> while actual argument <em>ags *may be a *HashSet. *The source of this problem is that the *member</em> **attribute is not “final”, in the sense that it can be overridden. We will consider an attribute as “final” if every component which is part of its declared type is a final class or refers to an abstract type.</p>
+
+<p>We may have forbidden non-final attributes to be used as part of update sentences, but this would rule out the above implementation of the <em>play method</em>, which is perfectly safe: in that case, there was no problem because the ‘+’ operator is defined by the different subtypes of the trait <em>Set**. *So, we ended up deciding to just emit a warning if non-final attributes are used by updating sentences *in a generic context</em>. If you want to eliminate that warning, you can always make the attribute declaration final with the help of new auxiliary abstract types. For instance, look at the following snippet: the <em>member</em> declaration now refers to a new abstract type <em>MemberCol[_]</em>, which forces us to change the declaration of the <em>playAll </em>method in such a way that the actual type of the attribute must now be taken into account.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">Interaction</span> <span class="o">{</span>
+  <span class="k">type</span> <span class="kt">MemberCol</span><span class="o">[</span><span class="kt">x</span><span class="o">]</span> <span class="k">&lt;:</span> <span class="nc">Set</span><span class="o">[</span><span class="kt">x</span><span class="o">]</span>
+  <span class="k">type</span> <span class="kt">Member</span> <span class="k">&lt;:</span> <span class="kt">Agent</span>
+  <span class="k">val</span> <span class="nv">member</span><span class="k">:</span> <span class="kt">MemberCol</span><span class="o">[</span><span class="kt">Member</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">def</span> <span class="nf">playAll</span><span class="o">[</span><span class="kt">I</span> <span class="k">&lt;:</span> <span class="kt">Interaction:</span> <span class="kt">Builder</span><span class="o">](</span><span class="n">i</span><span class="k">:</span> <span class="kt">I</span><span class="o">)(</span><span class="n">ags</span><span class="k">:</span> <span class="kt">i.MemberCol</span><span class="o">[</span><span class="kt">i.Member</span><span class="o">])</span><span class="k">:</span> <span class="kt">I</span> <span class="o">=</span>
+  <span class="nv">i</span><span class="o">.</span><span class="py">member</span> <span class="o">:=</span> <span class="n">ags</span>
+</code></pre></div></div>
+
+<p><strong>UPDATE: </strong>the above snippet has been changed to fix a mistake detected by Eugene Burmako. Thanks Eugene!</p>
+
+<h2 id="in-hindsight-"><strong><em>In hindsight …</em></strong></h2>
+<p>We spent a considerable amount of time in the design and implementation of the updatable package, but it was worth it. The *Speech *layer is populated by several abstract types with dozens of standard attributes, and making the application programmer to provide getters and setters for them, for each of the application types, is a tough work.</p>
+
+<p>But we also found the updatable library useful for other parts of the Speech platform: for instance, we exploit it to facilitate the serialization of JSON objects, so that we can automatically generate a serializer for buildable types (i.e. instances of the *Builder *type class). We will tell you about this and other applications of the updatable package in following posts, paying particular attention to macro issues.</p>
+
+<p>But there is still a lot that could be done … besides fixing bugs, of course ;). For instance, we currently require traits to have all of its type members defined in order to generate a builder for it, and it would be nice to relax this constraint. Also, we may extend the updating operator := to cope with nested updates (similarly to what you can achieve with lenses). And we may add support for Union-like types, try to use type macros, etc. We warmly welcome any comment, suggestion for new functionality, corrections, … and any other kind of help. Enjoy it!</p>
+
+:ET

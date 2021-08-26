@@ -1,0 +1,96 @@
+I"�A<p>This is the first instalment of a series of posts about the essence of functional programming. The only purpose of this series is to illustrate the defining features of this style of programming using different examples of increasing complexity. We will start with the ubiquitous “Hello, world!” and will eventually arrive at … (throat clearing) monads. But we won’t argue that monads are the essence of functional programming, and, ultimately, do not intend these posts to be about monads. In fact, we will stumble upon monads without actually looking for them, much in the same spirit of Dan Piponi’s ”<a href="http://blog.sigfpe.com/2006/08/you-could-have-invented-monads-and.html">You Could Have Invented Monads! (And Maybe You Already Have.)</a>”.</p>
+
+<p>There is a major difference between Dan’s post and these ones, however: we won’t be using Haskell but Scala, a language which unlike Haskell is not purely functional, i.e. that allows us to write non-functional programs. But this feature won’t be a drawback at all. On the contrary, we think that it will allow us to emphasise some aspects (e.g. the interpreters) that may go unnoticed using a language like Haskell. Let’s start with our first example!</p>
+
+<h2 id="hello-functional-world">Hello, functional world!</h2>
+<p>This is a possible way of writing the “Hello, world!” program in Scala:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">Example1</span><span class="o">{</span>
+  <span class="k">def</span> <span class="nf">hello</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="nf">println</span><span class="o">(</span><span class="s">"Hello, world!"</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>which can be run in the Scala REPL as follows:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nv">Example1</span><span class="o">.</span><span class="py">hello</span><span class="o">()</span>
+<span class="nc">Hello</span><span class="o">,</span> <span class="n">world</span><span class="o">!</span>
+</code></pre></div></div>
+
+<p>As you can see, when this function is run the message “Hello, world!” is printed in the console. This is called a <em>side effect</em>, and it was indeed the purpose of the program. But this also means that our implementation is not purely functional. Why? Because functional programming is all about writing <em>pure</em> functions: functions which receive some input, compute some values and do <em>nothing else</em>. In a strongly-typed language such as Scala, we can witness the non-functional character of some function as follows: if the function does nothing else than returning values of the type declared in its signature, then it’s a pure function; otherwise, it’s an <em>impure</em> function: its signature declares that it does one thing, but it also does something more behind the compiler’s back. We may thus also say that impure functions work in the <em>black market</em>, beyond the reach of the compiler’s type system (our best ally!).</p>
+
+<p>But, if pure functions only allow us to return <em>values</em>, how can we then print something to the console? How can we then execute any kind of effect (read something from the database, invoke a web service, write to a file, etc.)? How can we then do something useful at all? The answer is that you can’t do those things with pure functions alone. Functional programming rests upon a basic modularity principle which tells us to decompose our applications into two kinds of modules: (1) functional modules, made up of pure functions that are responsible for computing <em>what</em> has to be done, and (2) non-functional modules made up of impure functions or programs in charge of actually <em>doing</em> it. It’s this latter kind of modules which will do the dirty job of actually interacting with the outside world and executing the desired effects; and it’s the only responsibility of the functional modules to determine which effects have to be executed. When programming functionally, you should not forget this fact: impure functions will eventually be necessary. The only thing that functional programming mandates is to segregate impure functions, so that the <em>ivory tower</em> where pure functions live is as large as possible, and the <em>kitchen</em> where impure, side-effecting functions operate is reduced to the bare minimum (which, nonetheless, in many applications might be quite large).</p>
+
+<p>This limitation on the things that functional programming can do is a self-imposed constraint that doesn’t actually constrain its range of application domains. Indeed, we can apply the functional programming style to any kind of application domain you may think of. So, what about our impure “Hello, world!” program? Can we <em>purify</em> it? Sure we can. But then, how can we disentangle its pure and impure parts? Essentially, functional programming tells us to proceed as follows (line numbers refer to the code snippet bellow):</p>
+
+<ul>
+  <li>First, we define a <em>data type </em>that allows us to describe the kinds of effects we are dealing with<em>. </em>In our “Hello, world!” example, we want to talk about <em>printing </em>strings somewhere, so we will define the <code class="language-plaintext highlighter-rouge">Print </code>data type (cf. line 8).</li>
+  <li>Second, we implement a function which <em>computes</em> the particular desired effects in terms of an instance of the previous data type. Our program then will be pretty simple (line 12): it simply returns the value <code class="language-plaintext highlighter-rouge">Print("Hello, world!")</code>. Note that this function is pure!</li>
+  <li>Third, we implement a function that receives an instance of the effect data type, and executes it in any way we want. In our example, we will implement a function that receives a <code class="language-plaintext highlighter-rouge">Print </code>value and executes a <code class="language-plaintext highlighter-rouge">println</code> instruction to write the desired message to the console (line 17). This function is thus impure!</li>
+  <li>Last, we compose our program out of the previous two functions, obtaining, of course, an impure program (line 21).</li>
+</ul>
+
+<p>The resulting program is implemented in the <code class="language-plaintext highlighter-rouge">Fun</code> module (pun intended):</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">Example1</span><span class="o">{</span> 
+
+  <span class="cm">/* Functional purification */</span>
+  <span class="k">object</span> <span class="nc">Fun</span><span class="o">{</span>
+
+    <span class="c1">// Language</span>
+    <span class="k">type</span> <span class="kt">IOProgram</span> <span class="o">=</span> <span class="nc">Print</span>
+    <span class="k">case</span> <span class="k">class</span> <span class="nc">Print</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+
+    <span class="c1">// Program</span>
+    <span class="k">def</span> <span class="nf">pureHello</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOProgram</span> <span class="o">=</span>
+      <span class="nc">Print</span><span class="o">(</span><span class="s">"Hello, world!"</span><span class="o">)</span>
+
+    <span class="c1">// Interpreter</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="o">(</span><span class="n">program</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+      <span class="n">program</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Print</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+      <span class="o">}</span>
+
+    <span class="c1">// Composition</span>
+    <span class="k">def</span> <span class="nf">hello</span><span class="o">()</span> <span class="k">=</span> <span class="nf">run</span><span class="o">(</span><span class="nf">pureHello</span><span class="o">())</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The equivalent program to our initial impure solution <code class="language-plaintext highlighter-rouge">Example1.hello</code> is the (also impure) function <code class="language-plaintext highlighter-rouge">Example1.Fun.hello</code>. Both functions has the same functionality, i.e. they both do the same thing, and from the point of view of the functional requirements of our tiny application, they are both <em>correct.</em> However, they are far from being similar in terms of their reusability, composability, testability, and other non-functional requirements. We won’t explain in this post why the functional solution offers better non-functional guarantees, but ultimately the reason lies behind its better modularisation: whereas the <code class="language-plaintext highlighter-rouge">Example1.hello </code>function is monolithic, its functional counterpart is made up of two parts: the <code class="language-plaintext highlighter-rouge">pureHello </code>function and the impure function <code class="language-plaintext highlighter-rouge">run</code>.</p>
+
+<p>Now, an important remark concerning the above code: note that we defined the alias <code class="language-plaintext highlighter-rouge">IOProgram</code> for our effect data type, and that we used the labels <em>Language</em>, <em>Program</em> and <em>Interpreter </em>for the different parts of our functional solution. This is not accidental, and it points at the <a href="https://www.youtube.com/watch?v=hmX2s3pe_qk">interpreter pattern</a>, arguably the essence of functional programming:</p>
+
+<ul>
+  <li>First, our effect data type can be regarded as the <em>language</em> we use to describe the desired effects of our application. As part of this language, we can have different types of single effects, such as the <code class="language-plaintext highlighter-rouge">Print</code> effect or instruction. Also, since languages are used to write programs, expressions in our effect language can be called <em>programs</em>, and we can use the word “program” to name the type of the overall effect language. In our case, since we are dealing with IO effects, <code class="language-plaintext highlighter-rouge">IOProgram</code> is a good name. Last, note that the purpose of our language is very specific: we want to be able to write programs that just build upon IO instructions, so <code class="language-plaintext highlighter-rouge">IOProgram</code> is actually a <em>domain-specific</em> language (DSL). Here there are some hand-crafted programs of our IO DSL:</li>
+</ul>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="k">import</span> <span class="nn">Example1.Fun._</span>
+<span class="k">import</span> <span class="nn">Example1.Fun._</span>
+<span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="nv">program1</span><span class="k">:</span> <span class="kt">IOProgram</span> <span class="o">=</span> <span class="nc">Print</span><span class="o">(</span><span class="s">"hi!"</span><span class="o">)</span>
+<span class="n">program1</span><span class="k">:</span> <span class="kt">Example1.Fun.IOProgram</span> <span class="o">=</span> <span class="nc">Print</span><span class="o">(</span><span class="n">hi</span><span class="o">!)</span>
+<span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="nv">program2</span><span class="k">:</span> <span class="kt">IOProgram</span> <span class="o">=</span> <span class="nc">Print</span><span class="o">(</span><span class="s">"dummy program!"</span><span class="o">)</span>
+<span class="n">program2</span><span class="k">:</span> <span class="kt">Example1.Fun.IOProgram</span> <span class="o">=</span> <span class="nc">Print</span><span class="o">(</span><span class="n">dummy</span> <span class="n">program</span><span class="o">!)</span>
+</code></pre></div></div>
+<ul>
+  <li>So, pure functions return programs: this means that functional programming is intimately related to metaprogramming! And when we say that functional programming is <em>declarative</em>, we mean that functional programs just <em>declare</em> or <em>describe</em> what has to be done in terms of expressions or values. To convince yourself that our <code class="language-plaintext highlighter-rouge">pureHello</code> function is really declarative (i.e. pure), just execute it on the REPL. You will see that the only thing that happens during its execution is that a new value is computed by the runtime system (note that the output that you’ll see in the REPL is not a result of the <code class="language-plaintext highlighter-rouge">pureHello</code> execution, but of the REPL itself):</li>
+</ul>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nv">Example1</span><span class="o">.</span><span class="py">Fun</span><span class="o">.</span><span class="py">pureHello</span><span class="o">()</span>
+<span class="n">res1</span><span class="k">:</span> <span class="kt">Example1.Fun.IOProgram</span> <span class="o">=</span> <span class="nc">Print</span><span class="o">(</span><span class="nc">Hello</span><span class="o">,</span> <span class="n">world</span><span class="o">!)</span>
+</code></pre></div></div>
+<ul>
+  <li>Once we execute a pure function and obtain a program, what is left is to actually <em>run</em> that program. But our program is an expression, pure syntax, so we have to choose a particular <em>interpretation</em> before we can actually run it. In our case, we chose to interpret our <code class="language-plaintext highlighter-rouge">IOProgram</code>s in term of console instructions, but we are free to interpret it otherwise (file IO, socket, etc.). When you run the program computed by our <code class="language-plaintext highlighter-rouge">pureHello</code> function, you will actually see the intended side effects:</li>
+</ul>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">scala</span><span class="o">&gt;</span> <span class="nv">Example1</span><span class="o">.</span><span class="py">Fun</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="nv">Example1</span><span class="o">.</span><span class="py">Fun</span><span class="o">.</span><span class="py">pureHello</span><span class="o">())</span>
+<span class="nc">Hello</span><span class="o">,</span> <span class="n">world</span><span class="o">!</span>
+</code></pre></div></div>
+
+<p>So, this is basically the structure of functional programming-based applications: domain-specific languages, pure functions that return programs in those DSLs, and interpreters that execute those programs. Note that these interpreters may be implemented in such a way that our programs are not directly executed but are instead translated to programs of some lower-level intermediate language (in a pure way). Eventually, however, we will reach the “bare metal” and we will be able to observe some side effect in the real world.</p>
+
+<p>The IO programs that we are able to express with our current definition of the type <code class="language-plaintext highlighter-rouge">IOProgram</code> are very simple. In fact, we can just create programs that write single messages. Accordingly, the range of impure functions that we can purify is pretty limited. In our next posts, we’ll challenge our IO DSL with more complex and realistic scenarios, and will see how it has to be extended in order to cope with them.</p>
+
+<p><strong>Edit:</strong> All code from this post can be found <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/hello-monads/partI.scala" target="_blank">here</a>.</p>
+
+:ET

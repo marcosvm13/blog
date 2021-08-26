@@ -1,0 +1,142 @@
+I"�h<p>In the <a href="http://blog.hablapps.com/2016/01/22/from-hello-world-to-hello-monad-part-i/">first</a> part of this series, we saw how we can write the business logic of our applications as pure functions that return programs written in a custom domain-specific language (DSL). We also showed in <a href="https://blog.hablapps.com/2017/01/09/from-hello-world-to-hello-monad-part-iiiii/">part II</a> that no matter how complex our business logic is, we can always craft a DSL to express our intent. All this was illustrated using the “Fibonacci” example of purely functional programming, namely <em>IO programs</em>. We reproduce bellow the resulting design of the IO DSL and a sample IO program:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="c1">// IO DSL</span>
+
+  <span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+  <span class="nc">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">IOProgram.Effect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span>
+    <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+  <span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">p1</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span>
+    <span class="n">p2</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+  <span class="k">case</span> <span class="k">class</span> <span class="nc">Value</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+
+  <span class="k">object</span> <span class="nc">IOProgram</span><span class="o">{</span>
+    <span class="k">sealed</span> <span class="k">trait</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+    <span class="nc">case</span> <span class="k">class</span> <span class="nc">Write</span><span class="o">(</span><span class="n">s</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+    <span class="k">case</span> <span class="k">object</span> <span class="nc">Read</span> <span class="k">extends</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+  <span class="o">}</span>
+
+  <span class="c1">// Sample IO program</span>
+
+  <span class="k">def</span> <span class="nf">echo</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+    <span class="nc">Sequence</span><span class="o">(</span><span class="nc">Single</span><span class="o">(</span><span class="nc">Read</span><span class="o">()),</span> <span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="nc">Sequence</span><span class="o">(</span><span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="o">),</span> <span class="o">(</span><span class="k">_</span> <span class="k">:</span> <span class="kt">Unit</span><span class="o">)</span> <span class="k">=&gt;</span>
+        <span class="nc">Value</span><span class="o">(</span><span class="n">msg</span><span class="o">)))</span>
+</code></pre></div></div>
+
+<p>However, while this design is essentially correct from the point of view of the functional requirements of our little application, and from the point of view of illustrating the essence of functional programming, there are two major flaws concerning two important non-functional guarantees: readability and modularity. Let’s start from the first one!</p>
+
+<p>*Note: you can find the code for this post in this <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/hello-monads/partIII.scala">repo</a>. *</p>
+
+<h2 id="more-sugar">More sugar!</h2>
+<p>What’s the problem with the little <code class="language-plaintext highlighter-rouge">echo</code> function we came up with? Well, this function being pure has an essential advantage: it simply declares <i>what</i> has to be done, and the task of actually executing those programs in any way we want is delegated to another part of the application - the interpreter. Thus, we could run our <code class="language-plaintext highlighter-rouge">echo()</code> IO program using the <code class="language-plaintext highlighter-rouge">println</code> and <code class="language-plaintext highlighter-rouge">readLine</code> methods of the <code class="language-plaintext highlighter-rouge">Console</code>; or using an asynchronous library using <code class="language-plaintext highlighter-rouge">Future</code> values; or test it without the need of mocking libraries with the help of custom state transformers in a type-safe way. Great, great, great! But … who would ever want to write our pure functions using that syntax? We have to admit that the readability of our little program is poor … to say the least. Let’s fix it!</p>
+
+<h3 id="smart-constructors-for-atomic-programs">Smart constructors for atomic programs</h3>
+<p>We start by adding some lifting methods that allow us to use <em>IO instructions</em> as if they were <em>programs </em>already:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">IOProgram</span> <span class="o">{</span>
+  <span class="k">object</span> <span class="nc">Syntax</span><span class="o">{</span>
+    <span class="k">val</span> <span class="nv">read</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+      <span class="nc">Single</span><span class="o">(</span><span class="nc">Read</span><span class="o">)</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+      <span class="nc">Single</span><span class="o">(</span><span class="nc">Write</span><span class="o">(</span><span class="n">msg</span><span class="o">))</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="smart-constructors-for-complex-programs">Smart constructors for complex programs</h3>
+<p>Next, let’s introduce some smart constructors for sequencing programs. We will named them <code class="language-plaintext highlighter-rouge">flatMap</code> and <code class="language-plaintext highlighter-rouge">map</code> – for reasons that will become clear very soon. As you can see in the following implementation, <code class="language-plaintext highlighter-rouge">flatMap</code> simply allow us to write sequential programs using an infix notation; and <code class="language-plaintext highlighter-rouge">map</code> allows us to write a special type of sequential program: one which runs some program, transforms its result using a given function, and then simply returns that transformed output.</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">flatMap</span><span class="o">[</span><span class="kt">B</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span> <span class="k">=</span>
+    <span class="nc">Sequence</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">f</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">map</span><span class="o">[</span><span class="kt">B</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">B</span><span class="o">)</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span> <span class="k">=</span>
+    <span class="nf">flatMap</span><span class="o">(</span><span class="n">f</span> <span class="n">andThen</span> <span class="nv">Value</span><span class="o">.</span><span class="py">apply</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Using all these smart constructors we can already write our program in a more concise style:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">IOProgram.Syntax._</span>
+
+<span class="k">def</span> <span class="nf">echo</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nf">read</span><span class="o">()</span> <span class="n">flatMap</span> <span class="o">{</span> <span class="n">msg</span> <span class="k">=&gt;</span>
+    <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span> <span class="n">map</span> <span class="o">{</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">msg</span> <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="using-for-comprehensions">Using for-comprehensions</h3>
+<p>We may agree that the above version using smart constructors represents an improvement, but, admittedly, it’s far from the conciseness and readability of the initial impure version:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">echo</span><span class="o">()</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="nv">msg</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">readLine</span>
+  <span class="nf">println</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+  <span class="n">msg</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>For one thing at least: in case that our program consists of a long sequence of multiple subprograms, we will be forced to write a long sequence of nested indented <code class="language-plaintext highlighter-rouge">flatMap</code>s. But we can avoid this already using so-called <em>for-comprehensions</em>! This is a Scala feature which parallels Haskell’s <em>do</em> notation and F#’s <em>computation expressions</em>. In all of these cases, the purpose is being able to write sequential programs more easily. Our little example can be written now as follows:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">IOProgram.Syntax._</span>
+
+<span class="k">def</span> <span class="nf">echo</span><span class="o">()</span><span class="k">:</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="k">for</span><span class="o">{</span>
+  <span class="n">msg</span> <span class="k">&lt;-</span> <span class="nf">read</span><span class="o">()</span>
+  <span class="k">_</span> <span class="k">&lt;-</span> <span class="nf">write</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+<span class="o">}</span> <span class="k">yield</span> <span class="n">msg</span>
+</code></pre></div></div>
+
+<p>For-comprehensions are desugared by the Scala compiler into a sequence of <code class="language-plaintext highlighter-rouge">flatMap</code>s and a last <code class="language-plaintext highlighter-rouge">map</code> expression. So, the above program and the <code class="language-plaintext highlighter-rouge">flatMap</code>-based program written in the last section are essentially identical.</p>
+
+<h2 id="hello-monad">Hello, Monad!</h2>
+<p>Let’s deal now with the second of our problems: the one concerning modularity. What’s the problem with the little DSL to write IO programs we came up with? Basically, the problem is that, approximately, half of this data type is not related to input-output at all. Indeed, if we were to write a different DSL to write imperative programs dealing with file system effects (e.g. reading the content from some file, renaming it, etc.), we would almost write line by line half of its definition:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">FileSystemProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="nc">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">FileSystemProgram.Effect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span>
+  <span class="k">extends</span> <span class="nc">FileSystemProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">p1</span><span class="k">:</span> <span class="kt">FileSystemProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span>
+  <span class="n">p2</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">FileSystemProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">FileSystemProgram</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Value</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">FileSystemProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+
+<span class="k">object</span> <span class="nc">FileSystemProgram</span><span class="o">{</span>
+  <span class="k">sealed</span> <span class="k">abstract</span> <span class="k">class</span> <span class="nc">Effect</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>
+  <span class="nc">case</span> <span class="k">class</span> <span class="nc">ReadFile</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+  <span class="k">case</span> <span class="k">class</span> <span class="nc">DeleteFile</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+  <span class="k">case</span> <span class="k">class</span> <span class="nc">WriteFile</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">content</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+    <span class="k">extends</span> <span class="nc">Effect</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The only remarkable change is related to the kinds of effects we are dealing with now: file system effects instead of IO effects. The definition of the DSL itself simply varies in the reference to the new kind of effect. This amount of redundancy is a clear signal of a lack of modularity. What we need is a generic data type that accounts for the common imperative features of both DSLs. We can try it as follows:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>,<span class="kt">A</span><span class="o">]{</span>
+  <span class="k">def</span> <span class="nf">flatMap</span><span class="o">[</span><span class="kt">B</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">B</span><span class="o">])</span> <span class="k">=</span>
+    <span class="nc">Sequence</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">f</span><span class="o">)</span>
+  <span class="k">def</span> <span class="nf">map</span><span class="o">[</span><span class="kt">B</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">B</span><span class="o">)</span> <span class="k">=</span>
+    <span class="nf">flatMap</span><span class="o">(</span><span class="n">f</span> <span class="n">andThen</span> <span class="nv">Value</span><span class="o">.</span><span class="py">apply</span><span class="o">)</span>
+<span class="o">}</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Single</span><span class="o">[</span><span class="kt">Effect</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>,<span class="kt">A</span><span class="o">](</span><span class="n">e</span><span class="k">:</span> <span class="kt">Effect</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span>
+  <span class="k">extends</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">A</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sequence</span><span class="o">[</span><span class="kt">Effect</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>,<span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span>
+  <span class="n">p1</span><span class="k">:</span> <span class="kt">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">A</span><span class="o">],</span>
+  <span class="n">p2</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">B</span><span class="o">])</span>
+  <span class="k">extends</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">B</span><span class="o">]</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Value</span><span class="o">[</span><span class="kt">Effect</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>,<span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span>
+  <span class="k">extends</span> <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">Effect</span>,<span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>Note how the <code class="language-plaintext highlighter-rouge">Single</code> variant of the DSL now refers to a (type constructor) parameter <code class="language-plaintext highlighter-rouge">Effect[_]</code>. We can now reuse the <code class="language-plaintext highlighter-rouge">ImperativeProgram</code> generic DSL in a modular definition of our DSLs for IO and file system effects:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="kt">IOProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">IOProgram.Effect</span>, <span class="kt">A</span><span class="o">]</span>
+
+<span class="k">type</span> <span class="kt">FileSystemProgram</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">ImperativeProgram</span><span class="o">[</span><span class="kt">FileSystemProgram.Effect</span>, <span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>This <code class="language-plaintext highlighter-rouge">ImperativeProgram</code> generic DSL seems pretty powerful: indeed, it encodes the essence of imperative DSLs, and it is actually commonly known through a much more popular name: <em>Free Monad</em>! The definitions of <code class="language-plaintext highlighter-rouge">Free</code> that you will find in professional libraries such as <a href="https://github.com/typelevel/cats/blob/master/free/src/main/scala/cats/free/Free.scala#L13" target="_blank" rel="noopener noreferrer">cats</a>, <a href="https://github.com/scalaz/scalaz/blob/series/7.3.x/core/src/main/scala/scalaz/Free.scala#L102" target="_blank" rel="noopener noreferrer">scalaz</a> or <a href="https://github.com/atnos-org/eff/blob/master/shared/src/main/scala/org/atnos/eff/Eff.scala#L50" target="_blank" rel="noopener noreferrer">eff</a> are not quite the same as the one obtained in this post, which is quite inefficient both in time and space (not to mention further modularity problems when combining different types of effects); but, the essence of free monads, namely, being able to define imperative programs given <em>any</em> type of effects represented by some type constructor is there. This substantially reduces the effort of defining an imperative DSL: first, program definition will collapse into a single type alias; second, we will get the <code class="language-plaintext highlighter-rouge">flatMap</code> and <code class="language-plaintext highlighter-rouge">map</code> operators for free; and, similarly, although not shown in this post, we will also be able to simplify the definition of monadic interpreters (those that translate the given free program into a specific monadic data type, such as a state transformation, asynchronous computation, etc.), amongst many other goodies.</p>
+
+<h2 id="conclusion-modularity-all-the-way-down">Conclusion: modularity all the way down!</h2>
+<p>We may say that the essence of functional programming is <em>modularity</em>. Indeed, the defining feature of functional programming, namely <em>pure functions</em>, is an application of this design principle: they let us compose our application out of two kinds of modules: pure functions themselves that declare what has to be done, and interpreters that specify a particular way of doing it. In particular, interpreters may behave as translators, so that the resulting interpretations are programs written in a lower-level DSL, that also need to be interpreted. Eventually, we will reach the “bare metal” and the interpreters will actually bring the effects into the real world (i.e. something will be written in the screen, a file will be read, a web service will be called, etc.).</p>
+
+<p>But besides pure functions, functional programming is full of many additional modularity techniques: parametric polymorphism, type classes, higher-order functions, lazy evaluation, datatype generics, etc. All these techniques, which were first conceived in the functional programming community, basically aim at allowing us to write programs with extra levels of modularity. We saw an example in this post: instead of defining imperative DSLs for implementing Input/Output and File System programs in a monolithic way, we were able to abstract away their differences and package their common part in a super reusable definition: namely, the generic imperative DSL represented by the Free monad. How did we do that? Basically, using parametric polymorphism (higher-kinds generics, in particular), and generalised algebraic data types (GADTs). But functional programming is so rich in abstractions and modularity techniques, that we may have even achieved a similar modular result using type classes instead of GADTs (in a style known as <em>finally tagless</em>). And this is actually what we will see in our next post. Stay tuned!</p>
+
+:ET

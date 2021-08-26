@@ -1,0 +1,60 @@
+I""<h1 id="about-this-series">About this series</h1>
+
+<p>This series of posts describes our experience while learning
+<a href="https://code.kx.com/q/learn/startingkdb/language/"><em>q</em></a> and <em>kdb+</em> by Kx
+Systems. According to <a href="https://en.wikipedia.org/wiki/Kdb%2B">the wikipedia</a>,</p>
+<blockquote>
+  <p><em>“kdb+ is a high-performance column-store database that was designed to
+process and store large amounts of data… created with financial
+institutions in mind… At the core of kdb+ is the built-in programming
+language, q, a concise, expressive query array language, and dialect of the
+language APL”</em></p>
+</blockquote>
+
+<p>Although q is also a functional programming language, it has many features that
+make it different from other conventional languages such as Haskell, OCaml,
+etc. Given this situation, we’ll try to provide an overview of q basics,
+connecting the missing pieces to our previous knowledge on functional
+programming, using Scala and Spark to guide the explanations. We hope it also
+works in the opposite direction, so q programmers can also benefit from this
+introduction, which will be divided into the following posts:</p>
+
+<ol>
+  <li><a href="https://www.hablapps.com/blog/2021/04/19/q-as-an-impure-functional-language.html">Q as an (impure) functional language</a></li>
+  <li>Q as an array processing language</li>
+  <li>Q as a query language for kdb+</li>
+</ol>
+
+<p>The first post introduces q as a functional language, showing the main q
+features that are already familiar to the conventional functional programmer
+which could be used from the very first day. The second post will put focus on
+q as an array processing language, which is probably the main source of q
+weirdness, so we’ll try to connect it to existing theory on the functional
+paradigm. Finally, the last post will introduce q and kdb+ as a query language
+and a column-oriented database, respectively, to make the data engineer happy.</p>
+
+<h2 id="why-q">Why q?</h2>
+
+<p>Each day, we set aside a time to experiment with new technologies, and we are
+especially interested on functional languages. A colleague from the Scala
+community pointed us towards q. The following items summarise the alleged
+language benefits why we decided to give it a go:</p>
+
+<ul>
+  <li>Q is fast, sooo fast</li>
+  <li>Q is a functional query language</li>
+  <li>Q is a well-founded language that relies on APL</li>
+  <li>Q is highly demanded in the financial industry</li>
+  <li>Q is quite a challenge</li>
+</ul>
+
+<p>After a few months of reading q material and coding, we can confirm that none
+of the previous items is a myth. Although we feel that we still have a long way
+to master q/kdb, we are confident that we have now a good perspective on how
+hard it is to learn this language. In fact, reflecting this experience is
+perhaps the major contribution of this series of posts. Having said so, <a href="https://www.hablapps.com/blog/2021/04/19/q-as-an-impure-functional-language.html">we’re
+ready to go now!</a></p>
+
+<p><em>Post Picture: Momento de Transición, Salvador Dalí (1934)</em></p>
+
+:ET

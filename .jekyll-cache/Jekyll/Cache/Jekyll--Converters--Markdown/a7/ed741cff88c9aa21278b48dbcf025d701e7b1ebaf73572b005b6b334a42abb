@@ -1,0 +1,265 @@
+I"Н<p>In our <a href="https://blog.hablapps.com/2016/10/11/yo-dawg-we-put-an-algebra-in-your-coalgebra/">last post</a>, we introduced <code class="language-plaintext highlighter-rouge">IOCoalgebra</code>s as an alternative way of representing <em>coalgebras</em> from an algebraic viewpoint, where <code class="language-plaintext highlighter-rouge">Lens</code> was used as a guiding example. In fact, lens is an abstraction that belongs to the group of <em>Optics</em>, a great source of fascinating machines. We encourage you to watch this nice <a href="https://www.youtube.com/watch?v=6nyGVgGEKdA">introduction to optics</a> because we’ll show more optic examples under the <code class="language-plaintext highlighter-rouge">IOCoalgebra</code> perspective. While doing so, we’ll find out that this new representation let us identify and clarify some connections between optics and <code class="language-plaintext highlighter-rouge">State</code>. Finally, those connections will be analyzed in a real-world setting, specifically, in the <em>state module</em> from <a href="https://github.com/julien-truffaut/Monocle/">Monocle</a>. Let us not waste time, there is plenty of work to do!</p>
+
+<p><em>(</em>) All the encodings associated to this post have been collected <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/LensStateIsYourFather.scala">here</a>, where the same sectioning structure is followed.*</p>
+
+<h2 id="optics-as-coalgebras">Optics as Coalgebras</h2>
+<p>First of all, let’s recall the <code class="language-plaintext highlighter-rouge">IOCoalgebra</code> type constructor:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="kt">IOCoalgebra</span><span class="o">[</span><span class="kt">IOAlg</span><span class="o">[</span><span class="k">_</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span>, <span class="kt">Step</span><span class="o">[</span><span class="k">_</span>, <span class="k">_</span><span class="o">]</span>, <span class="kt">S</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOAlg</span><span class="o">[</span><span class="kt">Step</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">?</span><span class="o">]]</span>
+</code></pre></div></div>
+
+<p>As you can see, it receives three type arguments: the object algebra interface, the state-based action or step, and the state type. Once provided, coalgebras are defined as a state-based interpretation of the specified algebra. Take <a href="https://github.com/julien-truffaut/Monocle/blob/master/core/shared/src/main/scala/monocle/package.scala#L7"><code class="language-plaintext highlighter-rouge">Lens</code></a> as an example of IOCoalgebra:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">LensAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">set</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">type</span> <span class="kt">IOLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOCoalgebra</span><span class="o">[</span><span class="kt">LensAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">?</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span>, <span class="kt">State</span>, <span class="kt">S</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p><em>(</em>) This is a simple Lens, in opposition to a <a href="https://github.com/julien-truffaut/Monocle/blob/master/core/shared/src/main/scala/monocle/Lens.scala#L33">polymorphic</a> one. We will only consider simple optics for the rest of the article.*</p>
+
+<p>If we expand <code class="language-plaintext highlighter-rouge">IOLens[S, A]</code>, we get <code class="language-plaintext highlighter-rouge">LensAlg[A, State[S, ?]]</code>, which is a perfectly valid representation for lenses as demonstrated by the following isomorphism:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">lensIso</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nf">new</span> <span class="o">(</span><span class="nc">Lens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="o">&lt;=&gt;</span> <span class="nc">IOLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">])</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="nf">from</span><span class="k">:</span> <span class="kt">IOLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Lens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">ioln</span> <span class="k">=&gt;</span> <span class="nc">Lens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">](</span><span class="nv">ioln</span><span class="o">.</span><span class="py">get</span><span class="o">.</span><span class="py">eval</span><span class="o">)(</span><span class="n">a</span> <span class="k">=&gt;</span> <span class="nv">ioln</span><span class="o">.</span><span class="py">set</span><span class="o">(</span><span class="n">a</span><span class="o">).</span><span class="py">exec</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="nf">to</span><span class="k">:</span> <span class="kt">Lens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">IOLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="n">ln</span> <span class="k">=&gt;</span> <span class="k">new</span> <span class="nc">IOLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="o">{</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nv">State</span><span class="o">.</span><span class="py">gets</span><span class="o">(</span><span class="nv">ln</span><span class="o">.</span><span class="py">get</span><span class="o">)</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span> <span class="nv">State</span><span class="o">.</span><span class="py">modify</span><span class="o">(</span><span class="nv">ln</span><span class="o">.</span><span class="py">set</span><span class="o">(</span><span class="n">a</span><span class="o">))</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>We’ll see more details about lenses in later sections but, for now let’s keep diving through other optics, starting with <a href="https://github.com/julien-truffaut/Monocle/blob/master/core/shared/src/main/scala/monocle/package.scala#L5"><code class="language-plaintext highlighter-rouge">Optional</code></a>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">OptionalAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">getOption</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Option</span><span class="o">[</span><span class="kt">A</span><span class="o">]]</span>
+  <span class="k">def</span> <span class="nf">set</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">type</span> <span class="kt">IOOptional</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOCoalgebra</span><span class="o">[</span><span class="kt">OptionalAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">?</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span>, <span class="kt">State</span>, <span class="kt">S</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>This optic just replaces IOLens’ <code class="language-plaintext highlighter-rouge">get</code> with <code class="language-plaintext highlighter-rouge">getOption</code>, stating that it’s not always possible to return the inner value, and thence the resulting <code class="language-plaintext highlighter-rouge">Option[A]</code>. As far as we are concerned, there aren’t more significant changes, given that <code class="language-plaintext highlighter-rouge">State</code> is used as step as well. Thereby, we can move on to <a href="https://github.com/julien-truffaut/Monocle/blob/master/core/shared/src/main/scala/monocle/package.scala#L3"><code class="language-plaintext highlighter-rouge">Setter</code>s</a>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">SetterAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">modify</span><span class="o">(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">type</span> <span class="kt">IOSetter</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOCoalgebra</span><span class="o">[</span><span class="kt">SetterAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">?</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span>, <span class="kt">State</span>, <span class="kt">S</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>In fact, this is a kind of relaxed lens that has lost the ability to “get” the focus, but is still able to update it. Notice that <code class="language-plaintext highlighter-rouge">set</code> can be automatically derived in terms of <code class="language-plaintext highlighter-rouge">modify</code>. Again, <code class="language-plaintext highlighter-rouge">State</code> is perfectly fine to model the step associated to this optic. Finally, there is <a href="https://github.com/julien-truffaut/Monocle/blob/master/core/shared/src/main/scala/monocle/Getter.scala#L14"><code class="language-plaintext highlighter-rouge">Getter</code></a>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">GetterAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+<span class="o">}</span>
+
+<span class="k">type</span> <span class="kt">IOGetter</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">IOCoalgebra</span><span class="o">[</span><span class="kt">GetterAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">?</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span>, <span class="kt">Reader</span>, <span class="kt">S</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>This new optic is pretty much like a lens where the <code class="language-plaintext highlighter-rouge">set</code> method has been taken off, and it only remains <code class="language-plaintext highlighter-rouge">get</code>. Although we could use <code class="language-plaintext highlighter-rouge">State</code> to represent the state-based action, we’ll take another path here. Since there isn’t a real state in the background that we need to thread, ie. we can only “get” the inner value, <code class="language-plaintext highlighter-rouge">Reader</code> could be used as step instead. As an additional observation, realize that <code class="language-plaintext highlighter-rouge">LensAlg</code> could have been implemented as a combination of <code class="language-plaintext highlighter-rouge">GetterAlg</code> and <code class="language-plaintext highlighter-rouge">SetterAlg</code>.</p>
+
+<p>There are still more optics in the wild, such as <code class="language-plaintext highlighter-rouge">Fold</code> and <code class="language-plaintext highlighter-rouge">Traversal</code>, but we’re currently working on their corresponding IOCoalgebra representation. However, the ones that have already been shown are good enough to establish some relations between optics and the state monad.</p>
+
+<h2 id="optics-and-state-connections">Optics and State Connections</h2>
+<p>Dealing with lenses and dealing with state feels like doing very similar things. In both settings there is a state that could be queried and updated. However, if we want to go deeper with this connection, we need to compare apples to apples. So, what’s the algebra for <code class="language-plaintext highlighter-rouge">State</code>? Indeed, this algebra is very well known, it’s named <code class="language-plaintext highlighter-rouge">MonadState</code>:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">MonadState</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>, <span class="kt">S</span><span class="o">]</span> <span class="nc">extends</span> <span class="nc">Monad</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="k">:</span> <span class="kt">F</span><span class="o">[</span><span class="kt">S</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">put</span><span class="o">(</span><span class="n">s</span><span class="k">:</span> <span class="kt">S</span><span class="o">)</span><span class="k">:</span> <span class="kt">F</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="nf">gets</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">S</span> <span class="o">=&gt;</span> <span class="n">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">F</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span> <span class="k">=</span>
+    <span class="nf">map</span><span class="o">(</span><span class="n">get</span><span class="o">)(</span><span class="n">f</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="nf">modify</span><span class="o">(</span><span class="n">f</span><span class="k">:</span> <span class="kt">S</span> <span class="o">=&gt;</span> <span class="n">S</span><span class="o">)</span><span class="k">:</span> <span class="kt">F</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+    <span class="nf">bind</span><span class="o">(</span><span class="n">get</span><span class="o">)(</span><span class="n">f</span> <span class="n">andThen</span> <span class="n">put</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>This <code class="language-plaintext highlighter-rouge">MonadState</code> version is a simplification of what we may find in a library such as <em>scalaz</em> or <em>cats</em>. The algebra is parametrized with two types: the state-based action <code class="language-plaintext highlighter-rouge">F</code> and the state <code class="language-plaintext highlighter-rouge">S</code> itself. If we look inside the typeclass, we find two abstract methods: <code class="language-plaintext highlighter-rouge">get</code> to obtain the current state and <code class="language-plaintext highlighter-rouge">put</code> to overwrite it, given a new one passed as argument. Those abstract methods, in combination with the fact that <code class="language-plaintext highlighter-rouge">MonadState</code> inherits <code class="language-plaintext highlighter-rouge">Monad</code>, let us implement <code class="language-plaintext highlighter-rouge">gets</code> and <code class="language-plaintext highlighter-rouge">modify</code> as derived methods. This sounds familiar, doesn’t it? It’s just the lens algebra along with the program examples that we used in our last post! Putting it all together:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">trait</span> <span class="nc">LensAlg</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">P</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">get</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">A</span><span class="o">]</span>
+  <span class="k">def</span> <span class="nf">set</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="nf">gets</span><span class="o">[</span><span class="kt">B</span><span class="o">](</span>
+      <span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">B</span><span class="o">)(</span><span class="k">implicit</span>
+      <span class="n">F</span><span class="k">:</span> <span class="kt">Functor</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">B</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">get</span> <span class="n">map</span> <span class="n">f</span>
+
+  <span class="k">def</span> <span class="nf">modify</span><span class="o">(</span>
+      <span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">A</span><span class="o">)(</span><span class="k">implicit</span>
+      <span class="n">M</span><span class="k">:</span> <span class="kt">Monad</span><span class="o">[</span><span class="kt">P</span><span class="o">])</span><span class="k">:</span> <span class="kt">P</span><span class="o">[</span><span class="kt">Unit</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">get</span> <span class="o">&gt;&gt;=</span> <span class="o">(</span><span class="n">f</span> <span class="n">andThen</span> <span class="n">set</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><em>(</em>) Notice that we could have had <code class="language-plaintext highlighter-rouge">LensAlg</code> extending <code class="language-plaintext highlighter-rouge">Monad</code> as well, but this decoupling seems nicer to us, since each program requires only the exact level of power to proceed. For instance, <code class="language-plaintext highlighter-rouge">Functor</code> is powerful enough to implement <code class="language-plaintext highlighter-rouge">gets</code>, so no <code class="language-plaintext highlighter-rouge">Monad</code> evidence is needed.*</p>
+
+<p>Apparently, the only difference among <code class="language-plaintext highlighter-rouge">LensAlg</code> and <code class="language-plaintext highlighter-rouge">MonadState</code> lies in the way we use the additional type parameter. On the one hand, <code class="language-plaintext highlighter-rouge">LensAlg</code> has a type parameter <code class="language-plaintext highlighter-rouge">A</code>, which we understand as the focus or inner state contextualized within an outer state. On the other hand, we tend to think of <code class="language-plaintext highlighter-rouge">MonadState</code>’s <code class="language-plaintext highlighter-rouge">S</code> parameter as the unique global state where focus is put. Thereby, types instantiating this typeclass usually make reference to that type parameter, as one could appreciate in the <code class="language-plaintext highlighter-rouge">State</code> <a href="//github.com/scalaz/scalaz/blob/series/7.3.x/core/src/main/scala/scalaz/StateT.scala#L177)">instance</a> for <code class="language-plaintext highlighter-rouge">MonadState</code>. However, we could avoid that common practice and use a different type as companion. In fact, by applying this idea in the previous instance, we get a new lens representation:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="kt">MSLens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="nc">MonadState</span><span class="o">[</span><span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">?</span><span class="o">]</span>, <span class="kt">A</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p><em>(</em>) The isomorphism between <code class="language-plaintext highlighter-rouge">IOLens</code> and <code class="language-plaintext highlighter-rouge">MSLens</code> is almost trivial, given the similarities among their algebras. Indeed, you can check it <a href="https://github.com/hablapps/gist/blob/master/src/test/scala/LensStateIsYourFather.scala#L135">here</a>.*</p>
+
+<p>Lastly, we can’t forget about one of the most essential elements conforming an algebra: its laws. <a href="http://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/utp-monads.pdf"><code class="language-plaintext highlighter-rouge">MonadState</code> laws</a> are fairly known in the functional programming community. However, the laws associated to our <code class="language-plaintext highlighter-rouge">LensAlg</code> aren’t clear. Luckily, we don’t have to start this work from scratch, since <a href="http://sebfisch.github.io/research/pub/Fischer+MPC15.pdf">lens laws</a> are a good starting point. Despite the similarity between both packages of laws (look at their names!) we have still to formalize this connection. Probably, this task will shed even more light on this section.</p>
+
+<h2 id="monocle-and-state">Monocle and State</h2>
+<p>Connections between optics and state have already been identified. Proof of this can be found in <a href="https://github.com/julien-truffaut/Monocle">Monocle</a>, the most popular Scala optic library nowadays, which includes a <a href="https://github.com/julien-truffaut/Monocle/tree/master/state/shared/src/main/scala/monocle/state"><em>state module</em></a> containing facilities to combine some optics with State. What follows is a simplification (removes polymorphic stuff) of the class that provides conversions from lens actions to state ones:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">StateLensOps</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">](</span><span class="n">lens</span><span class="k">:</span> <span class="kt">Lens</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">])</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">toState</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">...</span>
+  <span class="k">def</span> <span class="nf">mod</span><span class="o">(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">...</span>
+  <span class="k">def</span> <span class="nf">assign</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">S</span>, <span class="kt">A</span><span class="o">]</span> <span class="k">=</span> <span class="o">...</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>For instance, <code class="language-plaintext highlighter-rouge">mod</code> is a shortcut for applying <code class="language-plaintext highlighter-rouge">lens.modify</code> over the standing outer state and returning the resulting inner value. The next snippet, extracted from Monocle (type annotations were added for clarity), shows this method in action:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+<span class="k">val</span> <span class="nv">_age</span><span class="k">:</span> <span class="kt">Lens</span><span class="o">[</span><span class="kt">Person</span>, <span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">GenLens</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="nv">_</span><span class="o">.</span><span class="py">age</span><span class="o">)</span>
+<span class="k">val</span> <span class="nv">p</span><span class="k">:</span> <span class="kt">Person</span> <span class="o">=</span> <span class="nc">Person</span><span class="o">(</span><span class="s">"John"</span><span class="o">,</span> <span class="mi">30</span><span class="o">)</span>
+
+<span class="nf">test</span><span class="o">(</span><span class="s">"mod"</span><span class="o">)</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="nv">increment</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">Person</span>, <span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="nc">_age</span> <span class="nf">mod</span> <span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span>
+
+  <span class="nv">increment</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="n">p</span><span class="o">)</span> <span class="nf">shouldEqual</span> <span class="o">((</span><span class="nc">Person</span><span class="o">(</span><span class="s">"John"</span><span class="o">,</span> <span class="mi">31</span><span class="o">),</span> <span class="mi">31</span><span class="o">))</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>That said, how can we harness from our optic representation to analyze this module? Well, first of all, it would be nice to carry out the same exercise from the <code class="language-plaintext highlighter-rouge">IOLens</code> perspective:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+<span class="k">val</span> <span class="nv">_ioage</span><span class="k">:</span> <span class="kt">IOLens</span><span class="o">[</span><span class="kt">Person</span>, <span class="kt">Int</span><span class="o">]</span> <span class="k">=</span>
+  <span class="nc">IOLens</span><span class="o">(</span><span class="nv">_</span><span class="o">.</span><span class="py">age</span><span class="o">)(</span><span class="n">age</span> <span class="k">=&gt;</span> <span class="nv">_</span><span class="o">.</span><span class="py">copy</span><span class="o">(</span><span class="n">age</span> <span class="k">=</span> <span class="n">age</span><span class="o">))</span>
+<span class="k">val</span> <span class="nv">p</span><span class="k">:</span> <span class="kt">Person</span> <span class="o">=</span> <span class="nc">Person</span><span class="o">(</span><span class="s">"John"</span><span class="o">,</span> <span class="mi">30</span><span class="o">)</span>
+
+<span class="nf">test</span><span class="o">(</span><span class="s">"mod"</span><span class="o">)</span> <span class="o">{</span>
+  <span class="k">val</span> <span class="nv">increment</span><span class="k">:</span> <span class="kt">State</span><span class="o">[</span><span class="kt">Person</span>, <span class="kt">Int</span><span class="o">]</span> <span class="k">=</span>
+    <span class="o">(</span><span class="nc">_ioage</span> <span class="nf">modify</span> <span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">))</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="nc">_ioage</span> <span class="n">get</span><span class="o">)</span>
+
+  <span class="nv">increment</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="n">p</span><span class="o">)</span> <span class="nf">shouldEqual</span> <span class="o">((</span><span class="nc">Person</span><span class="o">(</span><span class="s">"John"</span><span class="o">,</span> <span class="mi">31</span><span class="o">),</span> <span class="mi">31</span><span class="o">))</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Leaving aside the different types returned by <code class="language-plaintext highlighter-rouge">_age mod (_ + 1)</code> and <code class="language-plaintext highlighter-rouge">_ioage modify (_ + 1)</code>, we could say that both instructions are pretty much the same. However, <code class="language-plaintext highlighter-rouge">mod</code> is an action located in an external state module while <code class="language-plaintext highlighter-rouge">modify</code> is just a primitive belonging to <code class="language-plaintext highlighter-rouge">IOLens</code>. Is this a mere coincidence? To answer this question, we have formalized this kind of connections in a table:</p>
+
+<table>
+<thead>
+<tr>
+<th>Monocle State-Lens Action</th>
+<th>IOLens Action</th>
+<th>Return Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>`toState`</td>
+<td>`get`</td>
+<td>`State[S, A]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`set(a: A)`</td>
+<td>`State[S, Unit]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`gets(f: A ⇒ B)`</td>
+<td>`State[S, B]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`modify(f: A ⇒ A)`</td>
+<td>`State[S, Unit]`</td>
+</tr>
+<tr>
+<td>`mod(f: A ⇒ A)`</td>
+<td>?</td>
+<td>`State[S, A]`</td>
+</tr>
+<tr>
+<td>`modo(f: A ⇒ A)`</td>
+<td>?</td>
+<td>`State[S, A]`</td>
+</tr>
+<tr>
+<td>`assign(a: A)`</td>
+<td>?</td>
+<td>`State[S, A]`</td>
+</tr>
+<tr>
+<td>`assigno(a: A)`</td>
+<td>?</td>
+<td>`State[S, A]`</td>
+</tr>
+</tbody>
+</table>
+<p>What this table tells us is how the actions correspond to each other. For instance, the first raw shows that <em>toState</em> (from Monocle) corresponds directly with <em>get</em> (from our IOLens), both generating a program whose type is <code class="language-plaintext highlighter-rouge">State[S, A]</code>. The second raw contains a new element <em>?</em>, which informs us that there’s no corresponding action for <em>set</em> in Monocle. Given the multitude of gaps in the table, we could determine that we’re dealing with such different stuff, but if you squint your eyes, it’s not hard to appreciate that <code class="language-plaintext highlighter-rouge">mod(o)</code> and <code class="language-plaintext highlighter-rouge">assign(o)</code> are very close to <code class="language-plaintext highlighter-rouge">modify</code> and <code class="language-plaintext highlighter-rouge">set</code>, respectively. In fact, as we saw while defining <code class="language-plaintext highlighter-rouge">increment</code>, <code class="language-plaintext highlighter-rouge">mod</code> is just a combination of <code class="language-plaintext highlighter-rouge">get</code> and <code class="language-plaintext highlighter-rouge">modify</code>. So, it seems to exist a strong connection between the <code class="language-plaintext highlighter-rouge">IOLens</code> primitives and the actions that could be placed in the state module for lenses. The obvious question to be asked now is: Is there such a connection between the state module and other optics? In fact, Monocle also provides facilities to combine <code class="language-plaintext highlighter-rouge">State</code> and <code class="language-plaintext highlighter-rouge">Optional</code>s, so we can create the same table for it:</p>
+
+<table>
+<thead>
+<tr>
+<th>Monocle State-Optional Action</th>
+<th>IOOptional Action</th>
+<th>Return Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>`toState`</td>
+<td>`getOption`</td>
+<td>`State[S, Option[A]]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`set(a: A)`</td>
+<td>`State[S, Unit]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`gets(f: A ⇒ B)`</td>
+<td>`State[S, Option[B]]`</td>
+</tr>
+<tr>
+<td>?</td>
+<td>`modify(f: A ⇒ A)`</td>
+<td>`State[S, Unit]`</td>
+</tr>
+<tr>
+<td>`modo(f: A ⇒ A)`</td>
+<td>?</td>
+<td>`State[S, Option[A]]`</td>
+</tr>
+<tr>
+<td>`assigno(a: A)`</td>
+<td>?</td>
+<td>`State[S, Option[A]]`</td>
+</tr>
+</tbody>
+</table>
+<p>Again, the results are very similar to the ones we extracted from <code class="language-plaintext highlighter-rouge">IOLens</code>. In fact, we claim that any <code class="language-plaintext highlighter-rouge">IOCoalgebra</code>-based optic which can be interpreted into <code class="language-plaintext highlighter-rouge">State</code> may contain a representative in the state module, and the actions that the module may include for each of them are just its associated primitives and derived methods. But, what about <code class="language-plaintext highlighter-rouge">Getter</code>s, where both <code class="language-plaintext highlighter-rouge">State</code> and <code class="language-plaintext highlighter-rouge">Reader</code> are suitable instances? Well, the <code class="language-plaintext highlighter-rouge">State</code> part is clear, we can add a new representative for <code class="language-plaintext highlighter-rouge">Getter</code> in the state module. However, the interesting insight comes with <code class="language-plaintext highlighter-rouge">Reader</code>: identifying new interpretations means identifying new modules. In this sense, we could consider including a new module <em>reader</em> in the library. Obviously, we could fulfill that module by following the same ideas that we showed for <em>state</em>.</p>
+
+<p>To sum up, by following this approach, we have obtained a framework to systematically determine:</p>
+
+<ul>
+  <li>The appropriateness of including a new module.</li>
+  <li>The optics that it may support.</li>
+  <li>The methods it may contain for every optic.</li>
+</ul>
+
+<p>This is a nice help, isn’t it?</p>
+
+<h2 id="discussion-and-ongoing-work">Discussion and Ongoing Work</h2>
+<p>Today, we have seen that <code class="language-plaintext highlighter-rouge">IOCoalgebra</code>s served us two purposes, both of them involving understandability. First of all, we have identified an unexpected connection between <code class="language-plaintext highlighter-rouge">Lens</code> and the <code class="language-plaintext highlighter-rouge">State Monad</code>. In fact, we have defined <code class="language-plaintext highlighter-rouge">Lens</code> in terms of <code class="language-plaintext highlighter-rouge">MonadState</code>, so we had to explain <code class="language-plaintext highlighter-rouge">Lens</code> who was his biological father, and that was tough for her! Secondly, we have described a systematic process to create and fulfill Monocle’s peripheral modules, such as <em>state</em>. In this sense, if we go one step further, we could think of those peripheral modules as particular interpretations of our optic algebras. This perspective makes the aforementioned process entirely dispensable, since optic instances would replace the module itself. As a result, logic wouldn’t end up being contaminated with new names such as <code class="language-plaintext highlighter-rouge">assign</code> or <code class="language-plaintext highlighter-rouge">mod</code>, when all they really mean is <code class="language-plaintext highlighter-rouge">set</code> and <code class="language-plaintext highlighter-rouge">modify</code>, respectively.</p>
+
+<p>As we mentioned before, we still have to translate other optics into their corresponding <code class="language-plaintext highlighter-rouge">IOCoalgebra</code> representation and identify the laws associated to the algebras. Besides, we focused on simple optics, but we should contemplate the polymorphic nature of optics to analyze its implications in the global picture. Anyway, optics are just a source of very low-level machines that conform one of the first steps in the pursue of our general objective, which is programming larger machines, ie. reactive systems, by combining smaller ones. It’s precisely within this context where our optics, in combination with many other machines from here and there, should shine. In this sense, there’s still a lot of work to do, but at least we could see that isolating algebras from state concerns has turned out to be a nice design pattern.</p>
+
+:ET
