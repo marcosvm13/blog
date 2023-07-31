@@ -209,3 +209,13 @@ technologists just want to stick with their preferred tools. Emma therefore espe
 Thus PyKX allowed Emma to avoid the "with me or against me" mentality that comes with change. There was no unpopular abandonment of Python, far from it. Instead Python took on new meaning as it became the vehicle to steer more analytics into production and make those already in production much more perform. In fact, she soon appointed three of their top architects, Félix, Jesús, and Eloy, as team leads for three different teams responsible for various roles within the Mad Flow ecosystem utilizing the new infrastructure. These appointments align with the three different use cases for the PyKX library described in this post.
 
 Stay tuned for the follow-up to this post, where Félix, Jesús, and Eloy will elaborate on the use case of heavy traffic and the utilization of PyKX!
+
+### Acknowledgments
+
+This post was greatly enhanced thanks to the edits and comments from Steve Wilcokson and Conor McCarthy from KX. Óscar Nydza, Juan M. Serrano, and Marcos Vázquez from Habla Computing did their best to finalize the draft left by Jesús before he started to enjoy his paternity leave to take care of Félix, Jesús, and Eloy.
+
+### Dedication
+
+This post is dedicated to Eloy and the three newborns at Habla: Emma, Félix, and Jesús.
+
+*Post Picture: Project for "Destino", Salvador Dalí (1946)*
