@@ -1,1 +1,1 @@
-Habla blog!
+Habla Computing's blog!

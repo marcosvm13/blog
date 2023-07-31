@@ -1,4 +1,5 @@
----
+--
+
   email: juanmanuel.serrano@habla.dev
   display_name: Juan Manuel
   name: Juan Manuel Serrano
@@ -11,4 +12,4 @@
   active: true
 ---
 
-Juan Manuel is the CEO of habla computing and a teacher.
+Juan Manuel is the CEO of habla computing and a teacher at the University Rey Juan Carlos.
