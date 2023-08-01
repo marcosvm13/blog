@@ -106,13 +106,12 @@ While this approach allowed Emma to stay in her beloved Python and avoid costly 
 
 ```python
 >>> weather = kx.q.read.csv('./abr_meteo23.csv', types='IIII****' + 'FS'*24, delimiter=';', as_table=True)
->>> kx.q['weather'] = weather
 ```
 
 Once loaded, she issued a simple SQL query:
 
 ```python
->>> kx.q.sql('select STATION, count(distinct(MAGNITUDE)) from weather group by STATION')
+>>> kx.q.sql('select STATION, count(distinct(MAGNITUDE)) from $1 group by STATION', weather) 
 pykx.Table(pykx.q('
 STATION  MAGNITUDE
 ------------------
