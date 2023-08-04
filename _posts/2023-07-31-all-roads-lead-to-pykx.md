@@ -137,7 +137,7 @@ STATION | MAGNITUDE
 The pythonic interface proved quite convenient, and it was actually extended to many functions from the [q reference card](https://code.kx.com/pykx/1.6/api/q/q.html). However, she noticed the absence of equivalent attributes for operators like `cast`, `drop`, and `exec`, among others. So, she needed to explore alternative methods to be able to express arbitrary q expressions. Yet it proved remarkably straightforward! For instance, the previous qSQL query may also be implemented as follows:
 
 ```python
->>> kx.q("select count distinct MAGNITUDE by STATION from weather")
+>>> kx.q("{select count distinct MAGNITUDE by STATION from}", weather)
 pykx.KeyedTable(pykx.q('
 ESTACION| MAGNITUD
 --------| --------
